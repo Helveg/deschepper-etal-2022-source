@@ -1,5 +1,8 @@
 # deschepper-etal-2020
 Documents in preparation of the very first paper De Schepper et al. 2020
+
+Hi Claudia >:) Yes yes, a repo for the paper ;)
+
 ## Usage
 
 1. Plot all figures
