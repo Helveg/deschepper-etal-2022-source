@@ -7,11 +7,15 @@ path = os.path.abspath(os.path.dirname(__file__))
 format = "." + ("eps" if len(sys.argv) == 1 else sys.argv[1])
 
 def build():
+    i = 0
     for f in os.listdir(os.path.join(path, "plots")):
         if f.endswith(".py") and f != "__init__.py":
+            i = i + 1
+            print("Building plot {}...".format(i))
             plot = import_module("." + f[:-3], package="plots")
             plot.__figname__ = f[:-3]
             build_figure(plot)
+    print("Done")
 
 def build_figure(plotting_module):
     fig = plotting_module.plot()

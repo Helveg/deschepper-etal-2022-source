@@ -14,9 +14,12 @@ path = os.path.abspath(os.path.dirname(__file__))
 plots = mod_names() if len(sys.argv) == 1 else sys.argv[1:]
 
 def plot():
-    for plot in plots:
+    t = len(plots)
+    for i, plot in enumerate(plots):
+        print("Plotting", plot, "... ({}/{})".format(i + 1, t))
         plotting_module = import_module("." + plot, package="plots")
         show_figure(plotting_module)
+    print("Done")
 
 def show_figure(plotting_module):
     plotting_module.plot().show()
