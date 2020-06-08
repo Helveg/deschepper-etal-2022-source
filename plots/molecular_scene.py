@@ -20,17 +20,16 @@ def plot():
     return molecular_scene(scaffold)
 
 
-def molecular_scene(scaffold, basket=4, stellate=4):
+def molecular_scene(scaffold, basket=3, stellate=3, granule=10):
     ms = MorphologyScene()
     mr = MorphologyRepository(file=test_path)
     skip = [
         "glomerulus",
-        "granule_cell",
         "golgi_cell",
         "purkinje_cell",
         "mossy_fibers",
     ]
-    count = {"basket_cell": basket, "stellate_cell": stellate}
+    count = {"basket_cell": basket, "stellate_cell": stellate, "granule_cell": granule}
     for cell_type in scaffold.configuration.cell_types.values():
         if cell_type.name in skip:
             continue
