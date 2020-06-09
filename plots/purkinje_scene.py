@@ -17,7 +17,9 @@ test_path = os.path.join(
 
 def plot():
     scaffold = from_hdf5(test_path)
-    return purkinje_layer_scene(scaffold)
+    fig = purkinje_layer_scene(scaffold)
+    set_scene_range(fig.layout.scene, [[-100, 200], [50, 350], [-100, 200]])
+    return fig
 
 def purkinje_layer_scene(scaffold, purkinjes=8, granules=200):
     ms = MorphologyScene()

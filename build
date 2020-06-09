@@ -4,24 +4,37 @@ from types import ModuleType
 from importlib import import_module
 
 path = os.path.abspath(os.path.dirname(__file__))
-format = "." + ("eps" if len(sys.argv) == 1 else sys.argv[1])
+formats = ['html', 'eps', 'jpeg', 'jpg', 'pdf', 'png', 'svg', 'webp']
+if len(sys.argv) > 1 and sys.argv[1] in formats:
+    format = "." + sys.argv[1]
+    plots = sys.argv[2:]
+else:
+    plots = sys.argv[1:]
+    format = ".png"
+
+if len(plots) == 0:
+    plots = [f[:-3] for f in os.listdir(os.path.join(path, "plots")) if f.endswith(".py") and f != "__init__.py"]
 
 def build():
     i = 0
-    for f in os.listdir(os.path.join(path, "plots")):
-        if f.endswith(".py") and f != "__init__.py":
-            i = i + 1
-            print("Building plot {}...".format(i))
-            plot = import_module("." + f[:-3], package="plots")
-            plot.__figname__ = f[:-3]
-            build_figure(plot)
+    t = len(plots)
+    for f in plots:
+        i = i + 1
+        print("Building plot {} {}/{}...".format(f, i, t))
+        plot = import_module("." + f, package="plots")
+        plot.__figname__ = f
+        build_figure(plot)
     print("Done")
 
 def build_figure(plotting_module):
     fig = plotting_module.plot()
-    fig.write_image(os.path.join(
+    fname = os.path.join(
         path, "figures", plotting_module.__figname__ + format
-    ), width=1920, height=1080)
+    )
+    if format == ".html":
+        fig.write_html(fname)
+    else:
+        fig.write_image(fname, width=1920, height=1080)
 
 if __name__ == "__main__":
     build()

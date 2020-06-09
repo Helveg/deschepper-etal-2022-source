@@ -66,11 +66,12 @@ def plot():
     to_i_pos = np.array([i.to_compartment.end + gaa_pos for i in intersections_aa])
     from_p_pos = np.array([i[0].from_compartment.end + frc_pos for i in intersections_pf])
     to_p_pos = np.array([i[0].to_compartment.end + i[1] for i in intersections_pf])
-    fig = plot_morphology(mgr, show=False, offset=frc_pos, set_range=False, color=from_type.plotting.color)
+    fig = plot_morphology(mgr, show=False, offset=frc_pos, set_range=False, color=from_type.plotting.color, segment_radius=3)
     fig.add_trace(go.Scatter3d(x=from_i_pos[:,0], y=from_i_pos[:,2], z=from_i_pos[:,1], mode="markers", marker=dict(size=5,color="red")))
     fig.add_trace(go.Scatter3d(x=to_i_pos[:,0], y=to_i_pos[:,2], z=to_i_pos[:,1], mode="markers", marker=dict(size=5,color="red")))
     fig.add_trace(go.Scatter3d(x=from_p_pos[:,0], y=from_p_pos[:,2], z=from_p_pos[:,1], mode="markers", marker=dict(size=5,color="green")))
     fig.add_trace(go.Scatter3d(x=to_p_pos[:,0], y=to_p_pos[:,2], z=to_p_pos[:,1], mode="markers", marker=dict(size=5,color="green")))
     plot_morphology(mgc, show=False, fig=fig, offset=gaa_pos, segment_radius=2.5, set_range=False, color=to_type.plotting.color)
     plot_morphology(mgc, show=False, fig=fig, offset=gpf_pos, segment_radius=2.5, set_range=False, color="#639EEC")
+    fig.layout.scene.yaxis.range = [-200, 200]
     return fig

@@ -17,7 +17,9 @@ test_path = os.path.join(
 
 def plot():
     scaffold = from_hdf5(test_path)
-    return granular_layer_scene(scaffold)
+    fig = granular_layer_scene(scaffold)
+    set_scene_range(fig.layout.scene, [[-100, 200], [0, 300], [-100, 200]])
+    return fig
 
 def granular_layer_scene(scaffold, golgis=1, granules=20):
     ms = MorphologyScene()

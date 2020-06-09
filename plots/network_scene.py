@@ -17,7 +17,9 @@ test_path = os.path.join(
 
 def plot():
     scaffold = from_hdf5(test_path)
-    return network_scene(scaffold)
+    fig = network_scene(scaffold)
+    set_scene_range(fig.layout.scene, [[-100, 250], [0, 350], [-100, 250]])
+    return fig
 
 def network_scene(scaffold):
     ms = MorphologyScene()
@@ -27,11 +29,14 @@ def network_scene(scaffold):
         if cell_type.name in skip:
             continue
         segment_radius = 1.0
+        count = 2
         if cell_type.name != "granule_cell":
             segment_radius = 2.5
+        else:
+            count = 10
         positions = np.random.permutation(
             scaffold.get_cells_by_type(cell_type.name)[:, 2:5]
-        )[:2]
+        )[:count]
         morpho = mr.get_morphology(cell_type.list_all_morphologies()[0])
         for cell_pos in positions:
             ms.add_morphology(
