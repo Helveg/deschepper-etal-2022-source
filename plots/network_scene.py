@@ -18,7 +18,15 @@ test_path = os.path.join(
 def plot():
     scaffold = from_hdf5(test_path)
     fig = network_scene(scaffold)
-    set_scene_range(fig.layout.scene, [[-100, 250], [0, 350], [-100, 250]])
+    set_scene_range(fig.layout.scene, [[-100, 250], [-100, 350], [-100, 250]])
+    fig.layout.scene.aspectmode="manual"
+    fig.layout.scene.aspectratio=dict(x=1, y=1, z=450/350)
+    fig.layout.scene.xaxis.tick0=0
+    fig.layout.scene.xaxis.dtick=150
+    fig.layout.scene.yaxis.tick0=0
+    fig.layout.scene.yaxis.dtick=150
+    fig.layout.scene.zaxis.tick0=0
+    fig.layout.scene.zaxis.dtick=150
     return fig
 
 def network_scene(scaffold):
