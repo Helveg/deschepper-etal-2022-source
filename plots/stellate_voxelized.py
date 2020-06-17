@@ -22,6 +22,6 @@ def plot():
     m_pre2 = scaffold.morphology_repository.get_morphology(from_type.list_all_morphologies()[0])
     m_pre2.voxelize(150)
     pos_pre = ps_pre.positions[int(pair.from_id) - ps_pre.identifiers[0]]
-    fig = plot_morphology(m_pre2, offset=pos_pre, show=False, segment_radius=2.5)
+    fig = plot_morphology(m_pre2, offset=pos_pre, show=False, segment_radius=2, color=from_type.plotting.color)
     plot_voxel_cloud(m_pre2.cloud, selected_voxels=[], fig=fig, offset=pos_pre, set_range=False, show=False)
     return fig

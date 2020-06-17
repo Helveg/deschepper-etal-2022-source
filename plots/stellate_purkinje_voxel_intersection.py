@@ -43,9 +43,9 @@ def plot():
     selected_voxels_pre = tuple(np.array(d[from_voxels]) for d in np.nonzero(m_pre.cloud.voxels))
     selected_voxels_post = tuple(np.array(d[to_voxels]) for d in np.nonzero(m_post.cloud.voxels))
 
-    fig2 = plot_morphology(m_pre, offset=pos_pre, show=False, color=from_type.plotting.color, segment_radius={2: 10, 3: 2.5})
+    fig2 = plot_morphology(m_pre, offset=pos_pre, show=False, color=from_type.plotting.color, segment_radius={2: 6, 3: 2.5})
     plot_voxel_cloud(m_pre.cloud, fig=fig2, selected_voxels=selected_voxels_pre, offset=pos_pre, show=False, set_range=False)
-    plot_morphology(m_post, fig=fig2, offset=pos_post, show=False, color=to_type.plotting.color, segment_radius={2: 5, 3: 2.5})
+    plot_morphology(m_post, fig=fig2, offset=pos_post, show=False, color=to_type.plotting.color, segment_radius={2: 2.5, 3: 2.5})
     plot_voxel_cloud(m_post.cloud, fig=fig2, offset=pos_post, selected_voxels=selected_voxels_post, show=False, set_range=False)
 
     return fig2

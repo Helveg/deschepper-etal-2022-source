@@ -18,6 +18,8 @@ test_path = os.path.join(
 network = os.path.join(os.path.dirname(__file__), "..", "networks", "neuron.hdf5")
 scaffold = from_hdf5(network)
 
+max_golgis = 2
+
 def plot():
     cs = scaffold.get_connectivity_set("glomerulus_to_golgi")
     conns = cs.get_dataset()
@@ -32,8 +34,8 @@ def plot():
     mgc = scaffold.morphology_repository.get_morphology("GolgiCell")
     glom = int(np.random.choice(glom_id, size=1)[0])
     golgis = conns[conns[:, 0] == glom, 1]
-    if len(golgis) > 4:
-        golgis = np.random.choice(golgis, size=4)
+    if len(golgis) > max_golgis:
+        golgis = np.random.choice(golgis, size=max_golgis)
 
 
     glom_pos = glom_poss[glom_id.tolist().index(glom)]
@@ -52,6 +54,6 @@ def plot():
         plot_morphology(mgc, show=False, fig=fig, offset=gp, set_range=False, color=to_type.plotting.color, segment_radius=3)
     fig.add_trace(get_soma_trace(50, glom_pos, color=from_type.plotting.color, opacity=0.2, steps=20))
     i_pos = np.array([i.to_pos for i in intersections])
-    fig.add_trace(go.Scatter3d(x=i_pos[:,0], y=i_pos[:,2], z=i_pos[:,1], mode="markers", marker=dict(size=5,color="red")))
+    fig.add_trace(go.Scatter3d(x=i_pos[:,0], y=i_pos[:,2], z=i_pos[:,1], mode="markers", marker=dict(symbol="diamond-open", size=8,color="violet")))
     set_scene_range(fig.layout.scene, [[-100, 300], [-100, 300], [-100, 300]])
     return fig

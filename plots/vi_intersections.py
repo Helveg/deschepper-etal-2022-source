@@ -55,6 +55,6 @@ def plot():
     intersections = [i for i in cs.intersections if i.from_id == pair.from_id and i.to_id == pair.to_id]
     i_pre = np.array([i.from_compartment.end + pos_pre for i in intersections])
     i_post = np.array([i.to_compartment.end + pos_post for i in intersections])
-    fig4.add_trace(go.Scatter3d(x=i_pre[:,0], y=i_pre[:,2], z=i_pre[:,1], mode="markers", marker=dict(size=5,color="red")))
-    fig4.add_trace(go.Scatter3d(x=i_post[:,0], y=i_post[:,2], z=i_post[:,1], mode="markers", marker=dict(size=5,color="red")))
+    fig4.add_trace(go.Scatter3d(x=i_pre[:,0], y=i_pre[:,2], z=i_pre[:,1], mode="markers", marker=dict(size=8,color="violet")))
+    fig4.add_trace(go.Scatter3d(x=i_post[:,0], y=i_post[:,2], z=i_post[:,1], mode="markers", marker=dict(symbol="diamond-open", size=8,color="violet")))
     return fig4
