@@ -3,6 +3,10 @@ from scaffold.core import from_hdf5
 import numpy as np, h5py
 from scipy import stats
 
+colorbar_grc = ['rgb(158,188,218)', 'rgb(140,150,198)', 'rgb(140,107,177)', 'rgb(136,65,157)', 'rgb(129,15,124)', 'rgb(77,0,75)']
+colorbar_pc = "thermal"
+
+
 network_path = os.path.join(
     os.path.dirname(__file__), "..", "networks", "results.hdf5"
 )
@@ -72,10 +76,10 @@ def plot():
     pos = pos[pos_roi]
     print("Plotting granule cloud", " " * 30, end="\r")
     granule_cloud = go.Scatter3d(x=pos[:,0],y=pos[:,2],z=pos[:,1],
-        name="GrC activity",
+        name="Active granule cells",
         mode="markers",
         marker=dict(
-            colorscale="Burg", cmin=0, cmax=1,
+            colorscale=colorbar_grc, cmin=0, cmax=1,
             opacity=0.05,
             color=norm,
             colorbar=dict(
@@ -120,14 +124,14 @@ def plot():
 
     print("Plotting purkinje activity", " " * 30, end="\r")
     pc_activity = go.Scatter3d(
-        name="Change in PC activity",
+        name="Purkinje cells",
         x=pc_pos[pc_indices, 0],
         y=pc_pos[pc_indices, 2],
         z=pc_pos[pc_indices, 1],
         text=[str(round(d, 2)) + "Hz" for d in pc_delta_freq.values()],
         mode="markers",
         marker=dict(
-            colorscale="Viridis",
+            colorscale=colorbar_pc,
             cmin=min(pc_delta_freq.values()),
             cmax=max(pc_delta_freq.values()),
             color=list(pc_delta_freq.values()),
