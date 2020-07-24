@@ -10,6 +10,7 @@ colorbar_pc = "thermal"
 network_path = os.path.join(
     os.path.dirname(__file__), "..", "networks", "results.hdf5"
 )
+
 def results_path(*args):
     return os.path.join(
         os.path.dirname(__file__), "..", "results", *args
