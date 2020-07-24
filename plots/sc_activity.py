@@ -30,7 +30,7 @@ avg = lambda x: sum(x) / len(x)
 
 
 def plot():
-    base_start, base_end = 400, 600
+    base_start, base_end = 600, 700
     stim_start, stim_end = 700, 800
     print("Loading network", " " * 30, end="\r")
     scaffold = from_hdf5(network_path)
@@ -95,17 +95,17 @@ def plot():
         )
     )
 
-    print("Loading purkinje", " " * 30, end="\r")
-    ps_pc = scaffold.get_placement_set("purkinje_cell")
+    print("Loading stellate", " " * 30, end="\r")
+    ps_pc = scaffold.get_placement_set("stellate_cell")
     pc_pos = ps_pc.positions
-    cut_off = list(ps_pc.identifiers[ps_pc.positions[:, 2] > 150])
+    cut_off = []#list(ps_pc.identifiers[ps_pc.positions[:, 2] > 150])
 
     g = results["recorders/soma_spikes/"]
     pc_isis = {int(id): [] for id in ps_pc.identifiers}
     pc_lo_isis = {int(id): [] for id in ps_pc.identifiers}
     dur = stim_end - stim_start
     pc_freq = {int(id): [] for id in ps_pc.identifiers}
-    print("Scanning purkinje spikes", " " * 30, end="\r")
+    print("Scanning stellate spikes", " " * 30, end="\r")
     for key in g:
         f = g[key]
         lospikes = crop(f[()], min=base_start, max=base_end, indices=True)
@@ -115,13 +115,14 @@ def plot():
         id = int(f[0, 1])
         pc_lo_isis[id].extend(get_isis(f[:, 0], lospikes))
         pc_isis[id].extend(get_isis(f[:, 0], spikes))
+
     pc_indices = [ps_pc.identifiers.tolist().index(id) for id in pc_isis.keys() if id not in cut_off]
     pc_isi_freq = {id: avg(inv(v)) for id, v in pc_isis.items() if id not in cut_off}
+    pc_lo_isi_freq = {id: avg(inv(v)) for id, v in pc_lo_isis.items() if id not in cut_off}
     pc_delta_freq = {id: avg(inv(v)) - avg(inv(pc_lo_isis[id])) for id, v in pc_isis.items() if id not in cut_off}
-
-    print("Plotting purkinje activity", " " * 30, end="\r")
+    print("Plotting stellate activity", " " * 30, end="\r")
     pc_activity = go.Scatter3d(
-        name="Purkinje cells",
+        name="Stellate cells",
         x=pc_pos[pc_indices, 0],
         y=pc_pos[pc_indices, 2],
         z=pc_pos[pc_indices, 1],
@@ -144,5 +145,5 @@ def plot():
     print(" " * 80, end="\r")
     fig = go.Figure([granule_cloud, pc_activity])
     axis_labels = dict(xaxis_title="X", yaxis_title="Z", zaxis_title="Y")
-    fig.update_layout(scene=axis_labels, title_text="Purkinje cell activity", title_x=0.5)
+    fig.update_layout(scene=axis_labels, title_text="Stellate cell activity", title_x=0.5)
     return fig
