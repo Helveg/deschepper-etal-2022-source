@@ -1,4 +1,4 @@
-from scaffold.core import from_hdf5
+from bsb.core import from_hdf5
 import plotly.graph_objs as go
 import os
 

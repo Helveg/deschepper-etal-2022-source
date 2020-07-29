@@ -1,14 +1,14 @@
 import os, plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from scaffold.core import from_hdf5
-from scaffold.plotting import (
+from bsb.core import from_hdf5
+from bsb.plotting import (
     plot_network,
     MorphologyScene,
     plot_morphology,
     set_scene_range,
     get_soma_trace,
 )
-from scaffold.output import MorphologyRepository
+from bsb.output import MorphologyRepository
 import numpy as np
 
 test_path = os.path.join(

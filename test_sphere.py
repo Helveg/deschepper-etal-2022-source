@@ -1,6 +1,6 @@
-from scaffold.core import from_hdf5
-from scaffold.config import JSONConfig
-from scaffold.output import HDF5Formatter
+from bsb.core import from_hdf5
+from bsb.config import JSONConfig
+from bsb.output import HDF5Formatter
 import h5py, numpy as np
 
 # Reconfigure and load

@@ -1,6 +1,6 @@
 import os, plotly.graph_objects as go
-from scaffold.core import from_hdf5
-from scaffold.plotting import hdf5_plot_spike_raster
+from bsb.core import from_hdf5
+from bsb.plotting import hdf5_plot_spike_raster
 import numpy as np, h5py
 from scipy import stats
 

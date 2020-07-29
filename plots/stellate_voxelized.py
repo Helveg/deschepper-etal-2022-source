@@ -1,5 +1,5 @@
-from scaffold.core import Scaffold, from_hdf5
-from scaffold.plotting import plot_morphology, plot_voxel_cloud
+from bsb.core import Scaffold, from_hdf5
+from bsb.plotting import plot_morphology, plot_voxel_cloud
 from plotly.subplots import make_subplots
 import plotly.graph_objs as go
 from . import make_3dsubplots

@@ -1,5 +1,5 @@
 import os, plotly.graph_objects as go
-from scaffold.core import from_hdf5
+from bsb.core import from_hdf5
 import numpy as np, h5py
 from scipy import stats
 
