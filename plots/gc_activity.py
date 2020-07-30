@@ -23,7 +23,7 @@ def crop(data, min, max, indices=False):
     return c[(c > min) & (c < max)]
 
 def get_isis(spikes, selected):
-    return [spikes[i + 1] - spikes[i] for i in selected]
+    return [spikes[i + 1] - spikes[i] for i in selected if i < len(spikes) - 1]
 
 inv = lambda x: [1000 / y for y in x]
 avg = lambda x: sum(x) / len(x)
@@ -95,8 +95,8 @@ def plot():
         )
     )
 
-    print("Loading stellate", " " * 30, end="\r")
-    ps_pc = scaffold.get_placement_set("stellate_cell")
+    print("Loading golgi", " " * 30, end="\r")
+    ps_pc = scaffold.get_placement_set("golgi_cell")
     pc_pos = ps_pc.positions
     cut_off = []#list(ps_pc.identifiers[ps_pc.positions[:, 2] > 150])
 
@@ -105,7 +105,7 @@ def plot():
     pc_lo_isis = {int(id): [] for id in ps_pc.identifiers}
     dur = stim_end - stim_start
     pc_freq = {int(id): [] for id in ps_pc.identifiers}
-    print("Scanning stellate spikes", " " * 30, end="\r")
+    print("Scanning golgi spikes", " " * 30, end="\r")
     for key in g:
         f = g[key]
         lospikes = crop(f[()], min=base_start, max=base_end, indices=True)
@@ -120,9 +120,9 @@ def plot():
     pc_isi_freq = {id: avg(inv(v)) for id, v in pc_isis.items() if id not in cut_off}
     pc_lo_isi_freq = {id: avg(inv(v)) for id, v in pc_lo_isis.items() if id not in cut_off}
     pc_delta_freq = {id: avg(inv(v)) - avg(inv(pc_lo_isis[id])) for id, v in pc_isis.items() if id not in cut_off}
-    print("Plotting stellate activity", " " * 30, end="\r")
+    print("Plotting golgi activity", " " * 30, end="\r")
     pc_activity = go.Scatter3d(
-        name="Stellate cells",
+        name="Golgi cells",
         x=pc_pos[pc_indices, 0],
         y=pc_pos[pc_indices, 2],
         z=pc_pos[pc_indices, 1],
@@ -146,5 +146,5 @@ def plot():
     print(" " * 80, end="\r")
     fig = go.Figure([granule_cloud, pc_activity])
     axis_labels = dict(xaxis_title="X", yaxis_title="Z", zaxis_title="Y")
-    fig.update_layout(scene=axis_labels, title_text="Stellate cell activity", title_x=0.5)
+    fig.update_layout(scene=axis_labels, title_text="Golgi cell activity", title_x=0.5)
     return fig

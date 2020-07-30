@@ -34,7 +34,7 @@ def plot():
     stim_start, stim_end = 700, 800
     print("Loading network", " " * 30, end="\r")
     scaffold = from_hdf5(network_path)
-    results = h5py.File(results_path("first_run_300_200.hdf5"), "r")
+    results = h5py.File(results_path("combined_results_300_200.hdf5"), "r")
     ps = scaffold.get_placement_set("granule_cell")
     ids = ps.identifiers
     spikes_per_dict = {id: [] for id in ids}
@@ -125,7 +125,7 @@ def plot():
         x=pc_pos[pc_indices, 0],
         y=pc_pos[pc_indices, 2],
         z=pc_pos[pc_indices, 1],
-        text=[str(round(d, 2)) + "Hz" for d in pc_delta_freq.values()],
+        text=["ID: " + str(int(i)) + "\ndf: " + str(round(d, 2)) + "Hz" for i, d in pc_delta_freq.items()],
         mode="markers",
         marker=dict(
             colorscale=colorbar_pc,
