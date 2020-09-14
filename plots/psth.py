@@ -14,7 +14,7 @@ def results_path(*args):
 
 
 def plot():
-    with h5py.File(results_path("150Hz/stacked_results_150.hdf5"), "r") as f:
-        fig = hdf5_plot_psth(f["stacked_psth"], show=False, cutoff=400, duration=10)
+    with h5py.File(results_path("results_poc_16000919304394250806305914.hdf5"), "r") as f:
+        fig = hdf5_plot_psth(f["recorders/soma_spikes"], show=False, cutoff=0, duration=5)
         # fig = hdf5_plot_spike_raster(f["/recorders/soma_spikes"], show=False)
     return fig
