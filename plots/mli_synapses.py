@@ -53,10 +53,13 @@ def plot():
     }
     bc_info = ("basket_cell", mb, selection.basket_cells, pf_bc_conn, bc_colors, bc_radius)
     sc_info = ("stellate_cell", ms, selection.stellate_cells, pf_sc_conn, sc_colors, sc_radius)
+    figs = {}
     for key, m, select, set, colors, radius in (bc_info, sc_info):
+        ps = network.get_placement_set(key)
         name = key.split("_")[0]
         for label, id in select.items():
-            fig = plot_morphology(m, show=False, color=colors, soma_radius=radius)
+            offset = ps.positions[ps.identifiers == id][0]
+            fig = plot_morphology(m, show=False, color=colors, soma_radius=radius, offset=offset)
             fig.update_layout(title_text=f"{label} {name} cell")
             positions = [[] for _ in range(5)]
             for intersection in set.intersections:
@@ -68,9 +71,9 @@ def plot():
                 if not len(pos):
                     pos = np.empty((0,3))
                 t = go.Scatter3d(
-                    x=pos[:,0],
-                    y=pos[:,2],
-                    z=pos[:,1],
+                    x=pos[:,0] + offset[0],
+                    y=pos[:,2] + offset[2],
+                    z=pos[:,1] + offset[1],
                     mode="markers",
                     opacity=marker_opacity[count],
                     marker=dict(
@@ -82,8 +85,8 @@ def plot():
                 fig.add_trace(t)
             cfg = selection.btn_config.copy()
             cfg["filename"] = label[0] + "_" + key + "_synapses"
-            fig.show(cfg)
-    return None
+            figs[f"{key[:2]}_{label[0]}"] = fig
+    return figs
 
 if __name__ == "__main__":
     plot()

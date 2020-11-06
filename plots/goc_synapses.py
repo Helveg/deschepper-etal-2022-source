@@ -4,6 +4,8 @@ from plotly import graph_objs as go
 import selection, numpy as np
 from colour import Color
 
+camera = dict(up=dict(x=0,y=0,z=1),center=dict(x=0,y=0,z=0),eye=dict(x=1.5569731921541285,y=1.4381184168348293,z=0.4417577368579583))
+
 def plot():
     network = from_hdf5("networks/300x_200z.hdf5")
     mr = network.morphology_repository
@@ -43,9 +45,11 @@ def plot():
         "axon": goc_scale[3]
     }
 
+    figs = {}
     for goc_label, goc_id in selection.golgi_cells.items():
-        fig = plot_morphology(m, show=False, color=goc_colors, soma_radius=goc_radius)
-        fig.update_layout(title_text=f"{goc_label} Golgi cell")
+        goc_pos = ps.positions[ps.identifiers == goc_id][0]
+        fig = plot_morphology(m, show=False, color=goc_colors, soma_radius=goc_radius, offset=goc_pos)
+        fig.update_layout(title_text=f"{goc_label} Golgi cell", scene_camera=camera)
         for set in (aa_goc_conn, pf_goc_conn):
             tag_label = labels[set.tag]
             positions = [[] for _ in range(5)]
@@ -58,9 +62,9 @@ def plot():
                 if not len(pos):
                     pos = np.empty((0,3))
                 t = go.Scatter3d(
-                    x=pos[:,0],
-                    y=pos[:,2],
-                    z=pos[:,1],
+                    x=pos[:,0] + goc_pos[0],
+                    y=pos[:,2] + goc_pos[2],
+                    z=pos[:,1] + goc_pos[1],
                     mode="markers",
                     opacity=marker_opacity[count],
                     marker=dict(
@@ -72,9 +76,10 @@ def plot():
                 )
                 fig.add_trace(t)
         cfg = selection.btn_config.copy()
-        cfg["filename"] = goc_label[0] + "_" + key + "_synapses"
-        fig.show(cfg)
-    return None
+        cfg["filename"] = goc_label[0] + "_golgi_cell_synapses"
+        figs[goc_label[0]] = fig
+    return figs
 
 if __name__ == "__main__":
-    plot()
+    for p in plot():
+        p.show()

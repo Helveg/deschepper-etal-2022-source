@@ -43,9 +43,10 @@ def plot():
         "aa_targets": pc_scale[2],
         "axon": pc_scale[3]
     }
-
+    figs = {}
     for pc_label, pc_id in selection.purkinje_cells.items():
-        fig = plot_morphology(m, show=False, color=pc_colors, soma_radius=pc_radius)
+        pc_pos = ps.positions[ps.identifiers==pc_id][0]
+        fig = plot_morphology(m, show=False, color=pc_colors, soma_radius=pc_radius, offset=pc_pos)
         fig.update_layout(title_text=f"{pc_label} purkinje cell")
         for set in (aa_pc_conn, pf_pc_conn):
             tag_label = labels[set.tag]
@@ -59,9 +60,9 @@ def plot():
                 if not len(pos):
                     pos = np.empty((0,3))
                 t = go.Scatter3d(
-                    x=pos[:,0],
-                    y=pos[:,2],
-                    z=pos[:,1],
+                    x=pos[:,0] + pc_pos[0],
+                    y=pos[:,2] + pc_pos[2],
+                    z=pos[:,1] + pc_pos[1],
                     mode="markers",
                     opacity=marker_opacity[count],
                     marker=dict(
@@ -73,9 +74,9 @@ def plot():
                 )
                 fig.add_trace(t)
         cfg = selection.btn_config.copy()
-        cfg["filename"] = pc_label[0] + "_" + key + "_synapses"
-        fig.show(cfg)
-    return None
+        cfg["filename"] = pc_label[0] + "_purkinje_cell_synapses"
+        figs[pc_label[0]] = fig
+    return figs
 
 if __name__ == "__main__":
     plot()

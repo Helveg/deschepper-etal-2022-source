@@ -4,6 +4,9 @@ from plotly import graph_objs as go
 import selection, numpy as np, h5py
 from colour import Color
 
+def figmod(fig):
+    pass
+
 def plot():
     network = from_hdf5("networks/300x_200z.hdf5")
     with h5py.File("results/results_stim_on_MFs_Poiss.hdf5", "r") as f:

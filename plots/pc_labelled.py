@@ -5,6 +5,8 @@ import numpy as np
 import bsb.plotting as plotting
 import selection
 
+camera = dict(up=dict(x=0,y=0,z=1),center=dict(x=0,y=0,z=0),eye=dict(x=0.0005827336957326205,y=0.06985506890139645,z=2.163936212038197))
+
 def plot():
     network = from_hdf5("networks/300x_200z.hdf5")
     traces = []
@@ -30,7 +32,7 @@ def plot():
 
     fig = go.Figure(traces)
     plotting.network_figure(fig=fig, show=False, cubic=False)
-    fig.update_layout(scene=dict(xaxis_range=[0, 300], yaxis_range=[0, 200], zaxis_range=[0,150]))
+    fig.update_layout(scene=dict(camera=camera, xaxis_range=[0, 300], yaxis_range=[0, 200], zaxis_range=[0,150]))
     return fig
 
 if __name__ == "__main__":

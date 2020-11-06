@@ -28,19 +28,19 @@ def show_figure(plotting_module):
         warnings.warn(f"No figure returned from {plotting_module.__name__}.")
         return
     if isinstance(plt, list):
-        for p in plt:
-            _show_figure(plotting_module, p)
+        for i, p in enumerate(plt):
+            _show_figure(plotting_module, p, o)
     elif isinstance(plt, dict):
-        for p in plt.values():
-            _show_figure(plotting_module, p)
+        for k, p in plt.items():
+            _show_figure(plotting_module, p, k)
     else:
         _show_figure(plotting_module, plt)
 
-def _show_figure(plotting_module, plt):
+def _show_figure(plotting_module, plt, suffix=None):
     plt.show(config={
         'toImageButtonOptions': {
             'format': 'svg',
-            'filename': plotting_module.__name__,
+            'filename': plotting_module.__name__ + (f"_{suffix}" if suffix is not None else ""),
             'height': 1920,
             'width': 1080,
             'scale': 1

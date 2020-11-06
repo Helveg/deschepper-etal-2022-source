@@ -5,6 +5,8 @@ import numpy as np
 import bsb.plotting as plotting
 import selection
 
+camera = dict(up=dict(x=0,y=0,z=1),center=dict(x=0,y=0,z=0),eye=dict(x=0.1889550858586422,y=1.8486740326218545,z=1.1109456767267265))
+
 def plot():
     network = from_hdf5("networks/300x_200z.hdf5")
     traces = []
@@ -20,7 +22,7 @@ def plot():
             x=mli_pos[:, 0],
             y=mli_pos[:,2],
             z=mli_pos[:,1],
-            text=list(labels.keys()),
+            text=list(map(lambda x: x + " " + key.replace("_", " "), labels.keys())),
             mode="markers+text",
             marker=dict(
                 color=mli_color,
@@ -31,7 +33,7 @@ def plot():
 
     fig = go.Figure(traces)
     plotting.network_figure(fig=fig, show=False, cubic=False)
-    fig.update_layout(scene=dict(xaxis_range=[0, 300], yaxis_range=[0, 200], zaxis_range=[0, 300]))
+    fig.update_layout(title_text="Molecular layer interneurons", scene=dict(camera=camera, xaxis_range=[0, 300], yaxis_range=[0, 200], zaxis_range=[0, 300]))
     return fig
 
 if __name__ == "__main__":
