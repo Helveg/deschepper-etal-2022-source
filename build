@@ -3,6 +3,7 @@ import os, sys, warnings
 from types import ModuleType
 from importlib import import_module
 
+sys.path.append(os.path.abspath("plots"))
 path = os.path.abspath(os.path.dirname(__file__))
 formats = ['html', 'eps', 'jpeg', 'jpg', 'pdf', 'png', 'svg', 'webp']
 if len(sys.argv) > 1 and sys.argv[1] in formats:
@@ -32,14 +33,17 @@ def build_figure(plotting_module):
         warnings.warn(f"No figure returned from {plotting_module.__name__}.")
         return
     if isinstance(fig, list):
-        for f in fig:
-            _build_figure(plotting_module, f)
+        for i, f in enumerate(fig):
+            _build_figure(plotting_module, f, i)
+    elif isinstance(fig, dict):
+        for suffix, f in fig.items():
+            _build_figure(plotting_module, f, suffix)
     else:
         _build_figure(plotting_module, fig)
 
-def _build_figure(plotting_module, fig):
+def _build_figure(plotting_module, fig, suffix=None):
     fname = os.path.join(
-        path, "figures", plotting_module.__figname__ + format
+        path, "figures", plotting_module.__figname__ + (f"_{suffix}" if suffix is not None else "") + format
     )
     if format == ".html":
         fig.write_html(fname)

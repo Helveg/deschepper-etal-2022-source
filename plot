@@ -30,6 +30,9 @@ def show_figure(plotting_module):
     if isinstance(plt, list):
         for p in plt:
             _show_figure(plotting_module, p)
+    elif isinstance(plt, dict):
+        for p in plt.values():
+            _show_figure(plotting_module, p)
     else:
         _show_figure(plotting_module, plt)
 
