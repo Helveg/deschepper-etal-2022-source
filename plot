@@ -31,7 +31,7 @@ def show_figure(plotting_module):
                 'filename': plotting_module.__name__,
                 'height': 1920,
                 'width': 1080,
-                'scale': 1 # Multiply title/legend/axis/canvas sizes by this factor
+                'scale': 1
             }
         })
     else:
