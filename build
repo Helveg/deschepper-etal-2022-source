@@ -28,6 +28,9 @@ def build():
 
 def build_figure(plotting_module):
     fig = plotting_module.plot()
+    if not fig:
+        warnings.warn(f"No figure returned from {plotting_module.__name__}.")
+        return
     fname = os.path.join(
         path, "figures", plotting_module.__figname__ + format
     )

@@ -10,6 +10,7 @@ def mod_names():
         if f.endswith(".py") and f != "__init__.py"
     ]
 
+sys.path.append(os.path.abspath("plots"))
 path = os.path.abspath(os.path.dirname(__file__))
 plots = mod_names() if len(sys.argv) == 1 else sys.argv[1:]
 
@@ -19,10 +20,14 @@ def plot():
         print("Plotting", plot, "... ({}/{})".format(i + 1, t))
         plotting_module = import_module("." + plot, package="plots")
         show_figure(plotting_module)
-    print("Done")
+    print("Done", " " * 30)
 
 def show_figure(plotting_module):
-    plotting_module.plot().show()
+    plt = plotting_module.plot()
+    if plt:
+        plt.show()
+    else:
+        warnings.warn(f"No figure returned from {plotting_module.__name__}.")
 
 if __name__ == "__main__":
     plot()
