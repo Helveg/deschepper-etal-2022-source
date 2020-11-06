@@ -31,6 +31,13 @@ def build_figure(plotting_module):
     if not fig:
         warnings.warn(f"No figure returned from {plotting_module.__name__}.")
         return
+    if isinstance(fig, list):
+        for f in fig:
+            _build_figure(plotting_module, f)
+    else:
+        _build_figure(plotting_module, fig)
+
+def _build_figure(plotting_module, fig):
     fname = os.path.join(
         path, "figures", plotting_module.__figname__ + format
     )

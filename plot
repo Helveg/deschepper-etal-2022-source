@@ -24,18 +24,25 @@ def plot():
 
 def show_figure(plotting_module):
     plt = plotting_module.plot()
-    if plt:
-        plt.show({
-            'toImageButtonOptions': {
-                'format': 'svg',
-                'filename': plotting_module.__name__,
-                'height': 1920,
-                'width': 1080,
-                'scale': 1
-            }
-        })
-    else:
+    if not plt:
         warnings.warn(f"No figure returned from {plotting_module.__name__}.")
+        return
+    if isinstance(plt, list):
+        for p in plt:
+            _show_figure(plotting_module, p)
+    else:
+        _show_figure(plotting_module, plt)
+
+def _show_figure(plotting_module, plt):
+    plt.show(config={
+        'toImageButtonOptions': {
+            'format': 'svg',
+            'filename': plotting_module.__name__,
+            'height': 1920,
+            'width': 1080,
+            'scale': 1
+        }
+    })
 
 if __name__ == "__main__":
     plot()
