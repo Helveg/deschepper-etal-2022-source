@@ -7,15 +7,15 @@ from colour import Color
 def plot():
     network = from_hdf5("networks/300x_200z.hdf5")
     mr = network.morphology_repository
-    m = mr.get_morphology("PurkinjeCell")
-    ps = network.get_placement_set("purkinje_cell")
+    mb = mr.get_morphology("BasketCell")
+    ms = mr.get_morphology("StellateCell")
     ps_grc = network.get_placement_set("granule_cell")
 
     stim_mf = selection.stimulated_mf_poiss
     cs_mf_glom = network.get_connectivity_set("mossy_to_glomerulus")
     cs_glom_grc = network.get_connectivity_set("glomerulus_to_granule")
-    aa_pc_conn = network.get_connectivity_set("ascending_axon_to_purkinje")
-    pf_pc_conn = network.get_connectivity_set("parallel_fiber_to_purkinje")
+    pf_sc_conn = network.get_connectivity_set("parallel_fiber_to_stellate")
+    pf_bc_conn = network.get_connectivity_set("parallel_fiber_to_basket")
     # Mask the glomeruli not connected to active MF
     stim_glom_mask = np.isin(cs_mf_glom.get_dataset()[:, 0], stim_mf)
     stim_glom = cs_mf_glom.get_dataset()[stim_glom_mask]
@@ -29,29 +29,38 @@ def plot():
 
     marker_sizes = {0: 1.0, 1: 2.0, 2: 2.0, 3: 3.0, 4: 4.0}
     marker_opacity = {0: 0.3, 1: 0.5, 2: 1.0, 3: 1.0, 4: 1.0}
-    markers = {"ascending_axon_to_purkinje": "circle", "parallel_fiber_to_purkinje": "diamond"}
-    labels = {"ascending_axon_to_purkinje": "AA", "parallel_fiber_to_purkinje": "PF"}
 
     grc_color = network.configuration.cell_types["granule_cell"].plotting.color
-    pc_color = network.configuration.cell_types["purkinje_cell"].plotting.color
-    pc_radius = network.configuration.cell_types["purkinje_cell"].placement.soma_radius
-    pc_scale = list(map(str, Color(pc_color).range_to("white", 10)))
-    pc_colors = {
-        "soma": pc_scale[0],
-        "basal_dendrites": pc_scale[0],
-        "pf_targets": pc_scale[1],
-        "aa_targets": pc_scale[2],
-        "axon": pc_scale[3]
+    bc_color = network.configuration.cell_types["basket_cell"].plotting.color
+    sc_color = network.configuration.cell_types["stellate_cell"].plotting.color
+    bc_radius = network.configuration.cell_types["basket_cell"].placement.soma_radius
+    sc_radius = network.configuration.cell_types["stellate_cell"].placement.soma_radius
+    bc_scale = list(map(str, Color(bc_color).range_to("black", 10)))
+    sc_scale = list(map(str, Color(sc_color).range_to("black", 10)))
+    bc_colors = {
+        "soma": bc_scale[0],
+        "dendrites": bc_scale[0],
+        "basal_dendrites": bc_scale[0],
+        "apical_dendrites": bc_scale[1],
+        "axon": bc_scale[3]
     }
-
-    for pc_label, pc_id in selection.purkinje_cells.items():
-        fig = plot_morphology(m, show=False, color=pc_colors, soma_radius=pc_radius)
-        fig.update_layout(title_text=f"{pc_label} purkinje cell")
-        for set in (aa_pc_conn, pf_pc_conn):
-            tag_label = labels[set.tag]
+    sc_colors = {
+        "soma": sc_scale[0],
+        "dendrites": bc_scale[0],
+        "basal_dendrites": sc_scale[0],
+        "apical_dendrites": sc_scale[1],
+        "axon": sc_scale[3]
+    }
+    bc_info = ("basket_cell", mb, selection.basket_cells, pf_bc_conn, bc_colors, bc_radius)
+    sc_info = ("stellate_cell", ms, selection.stellate_cells, pf_sc_conn, sc_colors, sc_radius)
+    for key, m, select, set, colors, radius in (bc_info, sc_info):
+        name = key.split("_")[0]
+        for label, id in select.items():
+            fig = plot_morphology(m, show=False, color=colors, soma_radius=radius)
+            fig.update_layout(title_text=f"{label} {name} cell")
             positions = [[] for _ in range(5)]
             for intersection in set.intersections:
-                if intersection.to_id == pc_id:
+                if intersection.to_id == id:
                     count = grc_count_map[intersection.from_id]
                     positions[count].append(intersection.to_compartment.midpoint)
             for count in range(5):
@@ -66,15 +75,14 @@ def plot():
                     opacity=marker_opacity[count],
                     marker=dict(
                         size=marker_sizes[count],
-                        symbol=markers[set.tag],
                         color=grc_color,
                     ),
-                    name=f"Granule cell {tag_label} synapses with {count} active dendrites"
+                    name=f"Granule cell PF synapses with {count} active dendrites"
                 )
                 fig.add_trace(t)
-        cfg = selection.btn_config.copy()
-        cfg["filename"] = pc_label[0] + "_" + key + "_synapses"
-        fig.show(cfg)
+            cfg = selection.btn_config.copy()
+            cfg["filename"] = label[0] + "_" + key + "_synapses"
+            fig.show(cfg)
     return None
 
 if __name__ == "__main__":

@@ -45,7 +45,7 @@ def plot():
 
     for goc_label, goc_id in selection.golgi_cells.items():
         fig = plot_morphology(m, show=False, color=goc_colors, soma_radius=goc_radius)
-        fig.update_layout(title_text=f"{goc_label} golgi cell")
+        fig.update_layout(title_text=f"{goc_label} Golgi cell")
         for set in (aa_goc_conn, pf_goc_conn):
             tag_label = labels[set.tag]
             positions = [[] for _ in range(5)]
@@ -71,8 +71,10 @@ def plot():
                     name=f"Granule cell {tag_label} synapses with {count} active dendrites"
                 )
                 fig.add_trace(t)
-        fig.show()
-    return go.Figure(layout=dict(title_text="This plot produces 3 plots as a script, do not use like this"))
+        cfg = selection.btn_config.copy()
+        cfg["filename"] = goc_label[0] + "_" + key + "_synapses"
+        fig.show(cfg)
+    return None
 
 if __name__ == "__main__":
     plot()

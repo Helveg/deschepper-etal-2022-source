@@ -24,9 +24,9 @@ def granule_cloud(network_file, results_file, base_start=400, base_end=600, stim
 
     print("Loading network", " " * 30, end="\r")
     scaffold = from_hdf5(network_file)
+    print(" " * 30, end="\r")
     with h5py.File(results_file, "r") as results:
         ps = scaffold.get_placement_set("granule_cell")
-        print("GRC IDS", ps.identifiers[0], ps.identifiers[-1])
         ids = ps.identifiers
         spikes_per_dict = {id: [] for id in ids}
         print("Scanning granule spikes", " " * 30, end="\r")
