@@ -25,7 +25,15 @@ def plot():
 def show_figure(plotting_module):
     plt = plotting_module.plot()
     if plt:
-        plt.show()
+        plt.show({
+            'toImageButtonOptions': {
+                'format': 'svg',
+                'filename': plotting_module.__name__,
+                'height': 1920,
+                'width': 1080,
+                'scale': 1 # Multiply title/legend/axis/canvas sizes by this factor
+            }
+        })
     else:
         warnings.warn(f"No figure returned from {plotting_module.__name__}.")
 
