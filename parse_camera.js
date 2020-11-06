@@ -1,0 +1,1 @@
+`dict(${["up", "center", "eye"].map(key => [key, Object.entries(document.getElementsByClassName("plotly-graph-div")[0]._fullLayout.scene._scene.getCamera()[key]).map(item => `${item[0]}=${item[1]}`).join(",")]).map(i=>`${i[0]}=dict(${i[1]})`).join(",")})`
