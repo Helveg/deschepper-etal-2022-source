@@ -12,7 +12,7 @@ def bounds(data, min=(-float("inf")), max=(+float("inf")), indices=False):
 
 # scaffold = from_hdf5("C:/Users/robin/Dropbox/Scaffold_NEURON_paper/neuronFINAL_V5.hdf5")
 scaffold = from_hdf5("networks/results.hdf5")
-file = "combined_results_150.hdf5"
+file = "combined_results.hdf5"
 results = h5py.File(file, "r")
 ps = scaffold.get_placement_set("granule_cell")
 ids = ps.identifiers
@@ -65,7 +65,6 @@ def get_isis(spikes, selected):
 high_activity_ids_red = ids[pos_roi][norm > 0.5]
 high_activity_ids_green = ids[norm_spikes > 0.5]
 high_activity_ids = high_activity_ids_red if "green" not in sys.argv else high_activity_ids_green
-print("HIGH:", len(high_activity_ids))
 
 def complete_sets(ids, *sets, column=1, ignore=[]):
     carry = {id: 0 for id in ids}

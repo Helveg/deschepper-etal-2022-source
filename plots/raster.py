@@ -15,5 +15,5 @@ def results_path(*args):
 
 def plot():
     with h5py.File(results_path("burst_pause/results_poc_1598351489385.hdf5"), "r") as f:
-        fig = hdf5_plot_psth(f["recorders/soma_spikes"], show=False, cutoff=400, duration=5)
+        fig = hdf5_plot_spike_raster(f["/recorders/soma_spikes"], show=False)
     return fig

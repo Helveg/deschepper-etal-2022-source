@@ -40,6 +40,9 @@ def plot():
             **extras,
         ))
 
+    for mf, gloms in [(k, v) for k, v in data.items() if k not in selected_mf]:
+        fig.add_trace(go.Scatter3d(x=[pos_map[id][0] for id in gloms], y=[pos_map[id][2] for id in gloms], z=[pos_map[id][1] for id in gloms], name="MF " + str(mf), mode="markers", marker=dict(color="gray", opacity=0.2)))
+
     fig.layout.scene.xaxis.range = [0, 300]
     fig.layout.scene.yaxis.range = [0, 200]
     fig.layout.scene.zaxis.range = [0, 150]
