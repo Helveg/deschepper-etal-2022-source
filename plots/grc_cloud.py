@@ -1,11 +1,12 @@
-def granule_cloud(network_file, results_file, base_start=400, base_end=600, stim_start=700, stim_end=800):
-    import os, plotly.graph_objects as go
-    from bsb.core import from_hdf5
-    import numpy as np, h5py
-    from scipy import stats
+import os, plotly.graph_objects as go
+from bsb.core import from_hdf5
+import numpy as np, h5py
+from scipy import stats
 
-    colorbar_grc = ['rgb(158,188,218)', 'rgb(140,150,198)', 'rgb(140,107,177)', 'rgb(136,65,157)', 'rgb(129,15,124)', 'rgb(77,0,75)']
-    colorbar_pc = "thermal"
+colorbar_grc = ['rgb(158,188,218)', 'rgb(140,150,198)', 'rgb(140,107,177)', 'rgb(136,65,157)', 'rgb(129,15,124)', 'rgb(77,0,75)']
+colorbar_pc = "thermal"
+
+def granule_kde(network_file, results_file, base_start=400, base_end=600, stim_start=700, stim_end=800):
 
     def crop(data, min, max, indices=False):
         c = data[:, 1]
@@ -64,25 +65,49 @@ def granule_cloud(network_file, results_file, base_start=400, base_end=600, stim
         density = kde(values)
         grc_densities = density[kde_roi]
         norm = grc_densities / np.max(grc_densities)
-        _fullpos = pos
-        pos = pos[pos_roi]
-        print("Plotting granule cloud", " " * 30, end="\r")
-        return go.Scatter3d(x=pos[:,0],y=pos[:,2],z=pos[:,1],
-            name="Active granule cells",
-            text=["ID: " + str(int(id)) for id in ids[pos_roi]],
-            mode="markers",
-            marker=dict(
-                colorscale=colorbar_grc, cmin=0, cmax=1,
-                opacity=0.05,
-                color=norm,
-                colorbar=dict(
-                    len=0.8,
-                    xanchor="right",
-                    x=0.1,
-                    title=dict(
-                        text="Activity density",
-                        side="bottom"
-                    )
+        return ids[pos_roi], pos[pos_roi], norm
+
+def granule_cloud(network_file, results_file, base_start=400, base_end=600, stim_start=700, stim_end=800):
+    ids, pos, norm = granule_kde(network_file, results_file, base_start, base_end, stim_start, stim_end)
+    print("Plotting granule cloud", " " * 30, end="\r")
+    return go.Scatter3d(x=pos[:,0],y=pos[:,2],z=pos[:,1],
+        name="Active granule cells",
+        text=["ID: " + str(int(id)) for id in ids],
+        mode="markers",
+        marker=dict(
+            colorscale=colorbar_grc, cmin=0, cmax=1,
+            opacity=0.05,
+            color=norm,
+            colorbar=dict(
+                len=0.8,
+                xanchor="right",
+                x=0.1,
+                title=dict(
+                    text="Activity density",
+                    side="bottom"
                 )
             )
         )
+    )
+
+def granule_disc(network_file, results_file, base_start=400, base_end=600, stim_start=700, stim_end=800, bar_l=0.8):
+    ids, pos, norm = granule_kde(network_file, results_file, base_start, base_end, stim_start, stim_end)
+    print("Plotting granule disc", " " * 30, end="\r")
+    return go.Scatter(x=pos[:,0],y=pos[:,2],
+        name="Active granule cells",
+        text=["ID: " + str(int(id)) for id in ids],
+        mode="markers",
+        marker=dict(
+            colorscale=colorbar_grc, cmin=0, cmax=1,
+            opacity=0.3,
+            color=norm,
+            colorbar=dict(
+                len=bar_l,
+                xanchor="left",
+                title=dict(
+                    text="Activity density",
+                    side="bottom"
+                )
+            )
+        )
+    )
