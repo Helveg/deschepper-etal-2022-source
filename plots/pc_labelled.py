@@ -1,5 +1,5 @@
 from bsb.core import from_hdf5
-from grc_cloud import granule_cloud
+from grc_cloud import granule_disc
 from plotly import graph_objs as go
 import numpy as np
 import bsb.plotting as plotting
@@ -10,30 +10,64 @@ camera = dict(up=dict(x=0,y=0,z=1),center=dict(x=0,y=0,z=0),eye=dict(x=0.0005827
 def plot():
     network = from_hdf5("networks/300x_200z.hdf5")
     traces = []
-    traces.append(granule_cloud("networks/300x_200z.hdf5", "results/results_stim_on_MFs_Poiss.hdf5"))
+    traces.append(granule_disc("networks/300x_200z.hdf5", "results/results_stim_on_MFs_Poiss.hdf5"))
 
+    pm = network.morphology_repository.get_morphology("PurkinjeCell")
     pc_labels = selection.purkinje_cells
     purkinje_set = network.get_placement_set("purkinje_cell")
     purkinje_mask = np.isin(purkinje_set.identifiers, np.array(list(pc_labels.values())))
     purkinje_pos = purkinje_set.positions[purkinje_mask]
     purkinje_color = network.configuration.cell_types["purkinje_cell"].plotting.color
 
-    traces.append(go.Scatter3d(
+    traces.append(go.Scatter(
         x=purkinje_pos[:, 0],
         y=purkinje_pos[:,2],
-        z=purkinje_pos[:,1],
         text=list(pc_labels.keys()),
+        textposition="bottom center",
+        legendgroup="purkinje_ext",
         mode="markers+text",
         marker=dict(
-            color=purkinje_color
+            color=purkinje_color,
+            size=15,
         ),
         name="Purkinje cells"
     ))
 
-    fig = go.Figure(traces)
-    plotting.network_figure(fig=fig, show=False, cubic=False)
-    fig.update_layout(scene=dict(camera=camera, xaxis_range=[0, 300], yaxis_range=[0, 200], zaxis_range=[0,150]))
+    show_first_legend = True
+    for pos in purkinje_pos:
+        ext_min, ext_max = protrusion(pm, pos[1])
+        traces.append(go.Scatter(
+            x=[pos[0] + ext_min, pos[0] + ext_max],
+            y=[pos[2], pos[2]],
+            mode="lines",
+            line=dict(
+                width=4,
+                color=purkinje_color,
+            ),
+            name="Golgi extension into molecular layer",
+            legendgroup="purkinje_ext",
+            showlegend=show_first_legend
+        ))
+        show_first_legend = False
+
+    fig = go.Figure(traces, layout=dict(
+        title_text="Purkinje cells",
+        legend_itemsizing="constant",
+        yaxis=dict(scaleanchor="x", scaleratio=1),
+        xaxis_range=[0, 300],
+        yaxis_range=[0, 200],
+        xaxis_title="X",
+        yaxis_title="Z",
+    ))
     return fig
+
+
+def protrusion(morphology, offset, layer_init=150):
+    pos = morphology.flatten()
+    x = pos[0][pos[1] + offset > layer_init]
+    if len(x) == 0:
+        return 0, 0
+    return np.min(x), np.max(x)
 
 if __name__ == "__main__":
     plot().show()
