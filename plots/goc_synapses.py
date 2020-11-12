@@ -18,6 +18,7 @@ def plot():
     cs_glom_grc = network.get_connectivity_set("glomerulus_to_granule")
     aa_goc_conn = network.get_connectivity_set("ascending_axon_to_golgi")
     pf_goc_conn = network.get_connectivity_set("parallel_fiber_to_golgi")
+    gaba = network.get_connectivity_set("golgi_to_golgi")
     # Mask the glomeruli not connected to active MF
     stim_glom_mask = np.isin(cs_mf_glom.get_dataset()[:, 0], stim_mf)
     stim_glom = cs_mf_glom.get_dataset()[stim_glom_mask]
@@ -75,6 +76,23 @@ def plot():
                     name=f"Granule cell {tag_label} synapses with {count} active dendrites"
                 )
                 fig.add_trace(t)
+        gabas = np.array([i.to_compartment.midpoint for i in gaba.intersections if i.to_id == goc_id])
+        fig.add_trace(go.Scatter3d(
+            x=gabas[:,0] + goc_pos[0],
+            y=gabas[:,2] + goc_pos[2],
+            z=gabas[:,1] + goc_pos[1],
+            name="Golgi-Golgi GABA synapses",
+            mode="markers",
+            marker=dict(
+                size=3.0,
+                color=goc_colors["soma"],
+                symbol="diamond",
+                line=dict(
+                    width=1,
+                    color="black",
+                )
+            )
+        ))
         cfg = selection.btn_config.copy()
         cfg["filename"] = goc_label[0] + "_golgi_cell_synapses"
         figs[goc_label[0]] = fig

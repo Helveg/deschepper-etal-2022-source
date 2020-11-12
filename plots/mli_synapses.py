@@ -16,6 +16,8 @@ def plot():
     cs_glom_grc = network.get_connectivity_set("glomerulus_to_granule")
     pf_sc_conn = network.get_connectivity_set("parallel_fiber_to_stellate")
     pf_bc_conn = network.get_connectivity_set("parallel_fiber_to_basket")
+    bc_bc_conn = network.get_connectivity_set("basket_to_basket")
+    sc_sc_conn = network.get_connectivity_set("stellate_to_stellate")
     # Mask the glomeruli not connected to active MF
     stim_glom_mask = np.isin(cs_mf_glom.get_dataset()[:, 0], stim_mf)
     stim_glom = cs_mf_glom.get_dataset()[stim_glom_mask]
@@ -51,10 +53,11 @@ def plot():
         "apical_dendrites": sc_scale[1],
         "axon": sc_scale[3]
     }
-    bc_info = ("basket_cell", mb, selection.basket_cells, pf_bc_conn, bc_colors, bc_radius)
-    sc_info = ("stellate_cell", ms, selection.stellate_cells, pf_sc_conn, sc_colors, sc_radius)
+    bc_info = ("basket_cell", mb, selection.basket_cells, pf_bc_conn, bc_bc_conn, bc_colors, bc_radius)
+    sc_info = ("stellate_cell", ms, selection.stellate_cells, pf_sc_conn, sc_sc_conn, sc_colors, sc_radius)
+    gaba_titles = {"basket_cell": "Basket to basket GABA synapses", "stellate_cell": "Stellate to stellate GABA synapses"}
     figs = {}
-    for key, m, select, set, colors, radius in (bc_info, sc_info):
+    for key, m, select, set, gaba, colors, radius in (bc_info, sc_info):
         ps = network.get_placement_set(key)
         name = key.split("_")[0]
         for label, id in select.items():
@@ -83,6 +86,23 @@ def plot():
                     name=f"Granule cell PF synapses with {count} active dendrites"
                 )
                 fig.add_trace(t)
+            gabas = np.array([i.to_compartment.midpoint for i in gaba.intersections if i.to_id == id])
+            fig.add_trace(go.Scatter3d(
+                x=gabas[:,0] + offset[0],
+                y=gabas[:,2] + offset[2],
+                z=gabas[:,1] + offset[1],
+                name=gaba_titles[key],
+                mode="markers",
+                marker=dict(
+                    size=3.0,
+                    color=colors["soma"],
+                    symbol="diamond",
+                    line=dict(
+                        width=1,
+                        color="black",
+                    )
+                )
+            ))
             cfg = selection.btn_config.copy()
             cfg["filename"] = label[0] + "_" + key + "_synapses"
             figs[f"{key[:2]}_{label[0]}"] = fig
