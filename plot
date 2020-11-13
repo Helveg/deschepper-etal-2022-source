@@ -29,7 +29,7 @@ def show_figure(plotting_module):
         return
     if isinstance(plt, list):
         for i, p in enumerate(plt):
-            _show_figure(plotting_module, p, o)
+            _show_figure(plotting_module, p, i)
     elif isinstance(plt, dict):
         for k, p in plt.items():
             _show_figure(plotting_module, p, k)
