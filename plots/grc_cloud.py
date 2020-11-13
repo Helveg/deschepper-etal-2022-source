@@ -101,6 +101,7 @@ def granule_disc(network_file, results_file, base_start=400, base_end=600, stim_
             colorscale=colorbar_grc, cmin=0, cmax=1,
             opacity=0.3,
             color=norm,
+            size=9,
             colorbar=dict(
                 len=bar_l,
                 xanchor="left",
