@@ -16,6 +16,7 @@ def plot():
     cs_glom_grc = network.get_connectivity_set("glomerulus_to_granule")
     aa_pc_conn = network.get_connectivity_set("ascending_axon_to_purkinje")
     pf_pc_conn = network.get_connectivity_set("parallel_fiber_to_purkinje")
+    gaba_conn = network.get_connectivity_set("stellate_to_purkinje")
     # Mask the glomeruli not connected to active MF
     stim_glom_mask = np.isin(cs_mf_glom.get_dataset()[:, 0], stim_mf)
     stim_glom = cs_mf_glom.get_dataset()[stim_glom_mask]
@@ -34,6 +35,7 @@ def plot():
 
     grc_color = network.configuration.cell_types["granule_cell"].plotting.color
     pc_color = network.configuration.cell_types["purkinje_cell"].plotting.color
+    sc_color = network.configuration.cell_types["stellate_cell"].plotting.color
     pc_radius = network.configuration.cell_types["purkinje_cell"].placement.soma_radius
     pc_scale = list(map(str, Color(pc_color).range_to("white", 10)))
     pc_colors = {
@@ -73,6 +75,23 @@ def plot():
                     name=f"Granule cell {tag_label} synapses with {count} active dendrites"
                 )
                 fig.add_trace(t)
+        gabas = np.array([i.to_compartment.midpoint for i in gaba_conn.intersections if i.to_id == pc_id])
+        fig.add_trace(go.Scatter3d(
+            x=gabas[:,0] + pc_pos[0],
+            y=gabas[:,2] + pc_pos[2],
+            z=gabas[:,1] + pc_pos[1],
+            name="Stellate GABA synapses",
+            mode="markers",
+            marker=dict(
+                size=2.0,
+                color=sc_color,
+                symbol="diamond",
+                line=dict(
+                    width=1,
+                    color="black",
+                )
+            )
+        ))
         cfg = selection.btn_config.copy()
         cfg["filename"] = pc_label[0] + "_purkinje_cell_synapses"
         figs[pc_label[0]] = fig
