@@ -11,6 +11,8 @@ def results_path(*args):
         os.path.dirname(__file__), "..", "results", *args
     )
 
+individually_labelled = False
+
 def plot():
     scaffold = from_hdf5(network_path)
     selected_mf = [213, 214, 222, 223]
@@ -27,23 +29,43 @@ def plot():
     axis_labels = dict(xaxis_title="X", yaxis_title="Z", zaxis_title="Y")
     fig.update_layout(scene=axis_labels)
 
+    show_first_legend = [True, True]
     for mf, gloms in data.items():
         extras = {}
         if mf not in selected_mf:
             extras["marker"] = dict(color="gray", opacity=0.2)
+        if individually_labelled:
+            extras["name"] = "MF " + str(mf)
+        else:
+            extras["name"] = f"{'S' if mf in selected_mf else 'Uns'}timulated glomeruli"
+            extras["legendgroup"] = "active" if mf in selected_mf else "inactive"
+            extras["showlegend"] = show_first_legend[mf in selected_mf]
+            show_first_legend[mf in selected_mf] = False
         fig.add_trace(go.Scatter3d(
             x=[pos_map[id][0] for id in gloms],
             y=[pos_map[id][2] for id in gloms],
             z=[pos_map[id][1] for id in gloms],
-            name="MF " + str(mf),
             mode="markers",
             **extras,
         ))
 
-    for mf, gloms in [(k, v) for k, v in data.items() if k not in selected_mf]:
-        fig.add_trace(go.Scatter3d(x=[pos_map[id][0] for id in gloms], y=[pos_map[id][2] for id in gloms], z=[pos_map[id][1] for id in gloms], name="MF " + str(mf), mode="markers", marker=dict(color="gray", opacity=0.2)))
+    # for mf, gloms in [(k, v) for k, v in data.items() if k not in selected_mf]:
+    #     kwargs = {}
+    #     if individually_labelled:
+    #         kwargs["name"] = "MF " + str(mf)
+    #     else:
+    #         kwargs["name"] = "Unstimulated glomeruli"
+    #         kwargs["legendgroup"] = "inactive"
+    #         kwargs["showlegend"] = show_first_legend
+    #         show_first_legend = False
+    #     fig.add_trace(go.Scatter3d(x=[pos_map[id][0] for id in gloms], y=[pos_map[id][2] for id in gloms], z=[pos_map[id][1] for id in gloms], mode="markers", marker=dict(color="gray", opacity=0.2), **kwargs))
 
-    fig.layout.scene.xaxis.range = [0, 300]
-    fig.layout.scene.yaxis.range = [0, 200]
-    fig.layout.scene.zaxis.range = [0, 150]
+    fig.update_layout(
+        scene=dict(
+            xaxis=dict(title="X", range=[0, 300], autorange=False),
+            yaxis=dict(title="Z", range=[0, 200], autorange=False),
+            zaxis=dict(title="Y", range=[0, 130], autorange=False),
+            aspectratio=dict(x=1, y=2/3, z=13/30 )
+        )
+    )
     return fig
