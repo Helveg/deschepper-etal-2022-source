@@ -11,23 +11,30 @@ from bsb.output import MorphologyRepository
 import numpy as np
 
 test_path = os.path.join(
-    os.path.dirname(__file__), "..", "networks", "neuron.hdf5"
+    os.path.dirname(__file__), "..", "networks", "300x_200z.hdf5"
 )
 
+camera = dict(up=dict(x=0,y=0,z=1),center=dict(x=0.014630658146720252,y=0.02534642697221434,z=-0.11515199306852882),eye=dict(x=9.88018501112187,y=0.14634744535299443,z=0.5590972887418161))
+net_cam = dict(up=dict(x=0,y=0,z=1),center=dict(x=0.9516507843396513,y=-0.7480738883245212,z=-0.48851824490599444),eye=dict(x=7.556075851557944,y=6.546386629756536,z=2.3610400567393985))
 
 def plot():
     scaffold = from_hdf5(test_path)
     fig = network_scene(scaffold)
-    set_scene_range(fig.layout.scene, [[-100, 250], [-100, 350], [-100, 250]])
+    fig.layout.scene.xaxis.range = [-100, 300]
+    fig.layout.scene.yaxis.range = [-100, 200]
+    fig.layout.scene.zaxis.range = [-100, 400]
     fig.layout.scene.aspectmode="manual"
-    fig.layout.scene.aspectratio=dict(x=1, y=1, z=450/350)
+    fig.layout.scene.aspectratio=dict(x=4, y=3, z=5)
     fig.layout.scene.xaxis.tick0=0
-    fig.layout.scene.xaxis.dtick=150
+    fig.layout.scene.xaxis.dtick=100
     fig.layout.scene.yaxis.tick0=0
-    fig.layout.scene.yaxis.dtick=150
+    fig.layout.scene.yaxis.dtick=100
     fig.layout.scene.zaxis.tick0=0
-    fig.layout.scene.zaxis.dtick=150
-    return fig
+    fig.layout.scene.zaxis.dtick=100
+    fig2 = go.Figure(fig)
+    fig.update_layout(scene_camera=net_cam)
+    fig2.update_layout(scene_camera=camera)
+    return [fig, fig2]
 
 def network_scene(scaffold):
     ms = MorphologyScene()
