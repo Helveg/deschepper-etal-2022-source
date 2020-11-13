@@ -1,7 +1,7 @@
 from bsb.plotting import hdf5_gather_voltage_traces, plot_traces, CellTraceCollection
 from bsb.core import from_hdf5
 from h5py import File
-import os, selection
+import os, selection, numpy as np
 
 network_path = os.path.join(
     os.path.dirname(__file__), "..", "networks", "300x_200z.hdf5"
@@ -23,8 +23,7 @@ def plot():
         for i, t in enumerate(traces.cells.values()):
             r = int(i / 2)
             t.title = f"{r} active dendrite{'s' if r != 1 else ''}"
-        def figmod(fig):
-            for i in range(len(traces.cells)):
-                fig.update_yaxes(range=[-75, 40], row=i)
-        fig = plot_traces(traces, show=False, mod=figmod)
+        fig = plot_traces(traces, show=False, input_region=[400, 500], cutoff=3000, x=np.arange(0,900,0.1))
+        for i in range(len(traces.cells)):
+            fig.update_yaxes(range=[-75, 40], row=i)
     return fig
