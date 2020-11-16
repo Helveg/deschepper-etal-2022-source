@@ -103,6 +103,7 @@ def plot():
                     )
                 )
             ))
+            fig.layout.scene.yaxis.dtick = 10
             cfg = selection.btn_config.copy()
             cfg["filename"] = label[0] + "_" + key + "_synapses"
             figs[f"{key[:2]}_{label[0]}"] = fig

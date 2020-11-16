@@ -36,7 +36,7 @@ def plot():
     show_first_legend = True
     for pos in purkinje_pos:
         ext_min, ext_max = protrusion(pm, pos[1])
-        traces.append(go.Scatter(
+        sc = go.Scatter(
             x=[pos[0] + ext_min, pos[0] + ext_max],
             y=[pos[2], pos[2]],
             mode="lines",
@@ -47,7 +47,8 @@ def plot():
             name="Golgi extension into molecular layer",
             legendgroup="purkinje_ext",
             showlegend=show_first_legend
-        ))
+        )
+        # traces.append(sc)
         show_first_legend = False
 
     fig = go.Figure(traces, layout=dict(
