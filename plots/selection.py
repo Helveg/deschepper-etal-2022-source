@@ -18,9 +18,17 @@ stellate_cells = dict(zip(stellate_cell_labels, stellate_cell_ids))
 granule_cells = np.array([3070, 31681, 3074, 9163, 3083, 11399, 3764, 15288, 5987, 17372])
 granule_cell_order = dict(map(lambda t: (t[1], t[0]), enumerate(granule_cells)))
 
+sync = {
+    "purkinje_cell": [83, 78, 126],
+    "stellate_cell": [695, 715],
+    "basket_cell": [306, 310],
+    "golgi_cell": [1, 17, 53],
+    "granule_cell": [3070, 3069, 3068, 3075, 3083],
+}
+
 btn_config = {
     'toImageButtonOptions': {
-        'format': 'svg',
+        'format': 'pdf',
         'height': 1920,
         'width': 1080,
         'scale': 1
