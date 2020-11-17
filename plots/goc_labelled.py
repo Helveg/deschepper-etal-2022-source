@@ -55,7 +55,7 @@ def plot():
         title_text="Golgi cells",
         legend_itemsizing="constant",
         yaxis=dict(scaleanchor="x", scaleratio=1),
-        xaxis_range=[0, 300],
+        xaxis_range=[300, 0],
         yaxis_range=[0, 200],
         xaxis_title="X",
         yaxis_title="Z",
