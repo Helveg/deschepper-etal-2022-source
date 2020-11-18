@@ -13,7 +13,8 @@ for i in range(5):
     network.get_cells_by_type("golgi_cell")
     network.get_cells_by_type("glomerulus")
     network.get_entities_by_type("mossy_fibers")
-    tags = ["mossy_to_glomerulus", "glomerulus_to_granule", "glomerulus_to_golgi", "golgi_to_glomerulus", "golgi_to_granule"]
+    network.cell_connections_by_tag["mossy_to_glomerulus"] = network.get_connectivity_set("mossy_to_glomerulus").get_dataset()
+    tags = ["glomerulus_to_granule", "glomerulus_to_golgi", "golgi_to_glomerulus", "golgi_to_granule"]
     for tag in tags:
         t = time()
         print("Connecting", tag)
