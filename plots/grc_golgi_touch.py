@@ -1,13 +1,14 @@
 from bsb.core import Scaffold, from_hdf5
-from bsb.plotting import plot_morphology, plot_voxel_cloud
+from bsb.plotting import plot_morphology, plot_voxel_cloud, set_scene_range, set_scene_aspect
 from plotly.subplots import make_subplots
 import plotly.graph_objs as go
 from . import make_3dsubplots
 from random import sample
 import os, numpy as np
 
-network = os.path.join(os.path.dirname(__file__), "..", "networks", "neuron.hdf5")
+network = os.path.join(os.path.dirname(__file__), "..", "networks", "300x_200z.hdf5")
 scaffold = from_hdf5(network)
+camera = dict(up=dict(x=0,y=0,z=1),center=dict(x=-0.009716506474688111,y=0.06185058580133833,z=-0.23025933249395017),eye=dict(x=1.0836828981355624,y=1.2166861339342228,z=0.14336010736471308))
 
 def plot():
     cs_aa = scaffold.get_connectivity_set("ascending_axon_to_golgi")
@@ -49,6 +50,7 @@ def plot():
         candidates.append((grc, goc1, goc2))
 
     f_grc, f_aa, f_pf = sample(candidates, 1)[0]
+    f_grc, f_aa, f_pf = 15972.0, 22.0, 37.0
     intersections_aa = []
     intersections_pf = []
     frc_pos = grc_pos[grc_id.tolist().index(f_grc)]
@@ -62,16 +64,19 @@ def plot():
             intersections_pf.append((intersection, gaa_pos))
         if intersection.from_id == f_grc and intersection.to_id == f_pf:
             intersections_pf.append((intersection, gpf_pos))
-    from_i_pos = np.array([i.from_compartment.end + frc_pos for i in intersections_aa])
-    to_i_pos = np.array([i.to_compartment.end + gaa_pos for i in intersections_aa])
-    from_p_pos = np.array([i[0].from_compartment.end + frc_pos for i in intersections_pf])
-    to_p_pos = np.array([i[0].to_compartment.end + i[1] for i in intersections_pf])
-    fig = plot_morphology(mgr, show=False, offset=frc_pos, set_range=False, color=from_type.plotting.color, segment_radius=3)
-    fig.add_trace(go.Scatter3d(x=from_i_pos[:,0], y=from_i_pos[:,2], z=from_i_pos[:,1], mode="markers", marker=dict(size=8,color="black")))
-    fig.add_trace(go.Scatter3d(x=to_i_pos[:,0], y=to_i_pos[:,2], z=to_i_pos[:,1], mode="markers", marker=dict(symbol="diamond-open", size=8,color="black")))
-    fig.add_trace(go.Scatter3d(x=from_p_pos[:,0], y=from_p_pos[:,2], z=from_p_pos[:,1], mode="markers", marker=dict(size=8,color="violet")))
-    fig.add_trace(go.Scatter3d(x=to_p_pos[:,0], y=to_p_pos[:,2], z=to_p_pos[:,1], mode="markers", marker=dict(symbol="diamond-open", size=8,color="violet")))
-    plot_morphology(mgc, show=False, fig=fig, offset=gaa_pos, segment_radius=2.5, set_range=False, color=to_type.plotting.color)
-    plot_morphology(mgc, show=False, fig=fig, offset=gpf_pos, segment_radius=2.5, set_range=False, color="#639EEC")
-    fig.layout.scene.yaxis.range = [-200, 200]
+    from_i_pos = np.array([i.from_compartment.midpoint + frc_pos for i in intersections_aa])
+    to_i_pos = np.array([i.to_compartment.midpoint + gaa_pos for i in intersections_aa])
+    from_p_pos = np.array([i[0].from_compartment.midpoint + frc_pos for i in intersections_pf])
+    to_p_pos = np.array([i[0].to_compartment.midpoint + i[1] for i in intersections_pf])
+    fig = plot_morphology(mgr, show=False, offset=frc_pos, set_range=False, color=from_type.plotting.color, segment_radius=3, soma_radius=from_type.placement.soma_radius)
+    fig.add_trace(go.Scatter3d(x=from_i_pos[:,0], y=from_i_pos[:,2], z=from_i_pos[:,1], name="Presyn. AA location", mode="markers", marker=dict(size=5,color="grey", line=dict(width=1, color="black"))))
+    fig.add_trace(go.Scatter3d(x=to_i_pos[:,0], y=to_i_pos[:,2], z=to_i_pos[:,1], name="Postsyn. AA location",  mode="markers", marker=dict(symbol="diamond-open", size=8,color="grey")))
+    fig.add_trace(go.Scatter3d(x=from_p_pos[:,0], y=from_p_pos[:,2], z=from_p_pos[:,1],  name="Presyn. PF location", mode="markers", marker=dict(size=5,color="violet")))
+    fig.add_trace(go.Scatter3d(x=to_p_pos[:,0], y=to_p_pos[:,2], z=to_p_pos[:,1],  name="Postsyn. PF location", mode="markers", marker=dict(symbol="diamond-open", size=8,color="violet")))
+    plot_morphology(mgc, show=False, fig=fig, offset=gaa_pos, segment_radius=2.5, set_range=False, color=to_type.plotting.color, soma_radius=to_type.placement.soma_radius)
+    plot_morphology(mgc, show=False, fig=fig, offset=gpf_pos, segment_radius=2.5, set_range=False, color="#639EEC", soma_radius=to_type.placement.soma_radius)
+    rng = [[80, 470], [-90, 300], [-50, 200]]
+    set_scene_range(fig.layout.scene, rng)
+    set_scene_aspect(fig.layout.scene, rng)
+    fig.layout.scene.camera = camera
     return fig

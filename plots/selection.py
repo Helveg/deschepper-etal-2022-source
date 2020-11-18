@@ -18,6 +18,9 @@ stellate_cells = dict(zip(stellate_cell_labels, stellate_cell_ids))
 granule_cells = np.array([3070, 31681, 3074, 9163, 3083, 11399, 3764, 15288, 5987, 17372])
 granule_cell_order = dict(map(lambda t: (t[1], t[0]), enumerate(granule_cells)))
 
+vi_stellate = 570
+vi_purkinje = 136
+
 sync = {
     "purkinje_cell": [83, 78, 126],
     "stellate_cell": [695, 715],
