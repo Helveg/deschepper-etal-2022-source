@@ -2,8 +2,11 @@ import os, plotly.graph_objects as go
 from bsb.core import from_hdf5
 import numpy as np, h5py
 from scipy import stats
+import itertools
+from colour import Color
 
 colorbar_grc = ['rgb(158,188,218)', 'rgb(140,150,198)', 'rgb(140,107,177)', 'rgb(136,65,157)', 'rgb(129,15,124)', 'rgb(77,0,75)']
+colorbar_grc_hex = ["#9ebcda", "#8c96c6", "#8c6bb1", "#88419d", "#810f7c", "#4d004b"]
 colorbar_pc = "thermal"
 
 def granule_kde(network_file, results_file, base_start=400, base_end=600, stim_start=700, stim_end=800):
@@ -112,3 +115,38 @@ def granule_disc(network_file, results_file, base_start=400, base_end=600, stim_
             )
         )
     )
+
+def granule_beam(network_file, results_file, base_start=400, base_end=600, stim_start=700, stim_end=800, bar_l=0.8, nbins=30):
+    ids, pos, norm = granule_kde(network_file, results_file, base_start, base_end, stim_start, stim_end)
+    z = pos[:, 2]
+    sorter = np.argsort(z)
+    pos = pos[sorter]
+    norm = norm[sorter]
+    min, max = np.min(z), np.max(z)
+    bin_size = (max - min) / nbins
+    bins = np.floor_divide(z - min, bin_size)
+    bin_intensity = np.array([norm[bins == i].sum() for i in range(nbins)])
+    bin_norms = bin_intensity / np.max(bin_intensity)
+    discrete_bin_norms = np.minimum(np.floor_divide(bin_norms, 1 / 500), 499).astype(int)
+    def pairwise(iterable):
+        "s -> (s0,s1), (s1,s2), (s2, s3), ..."
+        a, b = itertools.tee(iterable)
+        next(b, None)
+        return zip(a, b)
+    colors = list(map(str, itertools.chain(*(Color(c1).range_to(c2, 100) for c1, c2 in pairwise(colorbar_grc_hex)))))
+    return [
+        dict(
+            type="rect",
+            xref="x",
+            yref="paper",
+            x0=min + bin_i * bin_size,
+            y0=0,
+            x1=min + (bin_i + 1) * bin_size,
+            y1=1,
+            fillcolor=colors[dbn],
+            opacity=0.5,
+            line=dict(width=0),
+            layer="below"
+        )
+        for bin_i, dbn in enumerate(discrete_bin_norms)
+    ]
