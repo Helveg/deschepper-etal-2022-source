@@ -29,6 +29,11 @@ sync = {
     "granule_cell": [3070, 3069, 3068, 3075, 3083],
 }
 
+onbeam = {
+    "stellate_cell": [639],
+    "basket_cell": [314],
+}
+
 btn_config = {
     'toImageButtonOptions': {
         'format': 'pdf',
