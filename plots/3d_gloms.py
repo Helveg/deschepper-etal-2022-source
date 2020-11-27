@@ -15,8 +15,10 @@ individually_labelled = False
 
 def plot():
     scaffold = from_hdf5(network_path)
-    selected_mf = [213, 214, 222, 223]
-    selected_mf = [213, 214, 222, 223, 229, 221, 206, 230, 247, 239, 231, 238, 240]
+    selected_mf_4 = [213, 214, 222, 223]
+    selected_mf_13 = [213, 214, 222, 223, 229, 221, 206, 230, 247, 239, 231, 238, 240]
+    selected_mf_lateral = [275, 261, 260, 263, 273, 267, 279, 265, 268, 280, 270, 269, 272, 274, 282, 264, 271, 266, 283, 276, 278, 281, 277, 284]
+    selected_mf = selected_mf_lateral
     cs = scaffold.get_connectivity_set("mossy_to_glomerulus")
     fig = go.Figure()
     data = {id: [] for id in cs.from_identifiers}
