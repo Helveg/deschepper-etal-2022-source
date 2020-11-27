@@ -3,7 +3,8 @@ from bsb.core import from_hdf5
 import numpy as np, h5py
 from scipy import stats
 import scipy.ndimage, scipy.interpolate
-import pickle
+import pickle, selection
+import collections
 
 colorbar_grc = ['rgb(158,188,218)', 'rgb(140,150,198)', 'rgb(140,107,177)', 'rgb(136,65,157)', 'rgb(129,15,124)', 'rgb(77,0,75)']
 colorbar_pc = "thermal"
@@ -62,7 +63,7 @@ def get_activity(ids, group, start, stop):
 
 def plot():
     base_start, base_end = 400, 600
-    stim_start, stim_end = 700, 820
+    stim_start, stim_end = 550, 650
     print("Loading network", " " * 30, end="\r")
     scaffold = from_hdf5(network_path)
     ps_grc = scaffold.get_placement_set("granule_cell")
@@ -72,91 +73,139 @@ def plot():
     grid_spacing = np.array([5., 5.])  #um
     gpoints = np.round((points - grid_offset) / grid_spacing)
 
+    surfaces = dict(
+        control=dict(
+            file=results_path("center_surround/disinhibition_1dend_spikes/results_noBack_1SyncImpOn4mfs_forCenterSurr.hdf5"),
+            data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], stim_start, stim_end),
+        ),
+        gabazine=dict(
+            file=results_path("center_surround/disinhibition_1dend_spikes/results_noBack_1SyncImpOn4mfs_GABAZINE_forCenterSurr.hdf5"),
+            data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], stim_start, stim_end),
+        ),
+        n2a=dict(
+            file=results_path("center_surround/disinhibition_1dend_spikes/results_noBack_1SyncImpOn4mfs_forCenterSurr.hdf5"),
+            data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], 600, 605),
+        ),
+        n2b_control=dict(
+            file=results_path("center_surround/disinhibition_1dend_spikes/results_noBack_1SyncImpOn4mfs_forCenterSurr.hdf5"),
+            data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], 605, 610),
+        ),
+        n2b_gabazine=dict(
+            file=results_path("center_surround/disinhibition_1dend_spikes/results_noBack_1SyncImpOn4mfs_GABAZINE_forCenterSurr.hdf5"),
+            data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], 605, 610),
+        ),
+    )
+
     if not frozen:
-        grid_control = {}
-        grid_gabaz = {}
-        grid_bg = {}
-        for fi in range(5):
-            print(f"Sampling run {fi+1}", " " * 30, end="\r")
-            results = h5py.File(results_path(f"center_surround/results_stim_on_MFs_CS{fi}_control.hdf5"), "r")
-            results_gabaz = h5py.File(results_path(f"center_surround/results_stim_on_MFs_CS{fi}_GABAZINE.hdf5"), "r")
-            results_bg = h5py.File(results_path(f"center_surround/bg/results_stim_on_MFs_onlyBack20Hz_v{fi+1}.hdf5"), "r")
-            g_ctrl = results["recorders/soma_spikes/"]
-            g_gabaz = results_gabaz["recorders/soma_spikes/"]
-            g_bg = results_bg["recorders/soma_spikes/"]
-            activity_control = get_activity(ps_grc.identifiers, g_ctrl, stim_start, stim_end)
-            activity_gabazine = get_activity(ps_grc.identifiers, g_gabaz, stim_start, stim_end)
-            activity_bg = get_activity(ps_grc.identifiers, g_bg, stim_start, stim_end)
-            results.close()
-            results_gabaz.close()
-            results_bg.close()
+        filename = 'networks/300x_200z.hdf5'
+        f = h5py.File(filename,'r')
+        scaffoldInstance = from_hdf5(filename)
 
+        excitedMFs = selection.stimulated_mf_poiss
 
+        connMfGlom = np.array(f['/cells/connections/mossy_to_glomerulus'])
+        excitedGlom=[]
+        for i in range(0,len(excitedMFs)):
+            excitedGlom.append(connMfGlom[connMfGlom[:,0]==int(excitedMFs[i]),1])
+
+        excitedGlomA = np.concatenate( (np.array(excitedGlom)[:]))
+        connGlomGrC = np.array(f['/cells/connections/glomerulus_to_granule'])
+        excitedGrC=[]
+        for i in range(0,len(excitedGlomA)):
+            excitedGrC.append(connGlomGrC[connGlomGrC[:,0]==int(excitedGlomA[i]),1])
+
+        excitedGrCA = np.concatenate( (np.array(excitedGrC)[:]))
+        grIDs= scaffoldInstance.get_placement_set("granule_cell").identifiers
+        NOexcitedGrC = grIDs[np.logical_not(np.isin(grIDs, excitedGrCA))]
+
+        counterExcGrC=collections.Counter(excitedGrCA)
+        counterSynInGrC=collections.Counter(counterExcGrC.values())
+
+        pos=np.array(f['/cells/positions'])
+        InGrC = []
+        for key, val in sorted(counterExcGrC.items()):
+            if val > 0:
+                InGrC.append(key)
+
+        for sname, sdict in surfaces.items():
+            sdict["grid"] = grid = {}
+            print(f"Creating {sname} surface", " " * 30, end="\r")
+            if "file" in sdict:
+                f = h5py.File(sdict["file"], "r")
+                data = sdict["data"](f)
+                f.close()
+            elif "parent" in sdict:
+                data = sdict["data"](surfaces[sdict["parent"]]["_data"])
+            else:
+                raise Exception(f"Missing `file` or `parent` in {sname} definition.")
+            sdict["_data"] = data
 
             for i, id in enumerate(ps_grc.identifiers):
                 coords = tuple(gpoints[i,:])
-                if coords not in grid_control:
-                    grid_control[coords] = []
-                if coords not in grid_gabaz:
-                    grid_gabaz[coords] = []
-                if coords not in grid_bg:
-                    grid_bg[coords] = []
-                grid_control[coords].append(activity_control[id])
-                grid_gabaz[coords].append(activity_gabazine[id])
-                grid_bg[coords].append(activity_bg[id])
+                if coords not in grid:
+                    grid[coords] = []
+                grid[coords].append(data[id])
 
-        control = [avg(v) for v in grid_control.values()]
-        gabaz = [avg(v) for v in grid_gabaz.values()]
-        bg = [avg(v) for v in grid_bg.values()]
+            isosurface_values = [avg(v) for v in grid.values()]
+            # "sort" the isosurface {coord: value} map into an ordered square surface matrix
+            surface_xcoords = [int(k[0]) for k in grid.keys()]
+            surface_ycoords = [int(k[1]) for k in grid.keys()]
+            surface = np.zeros((int(max(surface_xcoords) + 1), int(max(surface_ycoords) + 1)))
+            for i, (x, y) in enumerate(zip(surface_xcoords, surface_ycoords)):
+                surface[x, y] = isosurface_values[i]
 
-        surface_xcoords = [int(k[0]) for k in grid_control.keys()]
-        surface_ycoords = [int(k[1]) for k in grid_control.keys()]
-        surface_z_control = np.zeros((int(max(surface_xcoords) + 1), int(max(surface_ycoords) + 1)))
-        surface_z_gabazine = np.zeros((int(max(surface_xcoords) + 1), int(max(surface_ycoords) + 1)))
-        surface_z_bg = np.zeros((int(max(surface_xcoords) + 1), int(max(surface_ycoords) + 1)))
-        for i, (x, y) in enumerate(zip(surface_xcoords, surface_ycoords)):
-            surface_z_control[x, y] = control[i]
-            surface_z_gabazine[x, y] = gabaz[i]
-            surface_z_bg[x, y] = bg[i]
+            sigma = [0.8,0.8]
+            sdict["surface"] = scipy.ndimage.filters.gaussian_filter(surface, sigma)
 
-        sigma = [0.8,0.8]
-        smooth_control = scipy.ndimage.filters.gaussian_filter(surface_z_control, sigma)
-        smooth_gabazine = scipy.ndimage.filters.gaussian_filter(surface_z_gabazine, sigma)
-        smooth_bg = scipy.ndimage.filters.gaussian_filter(surface_z_bg, sigma)
-        with open("smooth_control.pickle", "wb") as f:
-            pickle.dump(smooth_control, f)
-        with open("smooth_gabazine.pickle", "wb") as f:
-            pickle.dump(smooth_gabazine, f)
-        with open("smooth_bg.pickle", "wb") as f:
-            pickle.dump(smooth_bg, f)
+        for surface in surfaces.values():
+            # Delete the local unpicklable data lambda
+            del surface["data"]
+        with open("surfaces.pickle", "wb") as f:
+            pickle.dump(surfaces, f)
     else:
-        with open("smooth_control.pickle", "rb") as f:
-            smooth_control = pickle.load(f)
-        with open("smooth_gabazine.pickle", "rb") as f:
-            smooth_gabazine = pickle.load(f)
-        with open("smooth_bg.pickle", "rb") as f:
-            smooth_bg = pickle.load(f)
+        with open("surfaces.pickle", "rb") as f:
+            surfaces = pickle.load(f)
 
-    figs = []
-    for z in (smooth_control, smooth_gabazine, smooth_bg, (smooth_gabazine - smooth_bg)):
-        fig = go.Figure(go.Surface(z=z, cmin=0, cmax=6,))
+    control = surfaces["control"]["surface"]
+    gabazine = surfaces["gabazine"]["surface"]
+    n2a = surfaces["n2a"]["surface"]
+    n2b_control = surfaces["n2b_control"]["surface"]
+    n2b_gabazine = surfaces["n2b_gabazine"]["surface"]
+    E = n2a / np.max(n2a)
+    I = (n2b_gabazine - n2b_control) / np.max(n2b_gabazine - n2b_control)
+    B = (E - I) / (E + 1)
+    print(np.max(E), np.max(I), np.max(B), np.min(B))
+    plots = {
+        "control": control,
+        "gabazine": gabazine,
+        "n2a": n2a,
+        "n2b_control": n2b_control,
+        "n2b_gabazine": n2b_gabazine,
+        "excitation": E,
+        "inhibition": I,
+    }
+    figs = {}
+    for name, z in plots.items():
+        fig = go.Figure(go.Surface(z=z))
         fig.update_layout(
+            title_text=name,
             scene=dict(
-                zaxis_range=[0,6],
+                zaxis_range=[0, 1],
                 xaxis_title="Y",
                 yaxis_title="X",
-                aspectratio=dict(x=2/3, y=1, z=1)
+                aspectratio=dict(x=2/3, y=1, z=0.3)
             )
         )
-        figs.append(fig)
-    # fig = go.Figure(go.Surface(z=(smooth_control - smooth_gabazine), cmin=-4, cmax=2,))
-    # fig.update_layout(
-    #     scene=dict(
-    #         zaxis_range=[-4,2],
-    #         xaxis_title="Y",
-    #         yaxis_title="X",
-    #         aspectratio=dict(x=2/3, y=1, z=1)
-    #     )
-    # )
-    # figs.append(fig)
+        figs[name] = fig
+    fig = go.Figure(go.Surface(z=B, colorscale="balance", cmin=-0.5, cmax=0.5))
+    fig.update_layout(
+        title_text="balance",
+        scene=dict(
+            zaxis_range=[-1, 1],
+            xaxis_title="Y",
+            yaxis_title="X",
+            aspectratio=dict(x=2/3, y=1, z=0.3),
+        )
+    )
+    figs["balance"] = fig
     return figs
