@@ -44,7 +44,15 @@ def _show_figure(plotting_module, plt, suffix=None):
             'height': 1920,
             'width': 1080,
             'scale': 1
-        }
+        },
+        'modeBarButtonsToAdd': [
+            'drawline',
+            'drawopenpath',
+            'drawclosedpath',
+            'drawcircle',
+            'drawrect',
+            'eraseshape'
+        ]
     })
 
 if __name__ == "__main__":
