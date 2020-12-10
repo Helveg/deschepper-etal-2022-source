@@ -16,13 +16,10 @@ def results_path(*args):
 
 
 def plot():
-    filename = '/home/nrp/workspace/deschepper-etal-2020/networks/300x_200z.hdf5'
-    scaffoldInstance = from_hdf5(filename)
+    scaffoldInstance = from_hdf5(network_path)
     config = scaffoldInstance.configuration
     cells = list(scaffoldInstance.get_cell_types())
-    print(cells[0].__dict__)
-
-    with h5py.File(results_path("results_NEST_stim_on_MFs_4syncFinal.hdf5"), "a") as f:
+    with h5py.File(results_path("results_stim_on_MFs_16075237073796946792023040046.hdf5"), "a") as f:
         order=dict(record_glomerulus_spikes=0, record_granules_spikes=1, record_golgi_spikes=2, record_pc_spikes=3,
             record_sc_spikes=4, record_bc_spikes=5)
         color=dict(record_glomerulus_spikes=config.cell_types["glomerulus"].plotting.color,
@@ -36,14 +33,8 @@ def plot():
                 print("Not sorting", g.name, "no order found")
             g.attrs["order"] = order.get(g.attrs["label"], 0)
             g.attrs['color'] = color.get(g.attrs["label"], 0)
-        fig = hdf5_plot_psth(scaffoldInstance, f["/recorders/soma_spikes"], show=False, cutoff=0, duration=5)
-        # fig = hdf5_plot_spike_raster(f["/recorders/soma_spikes"], show=False)
-        #fig.show()
-        #fig.show(config=dict(toImageButtonOptions=dict(format="svg", height=1080, width=1920)))
-        #fig.write_image("fig1.eps", engine="kaleido")
+        fig = hdf5_plot_psth(scaffoldInstance, f["/recorders/soma_spikes"], show=False, duration=5)
+        ranges = [[0, 25], [0, 25], [0, 125], [0, 130], [0, 120], [0, 120]]
+        for i in range(len(ranges)):
+            fig.update_yaxes(range=ranges[i], row=i + 1, col=1)
     return fig
-
-# dset.attrs['label'] = c
-# dset.attrs['color'] = color[c]
-# dset.attrs['num_neurons'] = len(np.unique(spikes[:,0]))
-# dset.attrs['mean_rate'] = (len(spikes[:,0])/dset.attrs['num_neurons'])/duration
