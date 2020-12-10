@@ -118,13 +118,13 @@ def granule_disc(network_file, results_file, base_start=400, base_end=600, stim_
 
 def granule_beam(network_file, results_file, base_start=400, base_end=600, stim_start=700, stim_end=800, bar_l=0.8, nbins=30):
     ids, pos, norm = granule_kde(network_file, results_file, base_start, base_end, stim_start, stim_end)
-    z = pos[:, 2]
-    sorter = np.argsort(z)
+    x = pos[:, 0]
+    sorter = np.argsort(x)
     pos = pos[sorter]
     norm = norm[sorter]
-    min, max = np.min(z), np.max(z)
+    min, max = np.min(x), np.max(x)
     bin_size = (max - min) / nbins
-    bins = np.floor_divide(z - min, bin_size)
+    bins = np.floor_divide(x - min, bin_size)
     bin_intensity = np.array([norm[bins == i].sum() for i in range(nbins)])
     bin_norms = bin_intensity / np.max(bin_intensity)
     discrete_bin_norms = np.minimum(np.floor_divide(bin_norms, 1 / 500), 499).astype(int)
