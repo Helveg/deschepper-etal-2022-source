@@ -38,9 +38,9 @@ def plot():
             print("Skipping run id insertion")
             break
         figs = {}
-        figs["poiss"] = hdf5_plot_psth(network, valueify(itertools.chain(*(handle["/all"].values() for handle in handles))), show=False, cutoff=400, duration=5)
+        figs["poiss"] = hdf5_plot_psth(network, valueify(itertools.chain(*(handle["/all"].values() for handle in handles))), show=False, cutoff=300, duration=5)
         with h5py.File(results_path("results_stim_on_MFs_4syncImp.hdf5"), "r") as f:
-            figs["sync"] = hdf5_plot_psth(network, f["recorders/soma_spikes"], show=False, cutoff=400, duration=5)
+            figs["sync"] = hdf5_plot_psth(network, f["recorders/soma_spikes"], show=False, cutoff=300, duration=5)
         return figs
     finally:
         for handle in handles:
