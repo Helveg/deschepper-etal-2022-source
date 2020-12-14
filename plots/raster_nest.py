@@ -23,19 +23,33 @@ def results_path(*args):
 #     group.attrs.get("label", None) == "record_pc_spikes" or \
 #     group.attrs.get("label", None) == "record_golgi_spikes" or name == cell_id
 
-def select_ids(kv):
-    sel_labels = ["record_granules_spikes", "record_glomerulus_spikes"]
-    cell_ids = {"record_granules_spikes":  [16011, 3083, 15265, 3075, 11800, 3068, 9623, 3069, 31681, 3070],
-    #[3070, 31681, 3074, 9163, 3083, 11399, 3764, 15288, 5987, 17372],\    Poiss
-    #[3070, 31681, 3069, 9623, 3068, 11800, 3075, 15265, 3083, 16011]        4sync
-    #[16011, 3083, 15265, 3075, 11800, 3068, 9623, 3069, 31681, 3070]   4sync flipped
-    "record_glomerulus_spikes": random.sample(range(732,2336), int((2336-732)*0.05))}
+sel_labels = ["record_golgi_spikes", "record_granules_spikes"]
+cell_ids = {"record_granules_spikes": [16011, 3083, 15265, 3075, 11800, 3068, 9623, 3069, 31681, 3070],
+#[17372, 5987, 15288, 3764, 11399, 3083, 9163, 3074, 31681, 3070],    # Poiss flipped
+#[3070, 31681, 3074, 9163, 3083, 11399, 3764, 15288, 5987, 17372],\    Poiss
+#[3070, 31681, 3069, 9623, 3068, 11800, 3075, 15265, 3083, 16011]        4sync
+#[16011, 3083, 15265, 3075, 11800, 3068, 9623, 3069, 31681, 3070]   4sync flipped
+"record_glomerulus_spikes": random.sample(range(732,2336), int((2336-732)*0.05))}
+
+def generate(arg):
+    def generator():
+        while True:
+            yield arg
+
+    return generator()
+
+def select_ids(kv, sel_labels, cell_ids):
 
     name, group = kv
     group = FakeDataset(group)
     # if ids within current label dataset
+    print("sel_labels", sel_labels)
     for label in sel_labels:
-        if group.attrs.get("label", None) == label:
+        print(name, group.attrs.get("label"))
+        if label not in cell_ids:
+            continue
+        elif group.attrs.get("label", None) == label:
+            print("printed",name, group.attrs.get("label"), "selected")
             group.arr = group.arr[np.isin(group.arr[:, 0], cell_ids[label])]
 
     return name, group
@@ -53,13 +67,15 @@ class FakeDataset:
         return self.arr.shape
 
 def plot():
-    with h5py.File(results_path("results_stim_on_MFs_10Hzdrive.hdf5"), "r") as f:
+    with h5py.File(results_path("results_NEST_stim_on_MFs_4syncFinal2_finetuning0-02.hdf5"), "r") as f:
         print("items ",f["/recorders/soma_spikes"].items())
         #groups = {k: v for k, v in filter(select_groups, f["/recorders/soma_spikes"].items())}
-        groups = {k: v for k, v in map(select_ids, f["/recorders/soma_spikes"].items())}
+        print("groups:", *(f["/recorders/soma_spikes"].items()))
+        groups = {k: v for k, v in map(select_ids, f["/recorders/soma_spikes"].items(), generate(sel_labels), generate(cell_ids))}
+        print(groups.keys())
         #fig = hdf5_plot_spike_raster(groups, show=False)
         fig = hdf5_plot_spike_raster(groups, show=False, cutoff=300, \
-        sorted_labels=[ "record_golgi_spikes", "record_granules_spikes"], sorted_ids={"record_granules_spikes": [16011, 3083, 15265, 3075, 11800, 3068, 9623, 3069, 31681, 3070]})
-        #sorted_labels=["record_bc_spikes", "record_sc_spikes", "record_pc_spikes", "record_golgi_spikes", "record_granules_spikes"], sorted_ids={"record_granules_spikes": [16011, 3083, 15265, 3075, 11800, 3068, 9623, 3069, 31681, 3070]})
+        sorted_labels=sel_labels, sorted_ids=cell_ids)
+        #fig.update_yaxes(range=[-5, 630])
 
     return fig
