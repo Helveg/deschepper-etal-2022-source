@@ -44,7 +44,7 @@ def build_figure(plotting_module):
         for suffix, f in fig.items():
             _build_figure(plotting_module, f, suffix, meta(suffix))
     else:
-        _build_figure(plotting_module, fig, meta())
+        _build_figure(plotting_module, fig, None, meta())
 
 def _build_figure(plotting_module, fig, suffix=None, meta=None):
     fname = os.path.join(
