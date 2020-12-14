@@ -39,8 +39,14 @@ def plot():
             break
         figs = {}
         figs["poiss"] = hdf5_plot_psth(network, valueify(itertools.chain(*(handle["/all"].values() for handle in handles))), show=False, cutoff=300, duration=5)
+        ranges = [[0, 15], [0, 15], [0, 65], [0, 75], [0, 75], [0, 75]]
+        for i in range(len(ranges)):
+            figs["poiss"].update_yaxes(range=ranges[i], row=i + 1, col=1)
         with h5py.File(results_path("results_stim_on_MFs_4syncImp.hdf5"), "r") as f:
             figs["sync"] = hdf5_plot_psth(network, f["recorders/soma_spikes"], show=False, cutoff=300, duration=5)
+            ranges = [[0, 25], [0, 25], [0, 125], [0, 130], [0, 120], [0, 120]]
+            for i in range(len(ranges)):
+                figs["sync"].update_yaxes(range=ranges[i], row=i + 1, col=1)
         return figs
     finally:
         for handle in handles:
