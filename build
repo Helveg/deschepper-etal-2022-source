@@ -32,23 +32,31 @@ def build_figure(plotting_module):
     if not fig:
         warnings.warn(f"No figure returned from {plotting_module.__name__}.")
         return
+    if "meta" in dir(plotting_module):
+        meta = plotting_module.meta
+    else:
+        def meta(*args):
+            return None
     if isinstance(fig, list):
         for i, f in enumerate(fig):
-            _build_figure(plotting_module, f, i)
+            _build_figure(plotting_module, f, i, meta(i))
     elif isinstance(fig, dict):
         for suffix, f in fig.items():
-            _build_figure(plotting_module, f, suffix)
+            _build_figure(plotting_module, f, suffix, meta(suffix))
     else:
-        _build_figure(plotting_module, fig)
+        _build_figure(plotting_module, fig, meta())
 
-def _build_figure(plotting_module, fig, suffix=None):
+def _build_figure(plotting_module, fig, suffix=None, meta=None):
     fname = os.path.join(
         path, "figures", plotting_module.__figname__ + (f"_{suffix}" if suffix is not None else "") + format
     )
     if format == ".html":
         fig.write_html(fname)
     else:
-        fig.write_image(fname, width=1920, height=1080)
+        kwargs = {"width": 1920, "height": 1080}
+        if meta is not None:
+            kwargs.update(meta)
+        fig.write_image(fname, **kwargs)
 
 if __name__ == "__main__":
     build()
