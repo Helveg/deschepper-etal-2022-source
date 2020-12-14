@@ -26,6 +26,7 @@ def plot():
     poisson_path = results_path("5poiss")
     network = from_hdf5(network_path)
     handles = [h5py.File(f, "a") for f in glob(os.path.join(poisson_path, "*.hdf5"))]
+    figs = {}
     try:
         for run_id, handle in enumerate(handles):
             for ds in handle["/all"].values():
@@ -37,14 +38,21 @@ def plot():
             print("Run ids already detected in:", handle.filename)
             print("Skipping run id insertion")
             break
-        figs = {}
         figs["poiss"] = hdf5_plot_psth(network, valueify(itertools.chain(*(handle["/all"].values() for handle in handles))), show=False, cutoff=300, duration=5)
-        ranges = [[0, 15], [0, 15], [0, 65], [0, 75], [0, 75], [0, 75]]
+        ranges = [[0, 10], [0, 10], [0, 65], [0, 75], [0, 60], [0, 60]]
         for i in range(len(ranges)):
             figs["poiss"].update_yaxes(range=ranges[i], row=i + 1, col=1)
-        with h5py.File(results_path("results_stim_on_MFs_4syncImp.hdf5"), "r") as f:
-            figs["sync"] = hdf5_plot_psth(network, f["recorders/soma_spikes"], show=False, cutoff=300, duration=5)
-            ranges = [[0, 25], [0, 25], [0, 125], [0, 130], [0, 120], [0, 120]]
+        with h5py.File(results_path("results_stim_on_MFs_4syncImp.hdf5"), "a") as f:
+            reorder = {"granule_cell": 0, "mossy_fiber": -1}
+            for g in f["/all"].values():
+                label = g.attrs.get("label", None)
+                if label in reorder:
+                    if g.attrs.get("order", None) == reorder[label]:
+                        print("Already reordered, continuing")
+                        break
+                    g.attrs["order"] = reorder[label]
+            figs["sync"] = hdf5_plot_psth(network, f["/all"], show=False, cutoff=300, duration=5)
+            ranges = [[0, 30], [0, 27], [0, 125], [0, 130], [0, 120], [0, 120]]
             for i in range(len(ranges)):
                 figs["sync"].update_yaxes(range=ranges[i], row=i + 1, col=1)
         return figs
