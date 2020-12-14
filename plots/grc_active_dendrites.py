@@ -3,7 +3,7 @@ import numpy as np
 from bsb.plotting import *
 from bsb.core import from_hdf5
 import plotly.graph_objects as go
-import h5py, selection
+import h5py, selection, _layouts
 
 import collections
 from collections import defaultdict
@@ -120,15 +120,12 @@ def plot():
     fig = go.Figure(data=[In0, In1, In2, In3, In4])
 
     fig.update_layout(
-        showlegend=True,
         scene=dict(
             xaxis=dict(title="X", range=[0, 300], autorange=False),
             yaxis=dict(title="Z", range=[0, 200], autorange=False),
             zaxis=dict(title="Y", range=[0, 130], autorange=False),
-            aspectratio=dict(x=1, y=2/3, z=13/30 )
+            aspectratio=dict(x=1, y=2/3, z=13/30 ),
+            camera=_layouts.struct_activation_cam
         )
     )
-    fig.layout.scene.xaxis.range = [0, 300]
-    fig.layout.scene.yaxis.range = [0, 200]
-    fig.layout.scene.zaxis.range = [0, 150]
     return fig
