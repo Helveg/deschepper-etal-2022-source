@@ -174,7 +174,6 @@ def plot():
     E = n2a / np.max(n2a)
     I = (n2b_gabazine - n2b_control) / np.max(n2b_gabazine - n2b_control)
     B = (E - I) / (E + 1)
-    print(np.max(E), np.max(I), np.max(B), np.min(B))
     plots = {
         "control": control,
         "gabazine": gabazine,
@@ -205,6 +204,18 @@ def plot():
             xaxis_title="Y",
             yaxis_title="X",
             aspectratio=dict(x=2/3, y=1, z=0.3),
+        )
+    )
+    fig.update_layout(
+        scene_yaxis=dict(
+            tickmode="array",
+            tickvals=[0, 20, 40, 60],
+            ticktext=["0", "100", "200", "300"]
+        ),
+        scene_xaxis=dict(
+            tickmode="array",
+            tickvals=[0, 10, 20, 30, 40],
+            ticktext=["0", "50", "100", "150", "200"]
         )
     )
     figs["balance"] = fig

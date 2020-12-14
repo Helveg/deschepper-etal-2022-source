@@ -19,8 +19,6 @@ def select_groups(kv):
 
 def plot():
     with h5py.File(results_path("results_NEST_stim_on_MFs_PoissFinal.hdf5"), "r") as f:
-        print("items ",f["/recorders/soma_spikes"].items())
         groups = {k: v for k, v in filter(select_groups, f["/recorders/soma_spikes"].items())}
-        print("groups ", groups)
         fig = hdf5_plot_spike_raster(groups, show=False, cutoff=300)
     return fig

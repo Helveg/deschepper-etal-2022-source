@@ -59,3 +59,6 @@ def plot():
     finally:
         for handle in handles:
             handle.close()
+
+def meta(key):
+    return {"width": 1920 / 2}

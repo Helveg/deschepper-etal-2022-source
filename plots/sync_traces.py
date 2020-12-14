@@ -29,5 +29,10 @@ def plot():
             fig.update_yaxes(range=[-80, 45], row=i)
         return fig
 
+
+def meta():
+    return {"width": 1920 / 2}
+
+
 if __name__ == "__main__":
     plot().show()

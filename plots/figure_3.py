@@ -36,22 +36,15 @@ def plot():
 
     # Create granule cell inset
     grc_id = selection.granule_cells[6]
-    inset = plot_morphology(grm, set_range=False, cubic=False, show=False, soma_radius=grc_radius, color=grc_color, use_last_soma_comp=False)
+    inset = plot_morphology(grm, set_range=False, show=False, soma_radius=grc_radius, color=grc_color, use_last_soma_comp=False)
     inset.layout.scene.xaxis.range = [-5, 5]
     inset.layout.scene.yaxis.range = [-5, 5]
     inset.layout.scene.zaxis.range = [-15, 5]
     inset.layout.scene.aspectratio = dict(x=1, y=1, z=2)
     glom_synapses = np.array([i.to_compartment.midpoint for i in cs_glom_grc.intersections if i.to_id == grc_id], dtype=float)
     goc_synapses = np.array([i.to_compartment.midpoint for i in cs_goc_grc.intersections if i.to_id == grc_id], dtype=float)
-    text_goc = []
-    u, last_goc = 0, None
-    for i in cs_goc_grc.intersections:
-        if i.to_id == grc_id:
-            if i.from_id != last_goc:
-                u += 1
-                last_goc = i.from_id
-            text_goc.append("GoC" + str(u))
     text_glom = ["Glom1", "Glom3", "Glom2", "Glom4"]
+    text_goc = ["GoC1", "GoC2", "GoC1", "GoC3"]
     inset.add_trace(go.Scatter3d(x=glom_synapses[:,0], y=glom_synapses[:,2], z=glom_synapses[:,1], text=text_glom, marker=dict(color="black"), mode="markers+text", textposition="bottom right", textfont=dict(size=10), showlegend=False, legendgroup="glom"))
     inset.add_trace(go.Scatter3d(x=goc_synapses[:,0], y=goc_synapses[:,2], z=goc_synapses[:,1], text=text_goc, marker=dict(color=goc_color), mode="markers+text", textposition="top right", textfont=dict(size=10), showlegend=False, legendgroup="goc"))
     inset.update_layout(scene_camera=inset_camera)

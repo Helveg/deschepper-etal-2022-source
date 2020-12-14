@@ -42,14 +42,11 @@ def select_ids(kv, sel_labels, cell_ids):
 
     name, group = kv
     group = FakeDataset(group)
-    # if ids within current label dataset
-    print("sel_labels", sel_labels)
     for label in sel_labels:
         print(name, group.attrs.get("label"))
         if label not in cell_ids:
             continue
         elif group.attrs.get("label", None) == label:
-            print("printed",name, group.attrs.get("label"), "selected")
             group.arr = group.arr[np.isin(group.arr[:, 0], cell_ids[label])]
 
     return name, group
@@ -68,15 +65,8 @@ class FakeDataset:
 
 def plot():
     with h5py.File(results_path("results_NEST_stim_on_MFs_4syncFinal2_finetuning0-02.hdf5"), "r") as f:
-        print("items ",f["/recorders/soma_spikes"].items())
-        #groups = {k: v for k, v in filter(select_groups, f["/recorders/soma_spikes"].items())}
-        print("groups:", *(f["/recorders/soma_spikes"].items()))
         groups = {k: v for k, v in map(select_ids, f["/recorders/soma_spikes"].items(), generate(sel_labels), generate(cell_ids))}
-        print(groups.keys())
-        #fig = hdf5_plot_spike_raster(groups, show=False)
-        fig = hdf5_plot_spike_raster(groups, show=False, cutoff=300, \
-        sorted_labels=sel_labels, sorted_ids=cell_ids)
-        #fig.update_yaxes(range=[-5, 630])
+        fig = hdf5_plot_spike_raster(groups, show=False, cutoff=300, sorted_labels=sel_labels, sorted_ids=cell_ids)
 
     return fig
 
