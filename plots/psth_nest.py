@@ -89,3 +89,6 @@ def plot():
         for i in range(len(ranges)):
             fig.update_yaxes(range=ranges[i], row=i + 1, col=1)
     return figs
+
+def meta(key):
+    return {"width": 1920 / 2}

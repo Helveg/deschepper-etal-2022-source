@@ -79,3 +79,7 @@ def plot():
         #fig.update_yaxes(range=[-5, 630])
 
     return fig
+
+
+def meta(key):
+    return {"width": 1920 / 2}
