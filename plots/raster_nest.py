@@ -71,5 +71,5 @@ def plot():
     return fig
 
 
-def meta(key):
+def meta():
     return {"width": 1920 / 2}
