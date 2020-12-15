@@ -23,7 +23,7 @@ def results_path(*args):
 #     group.attrs.get("label", None) == "record_pc_spikes" or \
 #     group.attrs.get("label", None) == "record_golgi_spikes" or name == cell_id
 
-sel_labels = ["record_golgi_spikes", "record_granules_spikes"]
+sel_labels = ["record_bc_spikes","record_sc_spikes","record_pc_spikes","record_golgi_spikes", "record_granules_spikes"]
 cell_ids = {"record_granules_spikes": [16011, 3083, 15265, 3075, 11800, 3068, 9623, 3069, 31681, 3070],
 #[17372, 5987, 15288, 3764, 11399, 3083, 9163, 3074, 31681, 3070],    # Poiss flipped
 #[3070, 31681, 3074, 9163, 3083, 11399, 3764, 15288, 5987, 17372],\    Poiss
