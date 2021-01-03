@@ -13,6 +13,10 @@ def results_path(*args):
         os.path.dirname(__file__), "..", "results", *args
     )
 
+def find_nearest(array, value):
+    array = np.asarray(array)
+    return (np.abs(array - value)).argmin()
+
 def plot():
     network = from_hdf5(network_path)
     ps_pc = network.get_placement_set("purkinje_cell")
@@ -27,7 +31,9 @@ def plot():
     no_mli_files = glob(results_path("mli/lateral_no_MLI/*.hdf5"))
     pcs_considered = len([id for id in ps_pc.identifiers if id not in cut_off_ids])
     deltas_mli = np.empty((pcs_considered, len(mli_files)))
+    base_mli = np.empty((pcs_considered, len(mli_files)))
     deltas_no_mli = np.empty((pcs_considered, len(no_mli_files)))
+    base_no_mli = np.empty((pcs_considered, len(no_mli_files)))
 
     base_start = 500
     base_end = 600
@@ -37,16 +43,20 @@ def plot():
     # Get mean ISI during baseline and stimulus windows for each PC for each run
     for i, fname in enumerate(mli_files):
         with File(fname, "r") as f:
+            base_mli[:, i] = np.array([np.mean(np.diff((times := f[f"/recorders/soma_spikes/{id}"][:, 1])[(times > 480) & (times < 600)])) for id in ps_pc.identifiers if id not in cut_off_ids])
             deltas_mli[:, i] = np.array([np.mean(np.diff((times := f[f"/recorders/soma_spikes/{id}"][:, 1])[(times > 676) & (times < 800)])) - np.mean(np.diff((times := f[f"/recorders/soma_spikes/{id}"][:, 1])[(times > 480) & (times < 600)])) for id in ps_pc.identifiers if id not in cut_off_ids])
 
 
     for i, fname in enumerate(no_mli_files):
         with File(fname, "r") as f2:
+            base_no_mli[:, i] = np.array([np.mean(np.diff((times := f2[f"/recorders/soma_spikes/{id}"][:, 1])[(times > 480) & (times < 600)])) for id in ps_pc.identifiers if id not in cut_off_ids])
             deltas_no_mli[:, i] = np.array([np.mean(np.diff((times := f2[f"/recorders/soma_spikes/{id}"][:, 1])[(times > 676) & (times < 800)])) - np.mean(np.diff((times := f2[f"/recorders/soma_spikes/{id}"][:, 1])[(times > 480) & (times < 600)])) for id in ps_pc.identifiers if id not in cut_off_ids])
 
-    # Average the values over the runs
-    deltas_mli = np.mean(deltas_mli, axis=1)
-    deltas_no_mli = np.mean(deltas_no_mli, axis=1)
+    # Average the values over the runs, use the opposite to get the reduction of ISI
+    deltas_mli = -np.mean(deltas_mli, axis=1)
+    deltas_no_mli = -np.mean(deltas_no_mli, axis=1)
+    base_mli = np.mean(base_mli, axis=1)
+    base_no_mli = np.mean(base_no_mli, axis=1)
 
     from sklearn.model_selection import GridSearchCV
     from sklearn.kernel_ridge import KernelRidge
@@ -61,6 +71,9 @@ def plot():
     kr.fit(X, y)
     inhib_score = kr.score(X, y)
     print("R^2 score inhibited: ", inhib_score)
+    # Standard error of the estimate
+    S = np.sqrt(np.sum((deltas_mli - kr.predict(X)) ** 2) / len(X))
+    print("S score inhibited:", S)
     y_kr = kr.predict(X_plot)
     kr2 = GridSearchCV(KernelRidge(kernel='rbf', gamma=0.1),
                       param_grid={"alpha": [1e0, 0.1, 1e-2, 1e-3],
@@ -68,6 +81,9 @@ def plot():
     kr2.fit(X, y2)
     disinhib_score = kr.score(X, y2)
     print("R^2 score disinhibited: ", disinhib_score)
+    # Standard error of the estimate
+    S = np.sqrt(np.sum((deltas_no_mli - kr2.predict(X)) ** 2) / len(X))
+    print("S score disinhibited:", S)
     y_kr2 = kr2.predict(X_plot)
     x = X.ravel()
     x_plot = X_plot.ravel()
@@ -95,10 +111,24 @@ def plot():
     fig.layout.shapes = grc_cloud.granule_beam("networks/300x_200z.hdf5", mli_files[0], base_start=base_start, base_end=base_end, stim_start=stim_start, stim_end=stim_end)
     fig.update_layout(
         title_text="Lateral response of PC to activated GrC bundle",
-        yaxis_title="Δ ISI (ms)",
+        yaxis_title="Reduction in ISI (ms)",
         xaxis_title="X (µm)",
-        yaxis_autorange="reversed",
+        xaxis_range=[300, 0],
     )
-    fig.add_annotation(x=x_plot[10], y=y_kr[10], text=f"R\u00B2 = {round(inhib_score, 2)}", showarrow=True, arrowhead=False, ay=30, ax=20, standoff=3)
-    fig.add_annotation(x=x_plot[10], y=y_kr2[10], text=f"R\u00B2 = {round(disinhib_score, 2)}", showarrow=True, arrowhead=False, ay=-30, ax=20, standoff=3)
+    fig.add_annotation(x=x_plot[10], y=y_kr[10], text=f"R\u00B2 = {round(inhib_score, 2)}", showarrow=True, arrowhead=False, ay=30, ax=-20, standoff=3)
+    fig.add_annotation(x=x_plot[10], y=y_kr2[10], text=f"R\u00B2 = {round(disinhib_score, 2)}", showarrow=True, arrowhead=False, ay=-30, ax=-20, standoff=3)
+
+    mi = np.argmax(y_kr)
+    nmi = np.argmax(y_kr2)
+    m = y_kr[mi]
+    nm = y_kr2[nmi]
+    print("Max red. with MLI:", round(m, 2), "at", round(x_plot[mi], 2))
+    print("Max red. without MLI:", round(nm, 2), "at", round(x_plot[nmi], 2))
+    hmi = find_nearest(y_kr, m / 2)
+    hnmi = find_nearest(y_kr2, nm / 2)
+    slope_m = np.diff(y_kr)[hmi] / np.diff(x_plot)[hmi]
+    slope_nm = np.diff(y_kr2)[hnmi] / np.diff(x_plot)[hnmi]
+    print("MLI Slope at half:", round(slope_m, 2))
+    print("No MLI Slope at half:", round(slope_nm, 2))
+
     return fig
