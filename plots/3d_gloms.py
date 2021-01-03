@@ -40,6 +40,8 @@ def plot():
             extras = {}
             if mf not in selection_mf:
                 extras["marker"] = dict(color="gray", opacity=0.2)
+            else:
+                print(f"[{selection_name}] Selected cluster of {len(gloms)} glomeruli.")
             if individually_labelled:
                 extras["name"] = "MF " + str(mf)
             else:

@@ -17,5 +17,8 @@ def plot():
         fig = plot_traces(traces, x=list(np.arange(0, 900, 0.1)), input_region=[400, 500], cutoff=3000, show=False)
     return fig
 
+def meta():
+    return {"width": 1920 / 3 * 2}
+    
 if __name__ == "__main__":
     plot().show()

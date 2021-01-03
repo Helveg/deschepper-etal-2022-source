@@ -78,6 +78,7 @@ def plot():
     ms.fig.add_trace(go.Scatter3d(x=goc_synapses[:,0], y=goc_synapses[:,2], z=goc_synapses[:,1], marker=dict(color=goc_color, size=3), opacity=0.5, mode="markers", legendgroup="goc", showlegend=False))
     ms.fig.add_trace(go.Scatter3d(x=active_goc_synapses[:,0], y=active_goc_synapses[:,2], z=active_goc_synapses[:,1], marker=dict(color=goc_color, size=3), mode="markers", name="GoC-GrC synapse", legendgroup="goc"))
     ms.fig.add_trace(go.Scatter3d(x=glom_synapses[:,0], y=glom_synapses[:,2], z=glom_synapses[:,1], marker=dict(color="black", size=3), mode="markers", name="Glom-GrC synapse", legendgroup="glom"))
+    print("Depicted GrC:", len(grc_pos))
     for pos in grc_pos:
         ms.add_morphology(grm, offset=pos, soma_radius=grc_radius, color=grc_color, use_last_soma_comp=False, segment_radius={"soma": 1, "axon": 0.2, "dendrites": 2})
     ms.fig.add_trace(get_soma_trace(goc_radius, offset=goc_pos, color=goc_color, name="Golgi cell", showlegend=True))

@@ -75,7 +75,7 @@ def plot():
         go.Scatter(x=x, y=deltas_mli, name="PC response with MLI", mode="markers", marker=dict(color="blue")),
         go.Scatter(x=X_plot.ravel(), y=y_kr, name="KRR of response with MLI", mode="lines", line=dict(color="blue")),
         go.Scatter(x=x, y=deltas_no_mli, name="PC response without MLI", mode="markers", marker=dict(color="red")),
-        go.Scatter(x=X_plot.ravel(), y=y_kr2, name="KRR of response with MLI", mode="lines", line=dict(color="red")),
+        go.Scatter(x=X_plot.ravel(), y=y_kr2, name="KRR of response without MLI", mode="lines", line=dict(color="red")),
         go.Scatter(x=[0], y=[0], mode="markers", name="Activated GrC", marker=dict(
             colorscale=grc_cloud.colorbar_grc, cmin=0, cmax=1,
             size=9,
@@ -95,7 +95,7 @@ def plot():
     fig.layout.shapes = grc_cloud.granule_beam("networks/300x_200z.hdf5", mli_files[0], base_start=base_start, base_end=base_end, stim_start=stim_start, stim_end=stim_end)
     fig.update_layout(
         title_text="Lateral response of PC to activated GrC bundle",
-        yaxis_title="Poststimulus change in ISI (ms)",
+        yaxis_title="Δ ISI (ms)",
         xaxis_title="X (µm)",
         yaxis_autorange="reversed",
     )

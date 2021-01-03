@@ -198,11 +198,12 @@ def plot():
         figs[name] = fig
     fig = go.Figure(go.Surface(z=B, colorscale="balance", cmin=-0.5, cmax=0.5))
     fig.update_layout(
-        title_text="balance",
+        title_text="E/I balance",
         scene=dict(
             zaxis_range=[-1, 1],
             xaxis_title="Y",
             yaxis_title="X",
+            zaxis_title="B",
             aspectratio=dict(x=2/3, y=1, z=0.3),
         )
     )

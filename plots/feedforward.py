@@ -14,6 +14,8 @@ def plot():
 
 def plot_average_all():
     network = from_hdf5("networks/300x_200z.hdf5")
+    grc_color = network.configuration.cell_types["granule_cell"].plotting.color
+    bc_color = network.configuration.cell_types["basket_cell"].plotting.color
     ampa_currents = []
     gaba_currents = []
     files = glob("results/mli/feedforward/*.hdf5")
@@ -40,10 +42,10 @@ def plot_average_all():
     max_x = np.argmax(corr_y)
     max_y = corr_y[max_x]
     corr_fig.add_annotation(x=corr_x[max_x], y=max_y, text=round(corr_x[max_x], 2), standoff=3, row=2, col=2)
-    corr_fig.add_trace(go.Scatter(x=time, y=avg_ampa_current, name="AMPA"), row=1, col=1)
-    corr_fig.add_trace(go.Scatter(x=time, y=avg_gaba_current, name="GABA"), row=1, col=1)
-    corr_fig.add_trace(go.Scatter(x=time, y=norm_ampa, name="Norm. AMPA"), row=1, col=2)
-    corr_fig.add_trace(go.Scatter(x=time, y=norm_gaba, name="Norm. GABA"), row=1, col=2)
+    corr_fig.add_trace(go.Scatter(x=time, y=avg_ampa_current, name="AMPA", line=dict(color=grc_color)), row=1, col=1)
+    corr_fig.add_trace(go.Scatter(x=time, y=avg_gaba_current, name="GABA", line=dict(color=bc_color)), row=1, col=1)
+    corr_fig.add_trace(go.Scatter(x=time, y=norm_ampa, name="Norm. AMPA", line=dict(color=grc_color)), row=1, col=2)
+    corr_fig.add_trace(go.Scatter(x=time, y=norm_gaba, name="Norm. GABA", line=dict(color=bc_color)), row=1, col=2)
     corr_fig.update_xaxes(range=[350, 450])
     corr_fig.update_xaxes(range=[-50, 50], row=2, col=2)
 

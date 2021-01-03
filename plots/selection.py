@@ -22,11 +22,11 @@ vi_stellate = 570
 vi_purkinje = 136
 
 sync = {
+    "granule_cell": [3070, 3069, 3068, 3075, 3083],
+    "golgi_cell": [1, 17, 53],
     "purkinje_cell": [83, 78, 126],
     "stellate_cell": [695, 715],
     "basket_cell": [306, 310],
-    "golgi_cell": [1, 17, 53],
-    "granule_cell": [3070, 3069, 3068, 3075, 3083],
 }
 
 onbeam = {

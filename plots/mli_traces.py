@@ -24,5 +24,8 @@ def plot():
             figs[tag] = fig
     return figs
 
+def meta(key):
+    return {"width": 1920 / 3 * 2}
+
 if __name__ == "__main__":
     plot()
