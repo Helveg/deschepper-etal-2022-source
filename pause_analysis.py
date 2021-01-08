@@ -68,7 +68,7 @@ class FakeDataset:
         return self.arr.shape
 
 
-with h5py.File(results_path("results_NEST_stim_on_MFs_4syncFinal2_finetuning0-02_noMLIPC.hdf5"), "r") as f:
+with h5py.File(results_path("results_NEST_stim_on_MFs_4syncFinal2_finetuning0-02_33ms.hdf5"), "r") as f:
     print("items ",f["/recorders/soma_spikes"].items())
     #groups = {k: v for k, v in filter(select_groups, f["/recorders/soma_spikes"].items())}
     print("groups:", *(f["/recorders/soma_spikes"].items()))
@@ -117,20 +117,18 @@ with h5py.File(results_path("results_NEST_stim_on_MFs_4syncFinal2_finetuning0-02
         print("p", p, " spikes ",current_pc_spikes_ids,current_pc_spikes, " in burst window ", spike_burst[p])
         ind = np.where(np.array(current_pc_spikes)>window_burst[1])
         print("p pause ind",ind, " first ", ind[0][0])
-        pause[p] = current_pc_spikes[ind[0][0]] - window_burst[1]
+        pause[p] = current_pc_spikes[ind[0][0]] - current_pc_spikes[ind_last[0][0]]  #window_burst[1]
         print("pause ",pause[p])
 
-    fig = dict({
-        "data": [{"type": "bar",
-                  "x": pause,
-                  "y": spike_burst}],
-        "layout": {"title": {"text": "A Figure Specified By Python Dictionary"}}
-    })
+    import plotly.express as px
+    lists = (pause.items()) # sorted by key, return a list of tuples
+    x, pause_values = zip(*lists) # unpack a list of pairs into two tuples
+    lists = (spike_burst.items()) # sorted by key, return a list of tuples
+    x, spike_burst_values = zip(*lists) # unpack a list of pairs into two tuples
+    fig = px.scatter(x=spike_burst_values, y=pause_values)
+    fig.show()
 
-    # To display the figure defined by this dict, use the low-level plotly.io.show function
-    import plotly.io as pio
 
-    pio.show(fig)
     # fig = hdf5_plot_spike_raster(groups, show=False, cutoff=300, \
     # sorted_labels=sel_labels, sorted_ids=cell_ids)
     #fig.update_yaxes(range=[-5, 30])
