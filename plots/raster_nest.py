@@ -23,32 +23,37 @@ def results_path(*args):
 #     group.attrs.get("label", None) == "record_pc_spikes" or \
 #     group.attrs.get("label", None) == "record_golgi_spikes" or name == cell_id
 
-sel_labels = ["record_bc_spikes","record_sc_spikes","record_pc_spikes","record_golgi_spikes", "record_granules_spikes"]
-cell_ids = {"record_granules_spikes": [16011, 3083, 15265, 3075, 11800, 3068, 9623, 3069, 31681, 3070],
-#[17372, 5987, 15288, 3764, 11399, 3083, 9163, 3074, 31681, 3070],    # Poiss flipped
-#[3070, 31681, 3074, 9163, 3083, 11399, 3764, 15288, 5987, 17372],\    Poiss
-#[3070, 31681, 3069, 9623, 3068, 11800, 3075, 15265, 3083, 16011]        4sync
-#[16011, 3083, 15265, 3075, 11800, 3068, 9623, 3069, 31681, 3070]   4sync flipped
-"record_glomerulus_spikes": random.sample(range(732,2336), int((2336-732)*0.05))}
+ordered_labels = ["record_bc_spikes","record_sc_spikes","record_pc_spikes","record_golgi_spikes", "record_granules_spikes"]
+cell_ids = {
+    "record_granules_spikes": [16011, 3083, 15265, 3075, 11800, 3068, 9623, 3069, 31681, 3070],
+    # Poiss flipped
+    # [17372, 5987, 15288, 3764, 11399, 3083, 9163, 3074, 31681, 3070]
+    # Poiss
+    # [3070, 31681, 3074, 9163, 3083, 11399, 3764, 15288, 5987, 17372]
+    # 4 sync
+    # [3070, 31681, 3069, 9623, 3068, 11800, 3075, 15265, 3083, 16011]
+    # 4 sync flipped
+    # [16011, 3083, 15265, 3075, 11800, 3068, 9623, 3069, 31681, 3070]
+    "record_glomerulus_spikes": random.sample(range(732,2336), int((2336-732)*0.05))
+}
 
-def generate(arg):
-    def generator():
-        while True:
-            yield arg
+def cell_type_sorter(x, y):
+    return ordered_labels
 
-    return generator()
+def cell_sorter(label, ids):
+    if label in cell_ids:
+        ids = cell_ids[label]
+        return dict(zip(ids, range(len(ids))))
 
-def select_ids(kv, sel_labels, cell_ids):
-
+def select_data(kv):
+    # Unpack the `.items()` key value pairs
     name, group = kv
+    # Create a fake dataset that we can filter and pass on into the raster plot function.
     group = FakeDataset(group)
-    for label in sel_labels:
-        print(name, group.attrs.get("label"))
-        if label not in cell_ids:
-            continue
-        elif group.attrs.get("label", None) == label:
-            group.arr = group.arr[np.isin(group.arr[:, 0], cell_ids[label])]
-
+    label = group.attrs.get("label", None)
+    # If a cell id filter exists for this label filter the fake dataset's spikes
+    if label in cell_ids:
+        group.arr = group.arr[np.isin(group.arr[:, 0], cell_ids[label])]
     return name, group
 
 class FakeDataset:
@@ -65,8 +70,8 @@ class FakeDataset:
 
 def plot():
     with h5py.File(results_path("results_NEST_stim_on_MFs_4syncFinal2_finetuning0-02.hdf5"), "r") as f:
-        groups = {k: v for k, v in map(select_ids, f["/recorders/soma_spikes"].items(), generate(sel_labels), generate(cell_ids))}
-        fig = hdf5_plot_spike_raster(groups, show=False, cutoff=300, sorted_labels=sel_labels, sorted_ids=cell_ids)
+        groups = {k: v for k, v in map(select_data, f["/recorders/soma_spikes"].items())}
+        fig = hdf5_plot_spike_raster(groups, show=False, cutoff=300, cell_type_sort=cell_type_sorter, cell_sort=cell_sorter)
 
     return fig
 
