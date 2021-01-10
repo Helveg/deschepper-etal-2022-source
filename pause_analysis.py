@@ -14,16 +14,7 @@ def results_path(*args):
     )
 
 cutoff = 300
-window_burst = [400, 475]
-# def select_groups(kv):
-#     name, group = kv
-#     cell_id = []
-#     print("attrssssssssssssssssssss    ",group.attrs.get("label", None))
-#     return group.attrs.get("label", None) == "record_sc_spikes" or \
-#     group.attrs.get("label", None) == "record_bc_spikes" or \
-#     group.attrs.get("label", None) == "record_glomerulus_spikes" or \
-#     group.attrs.get("label", None) == "record_pc_spikes" or \
-#     group.attrs.get("label", None) == "record_golgi_spikes" or name == cell_id
+window_burst = [400, 425]           # Time window where we analyse the burst (number of spikes or mean ISI)
 
 sel_labels = ["record_bc_spikes","record_sc_spikes","record_pc_spikes","record_golgi_spikes", "record_granules_spikes"]
 #sel_labels = ["record_granules_spikes"]
@@ -68,7 +59,7 @@ class FakeDataset:
         return self.arr.shape
 
 
-with h5py.File(results_path("results_NEST_stim_on_MFs_4syncFinal2_finetuning0-02_33ms.hdf5"), "r") as f:
+with h5py.File(results_path("results_NEST_stim_on_MFs_4syncFinal2_finetuning0-02.hdf5"), "r") as f:
     print("items ",f["/recorders/soma_spikes"].items())
     #groups = {k: v for k, v in filter(select_groups, f["/recorders/soma_spikes"].items())}
     print("groups:", *(f["/recorders/soma_spikes"].items()))
@@ -113,18 +104,20 @@ with h5py.File(results_path("results_NEST_stim_on_MFs_4syncFinal2_finetuning0-02
     for p in pc_ids:        # For each PC we compute number of spikes in window burst and pause duration
         current_pc_spikes_ids = np.where(neurons['record_pc_spikes'] == p)
         current_pc_spikes = [pc_times[i] for i in list(current_pc_spikes_ids[0])]
+        # Total number of spikes in the window_burst
         spike_burst[p] = sum(map(lambda x : x>window_burst[0] and x<window_burst[1], current_pc_spikes))
         print("p", p, " spikes ",current_pc_spikes_ids,current_pc_spikes, " in burst window ", spike_burst[p])
         ind = np.where(np.array(current_pc_spikes)>window_burst[1])
         print("p pause ind",ind, " first ", ind[0][0])
-        pause[p] = current_pc_spikes[ind[0][0]] - current_pc_spikes[ind_last[0][0]]  #window_burst[1]
-        print("pause ",pause[p])
+        # pause - ISI between first spike after window_burst and last spike in window_burst
+        pause[p] = current_pc_spikes[ind[0][0]] - current_pc_spikes[ind[0][0]-1]  #window_burst[1]
+        print("pause ",pause[p], "last",current_pc_spikes[ind[0][0]-1],"first",current_pc_spikes[ind[0][0]] )
 
     import plotly.express as px
-    lists = (pause.items()) # sorted by key, return a list of tuples
-    x, pause_values = zip(*lists) # unpack a list of pairs into two tuples
-    lists = (spike_burst.items()) # sorted by key, return a list of tuples
-    x, spike_burst_values = zip(*lists) # unpack a list of pairs into two tuples
+    lists = (pause.items())
+    x, pause_values = zip(*lists)
+    lists = (spike_burst.items())
+    x, spike_burst_values = zip(*lists)
     fig = px.scatter(x=spike_burst_values, y=pause_values)
     fig.show()
 
