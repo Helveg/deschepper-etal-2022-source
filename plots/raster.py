@@ -14,11 +14,10 @@ def results_path(*args):
 
 def select_groups(kv):
     name, group = kv
-    cell_id = []
-    return group.attrs.get("label", None) == "granule_cell" or name == cell_id
+    return group.attrs.get("label", None) != "granule_cell" or np.random.rand() < 0.05
 
 def plot():
-    with h5py.File(results_path("results_NEST_stim_on_MFs_PoissFinal.hdf5"), "r") as f:
+    with h5py.File(results_path("results_stim_on_MFs_Poiss.hdf5"), "r") as f:
         groups = {k: v for k, v in filter(select_groups, f["/recorders/soma_spikes"].items())}
         fig = hdf5_plot_spike_raster(groups, show=False, cutoff=300)
     return fig

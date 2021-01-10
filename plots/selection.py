@@ -3,6 +3,7 @@ import numpy as np
 # "networks/300x_200z.hdf5"
 
 stimulated_mf_poiss = np.array([213, 214, 222, 223])
+stimulated_mf_sync = np.array([213, 214, 222, 223, 229, 221, 206, 230, 247, 239, 231, 238, 240])
 golgi_cell_ids = np.array([14, 24, 35])
 golgi_cell_labels = ["Medium activity", "High activity", "Low activity"]
 golgi_cells = dict(zip(golgi_cell_labels, golgi_cell_ids))
