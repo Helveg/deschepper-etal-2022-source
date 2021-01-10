@@ -78,14 +78,14 @@ def plot():
     finally:
         for handle in handles:
             handle.close()
-    with h5py.File(results_path("results_NEST_stim_on_MFs_4syncFinal2_finetuning0-02.hdf5"), "a") as f:
+    with h5py.File(results_path("results_NEST_stim_on_MFs_4syncFinal2_finetuning0-02_noMLIPC.hdf5"), "a") as f:
         for g in f["/recorders/soma_spikes"].values():
             if g.attrs["label"] not in order:
                 print("Not sorting", g.name, "no order found")
             g.attrs["order"] = order.get(g.attrs["label"], 0)
             g.attrs['color'] = color.get(g.attrs["label"], 0)
         figs["sync"] = fig = hdf5_plot_psth(scaffoldInstance, f["/recorders/soma_spikes"], show=False, cutoff=300, duration=5)
-        ranges = [[0, 30], [0, 27], [0, 125], [0, 130], [0, 120], [0, 120]]
+        ranges = [[0, 30], [0, 29], [0, 125], [0, 130], [0, 120], [0, 120]]
         for i in range(len(ranges)):
             fig.update_yaxes(range=ranges[i], row=i + 1, col=1)
     return figs
