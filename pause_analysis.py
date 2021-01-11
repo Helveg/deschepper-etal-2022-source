@@ -1,4 +1,5 @@
 import os, plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from bsb.core import from_hdf5
 from bsb.plotting import hdf5_plot_psth, hdf5_plot_spike_raster
 import numpy as np, h5py
@@ -14,7 +15,7 @@ def results_path(*args):
     )
 
 cutoff = 300
-window_burst = [400, 425]           # Time window where we analyse the burst (number of spikes or mean ISI)
+window_burst = [400, 420]           # Time window where we analyse the burst (number of spikes or mean ISI)
 
 sel_labels = ["record_bc_spikes","record_sc_spikes","record_pc_spikes","record_golgi_spikes", "record_granules_spikes"]
 #sel_labels = ["record_granules_spikes"]
@@ -100,12 +101,23 @@ with h5py.File(results_path("results_NEST_stim_on_MFs_4syncFinal2_finetuning0-02
     pc_ids = np.unique(neurons['record_pc_spikes'])
     print("pc spikes",pc_times,pc_ids)
     spike_burst = {}
+    count_burst = {}
+    isi_burst = {}
     pause = {}
     for p in pc_ids:        # For each PC we compute number of spikes in window burst and pause duration
         current_pc_spikes_ids = np.where(neurons['record_pc_spikes'] == p)
-        current_pc_spikes = [pc_times[i] for i in list(current_pc_spikes_ids[0])]
+        current_pc_spikes = np.array([pc_times[i] for i in list(current_pc_spikes_ids[0])])
         # Total number of spikes in the window_burst
-        spike_burst[p] = sum(map(lambda x : x>window_burst[0] and x<window_burst[1], current_pc_spikes))
+        spike_burst[p]  = current_pc_spikes[(current_pc_spikes > window_burst[0]) & (current_pc_spikes < window_burst[1])]
+        #spike_burst[p] = sum(map(lambda x : x>window_burst[0] and x<window_burst[1], current_pc_spikes))
+        count_burst[p] = len(spike_burst[p])
+        if len(spike_burst[p])>1:
+        #    print("map", map(lambda x : x>window_burst[0] and x<window_burst[1], current_pc_spikes))
+
+            isi_burst[p] = np.mean(np.diff(spike_burst[p]))
+            print("arrayyyyyyyyyyy ",spike_burst[p], isi_burst[p])
+        else:
+            isi_burst[p] = -1
         print("p", p, " spikes ",current_pc_spikes_ids,current_pc_spikes, " in burst window ", spike_burst[p])
         ind = np.where(np.array(current_pc_spikes)>window_burst[1])
         print("p pause ind",ind, " first ", ind[0][0])
@@ -116,9 +128,28 @@ with h5py.File(results_path("results_NEST_stim_on_MFs_4syncFinal2_finetuning0-02
     import plotly.express as px
     lists = (pause.items())
     x, pause_values = zip(*lists)
-    lists = (spike_burst.items())
-    x, spike_burst_values = zip(*lists)
-    fig = px.scatter(x=spike_burst_values, y=pause_values)
+    lists = (count_burst.items())
+    x, spike_burst_count = zip(*lists)
+    lists = (isi_burst.items())
+    x, isi_burst = zip(*lists)
+    #print("y valuessssss ",isi_burst, spike_burst_values)
+    # fig = px.scatter(x=spike_burst_values, y=pause_values)
+    # fig.show()
+    fig = make_subplots(rows=1, cols=2)
+
+    fig.add_trace(
+        go.Scatter(x=spike_burst_count, y=pause_values, mode="markers", x_title='prova1'),
+        row=1, col=1
+    )
+
+    fig.add_trace(
+        go.Scatter(x=isi_burst, y=pause_values, mode="markers"),
+        row=1, col=2
+    )
+    fig['layout']['xaxis']['title']='Label x-axis 1'
+    fig['layout']['xaxis2']['title']='Label x-axis 2'
+    fig['layout']['yaxis']['title']='Label y-axis 1'
+    fig['layout']['yaxis2']['title']='Label y-axis 2'
     fig.show()
 
 
