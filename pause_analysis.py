@@ -104,23 +104,25 @@ with h5py.File(results_path("results_NEST_stim_on_MFs_1syncFinal2_finetuning0-02
     count_burst = {}
     isi_burst = {}
     pause = {}
+    spike_baseline = {}
+    isi_baseline = []
     for p in pc_ids:        # For each PC we compute number of spikes in window burst and pause duration
         current_pc_spikes_ids = np.where(neurons['record_pc_spikes'] == p)
         current_pc_spikes = np.array([pc_times[i] for i in list(current_pc_spikes_ids[0])])
+        # Spikes in baseline (time window before the window_burst)
+        spike_baseline[p]  = current_pc_spikes[(current_pc_spikes > 0) & (current_pc_spikes < window_burst[0])]
+        if len(spike_baseline[p])>1:
+            isi_baseline.extend(list(np.diff(spike_baseline[p])))
+
         # Total number of spikes in the window_burst
         spike_burst[p]  = current_pc_spikes[(current_pc_spikes > window_burst[0]) & (current_pc_spikes < window_burst[1])]
         #spike_burst[p] = sum(map(lambda x : x>window_burst[0] and x<window_burst[1], current_pc_spikes))
         count_burst[p] = len(spike_burst[p])
         if len(spike_burst[p])>1:
-        #    print("map", map(lambda x : x>window_burst[0] and x<window_burst[1], current_pc_spikes))
-
             isi_burst[p] = np.mean(np.diff(spike_burst[p]))
-            print("arrayyyyyyyyyyy ",spike_burst[p], isi_burst[p])
         else:
             isi_burst[p] = -1
-        print("p", p, " spikes ",current_pc_spikes_ids,current_pc_spikes, " in burst window ", spike_burst[p])
         ind = np.where(np.array(current_pc_spikes)>window_burst[1])
-        print("p pause ind",ind, " first ", ind[0][0])
         # pause - ISI between first spike after window_burst and last spike in window_burst
         pause[p] = current_pc_spikes[ind[0][0]] - current_pc_spikes[ind[0][0]-1]  #window_burst[1]
         print("pause ",pause[p], "last",current_pc_spikes[ind[0][0]-1],"first",current_pc_spikes[ind[0][0]] )
@@ -132,20 +134,61 @@ with h5py.File(results_path("results_NEST_stim_on_MFs_1syncFinal2_finetuning0-02
     x, spike_burst_count = zip(*lists)
     lists = (isi_burst.items())
     x, isi_burst = zip(*lists)
-    #print("y valuessssss ",isi_burst, spike_burst_values)
-    # fig = px.scatter(x=spike_burst_values, y=pause_values)
-    # fig.show()
+
     fig = make_subplots(rows=1, cols=2)
 
+    # Add burst spike count and pause
     fig.add_trace(
-        go.Scatter(x=spike_burst_count, y=pause_values, mode="markers"),
+        go.Scatter(x=spike_burst_count, y=pause_values, mode="markers", showlegend=False),
         row=1, col=1
     )
 
+    # standard deviation area baseline ISI baseline ISI
+    x=[min(spike_burst_count), max(spike_burst_count)]
+    y1_upper = [np.mean(np.array(isi_baseline))+np.std(np.array(isi_baseline)), np.mean(np.array(isi_baseline))+np.std(np.array(isi_baseline))]
+    y1_lower = [np.mean(np.array(isi_baseline))-np.std(np.array(isi_baseline)), np.mean(np.array(isi_baseline))-np.std(np.array(isi_baseline))]
+    y1_lower = y1_lower[::-1]
+    fig.add_trace(go.Scatter(x=x+x[::-1],
+                                y=y1_upper+y1_lower,
+                                fill='tozerox',
+                                #fillcolor=new_col,
+                                line=dict(color='rgba(255,255,255,0)'),
+                                showlegend=False
+                                ), row=1, col=1)
+
+    # line trace baseline ISI
+    fig.add_trace(go.Scatter(x=x+x[::-1],
+                              y=[np.mean(np.array(isi_baseline)), np.mean(np.array(isi_baseline))],
+                              line=dict(width=2.5,color="#d62728"),
+                              mode='lines',name='avg baseline ISI'), row=1, col=1
+                                )
+
+    # Add burst ISI and pause
     fig.add_trace(
-        go.Scatter(x=isi_burst, y=pause_values, mode="markers"),
+        go.Scatter(x=isi_burst, y=pause_values, mode="markers", showlegend=False),
         row=1, col=2
     )
+
+    # standard deviation area baseline ISI baseline ISI
+    x=[min(isi_burst), max(isi_burst)]
+    y1_upper = [np.mean(np.array(isi_baseline))+np.std(np.array(isi_baseline)), np.mean(np.array(isi_baseline))+np.std(np.array(isi_baseline))]
+    y1_lower = [np.mean(np.array(isi_baseline))-np.std(np.array(isi_baseline)), np.mean(np.array(isi_baseline))-np.std(np.array(isi_baseline))]
+    y1_lower = y1_lower[::-1]
+    fig.add_trace(go.Scatter(x=x+x[::-1],
+                                y=y1_upper+y1_lower,
+                                fill='tozerox',
+                                #fillcolor=new_col,
+                                line=dict(color='rgba(255,255,255,0)'),
+                                showlegend=False
+                                ), row=1, col=2)
+
+    # line trace baseline ISI
+    fig.add_trace(go.Scatter(x=x+x[::-1],
+                              y=[np.mean(np.array(isi_baseline)), np.mean(np.array(isi_baseline))],
+                              line=dict(width=2.5,color="#d62728"),
+                              mode='lines', name='avg baseline ISI', showlegend=False), row=1, col=2
+                                )
+
     fig.update_xaxes(
         title='# spikes in burst window',
         tickmode = 'array',
@@ -172,6 +215,7 @@ with h5py.File(results_path("results_NEST_stim_on_MFs_1syncFinal2_finetuning0-02
         tick0 = 5,
         dtick = 5, row=1, col=2
     )
+    fig.update_layout(title='Burst-pause analysis Purkinje cells')
     fig.show()
 
 
