@@ -60,7 +60,7 @@ class FakeDataset:
         return self.arr.shape
 
 
-with h5py.File(results_path("results_NEST_stim_on_MFs_4syncFinal2_finetuning0-02.hdf5"), "r") as f:
+with h5py.File(results_path("results_NEST_stim_on_MFs_1syncFinal2_finetuning0-02.hdf5"), "r") as f:
     print("items ",f["/recorders/soma_spikes"].items())
     #groups = {k: v for k, v in filter(select_groups, f["/recorders/soma_spikes"].items())}
     print("groups:", *(f["/recorders/soma_spikes"].items()))
@@ -138,7 +138,7 @@ with h5py.File(results_path("results_NEST_stim_on_MFs_4syncFinal2_finetuning0-02
     fig = make_subplots(rows=1, cols=2)
 
     fig.add_trace(
-        go.Scatter(x=spike_burst_count, y=pause_values, mode="markers", x_title='prova1'),
+        go.Scatter(x=spike_burst_count, y=pause_values, mode="markers"),
         row=1, col=1
     )
 
@@ -146,10 +146,32 @@ with h5py.File(results_path("results_NEST_stim_on_MFs_4syncFinal2_finetuning0-02
         go.Scatter(x=isi_burst, y=pause_values, mode="markers"),
         row=1, col=2
     )
-    fig['layout']['xaxis']['title']='Label x-axis 1'
-    fig['layout']['xaxis2']['title']='Label x-axis 2'
-    fig['layout']['yaxis']['title']='Label y-axis 1'
-    fig['layout']['yaxis2']['title']='Label y-axis 2'
+    fig.update_xaxes(
+        title='# spikes in burst window',
+        tickmode = 'array',
+        tickvals = [1, 2, 3, 4],
+        ticktext = ['1', '2', '3', '4']
+        , row=1, col=1
+    )
+    fig.update_xaxes(
+        title='ISI in burst window [ms]',
+        tickmode = 'linear',
+        tick0 = -5,
+        dtick = 5,
+        row=1, col=2
+    )
+    fig.update_yaxes(
+        title='pause duration [ms]',
+        tickmode = 'linear',
+        tick0 = 5,
+        dtick = 5, row=1, col=1
+    )
+    fig.update_yaxes(
+        title='pause duration [ms]',
+        tickmode = 'linear',
+        tick0 = 5,
+        dtick = 5, row=1, col=2
+    )
     fig.show()
 
 
