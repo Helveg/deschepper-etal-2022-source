@@ -15,7 +15,7 @@ def results_path(*args):
     )
 
 cutoff = 300
-window_burst = [400, 420]           # Time window where we analyse the burst (number of spikes or mean ISI)
+window_burst = [400, 425]           # Time window where we analyse the burst (number of spikes or mean ISI)
 
 sel_labels = ["record_bc_spikes","record_sc_spikes","record_pc_spikes","record_golgi_spikes", "record_granules_spikes"]
 #sel_labels = ["record_granules_spikes"]
@@ -99,11 +99,11 @@ with h5py.File(results_path("results_NEST_stim_on_MFs_1syncFinal2_finetuning0-02
     neurons = y_labelled
     pc_times = times['record_pc_spikes']
     pc_ids = np.unique(neurons['record_pc_spikes'])
-    print("pc spikes",pc_times,pc_ids)
     spike_burst = {}
     count_burst = {}
     isi_burst = {}
     pause = {}
+    pause_ratio = {}
     spike_baseline = {}
     isi_baseline = []
     for p in pc_ids:        # For each PC we compute number of spikes in window burst and pause duration
@@ -125,21 +125,24 @@ with h5py.File(results_path("results_NEST_stim_on_MFs_1syncFinal2_finetuning0-02
         ind = np.where(np.array(current_pc_spikes)>window_burst[1])
         # pause - ISI between first spike after window_burst and last spike in window_burst
         pause[p] = current_pc_spikes[ind[0][0]] - current_pc_spikes[ind[0][0]-1]  #window_burst[1]
-        print("pause ",pause[p], "last",current_pc_spikes[ind[0][0]-1],"first",current_pc_spikes[ind[0][0]] )
+        # Ratio between pause duration and baseline ISI for the current PC
+        pause_ratio[p] = pause[p]/(np.mean(np.diff(spike_baseline[p])))
 
     import plotly.express as px
     lists = (pause.items())
     x, pause_values = zip(*lists)
+    lists = (pause_ratio.items())
+    x, pause_ratio_values = zip(*lists)
     lists = (count_burst.items())
     x, spike_burst_count = zip(*lists)
     lists = (isi_burst.items())
     x, isi_burst = zip(*lists)
 
-    fig = make_subplots(rows=1, cols=2)
+    fig = make_subplots(rows=2, cols=2)
 
     # Add burst spike count and pause
     fig.add_trace(
-        go.Scatter(x=spike_burst_count, y=pause_values, mode="markers", showlegend=False),
+        go.Scatter(x=spike_burst_count, y=pause_values, mode="markers", showlegend=False, marker=dict(color="#1f77b4")),
         row=1, col=1
     )
 
@@ -151,7 +154,6 @@ with h5py.File(results_path("results_NEST_stim_on_MFs_1syncFinal2_finetuning0-02
     fig.add_trace(go.Scatter(x=x+x[::-1],
                                 y=y1_upper+y1_lower,
                                 fill='tozerox',
-                                #fillcolor=new_col,
                                 line=dict(color='rgba(255,255,255,0)'),
                                 showlegend=False
                                 ), row=1, col=1)
@@ -162,10 +164,16 @@ with h5py.File(results_path("results_NEST_stim_on_MFs_1syncFinal2_finetuning0-02
                               line=dict(width=2.5,color="#d62728"),
                               mode='lines',name='avg baseline ISI'), row=1, col=1
                                 )
+    # line trace 1
+    fig.add_trace(go.Scatter(x=x+x[::-1],
+                              y=[1, 1],
+                              line=dict(width=2.5,color="#7f7f7f"),  showlegend=False,
+                              mode='lines',name='avg baseline ISI'), row=2, col=1
+                                )
 
     # Add burst ISI and pause
     fig.add_trace(
-        go.Scatter(x=isi_burst, y=pause_values, mode="markers", showlegend=False),
+        go.Scatter(x=isi_burst, y=pause_values, mode="markers", showlegend=False, marker=dict(color="#2ca02c")),
         row=1, col=2
     )
 
@@ -188,19 +196,41 @@ with h5py.File(results_path("results_NEST_stim_on_MFs_1syncFinal2_finetuning0-02
                               line=dict(width=2.5,color="#d62728"),
                               mode='lines', name='avg baseline ISI', showlegend=False), row=1, col=2
                                 )
+    # line trace 1
+    fig.add_trace(go.Scatter(x=x+x[::-1],
+                              y=[1, 1],
+                              line=dict(width=2.5,color="#7f7f7f"),  showlegend=False,
+                              mode='lines',name='avg baseline ISI'), row=2, col=2
+                                )
 
+
+    # Add burst spike count and pause ratio
+    fig.add_trace(
+        go.Scatter(x=spike_burst_count, y=pause_ratio_values, mode="markers", showlegend=False, marker=dict(color="#1f77b4")),
+        row=2, col=1
+    )
+
+    # Add burst ISI and pause ratio
+    fig.add_trace(
+        go.Scatter(x=isi_burst, y=pause_ratio_values, mode="markers", showlegend=False, marker=dict(color="#2ca02c")),
+        row=2, col=2
+    )
+
+
+    # Layout
+    # Pause
     fig.update_xaxes(
         title='# spikes in burst window',
         tickmode = 'array',
-        tickvals = [1, 2, 3, 4],
-        ticktext = ['1', '2', '3', '4']
+        tickvals = [0, 1, 2, 3, 4],
+        ticktext = ['0', '1', '2', '3', '4']
         , row=1, col=1
     )
     fig.update_xaxes(
         title='ISI in burst window [ms]',
-        tickmode = 'linear',
-        tick0 = -5,
-        dtick = 5,
+        tickmode = 'array',
+        tickvals = [-1, 5, 10, 15, 20],
+        ticktext = ['no burst', '5', '10', '15', '20'],
         row=1, col=2
     )
     fig.update_yaxes(
@@ -214,6 +244,34 @@ with h5py.File(results_path("results_NEST_stim_on_MFs_1syncFinal2_finetuning0-02
         tickmode = 'linear',
         tick0 = 5,
         dtick = 5, row=1, col=2
+    )
+
+    # Pause ratio
+    fig.update_xaxes(
+        title='# spikes in burst window',
+        tickmode = 'array',
+        tickvals = [1, 2, 3, 4],
+        ticktext = ['1', '2', '3', '4']
+        , row=2, col=1
+    )
+    fig.update_xaxes(
+        title='ISI in burst window [ms]',
+        tickmode = 'array',
+        tickvals = [-1, 5, 10, 15, 20],
+        ticktext = ['no burst', '5', '10', '15', '20'],
+        row=2, col=2
+    )
+    fig.update_yaxes(
+        title='pause ratio',
+        tickmode = 'linear',
+        tick0 = 0,
+        dtick = 0.5, row=2, col=1
+    )
+    fig.update_yaxes(
+        title='pause ratio',
+        tickmode = 'linear',
+        tick0 = 0,
+        dtick = 0.5, row=2, col=2
     )
     fig.update_layout(title='Burst-pause analysis Purkinje cells')
     fig.show()
