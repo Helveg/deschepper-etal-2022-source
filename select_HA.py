@@ -5,14 +5,14 @@ import statistics
 _bounds = dict(min=700, max=800)
 
 def bounds(data, min=(-float("inf")), max=(+float("inf")), indices=False):
-    c = data[:, 0]
+    c = data[:, 1]
     if indices:
         return np.where((c > min) & (c < max))[0]
     return c[(c > min) & (c < max)]
 
 # scaffold = from_hdf5("C:/Users/robin/Dropbox/Scaffold_NEURON_paper/neuronFINAL_V5.hdf5")
 scaffold = from_hdf5("networks/results.hdf5")
-file = "combined_results.hdf5"
+file = "combined_results_150.hdf5"
 results = h5py.File(file, "r")
 ps = scaffold.get_placement_set("granule_cell")
 ids = ps.identifiers
@@ -22,7 +22,7 @@ for key in g:
     f = g[key]
     if f.attrs["label"] != ps.tag or len(f) == 0:
         continue
-    id = int(f[0, 1])
+    id = int(f[0, 0])
     spikes_per_dict[id].extend(bounds(f[()], **_bounds))
 
 spikes_per_grc = [spikes_per_dict[x] for x in sorted(spikes_per_dict)]
@@ -150,7 +150,7 @@ if "check" in sys.argv:
                     )
                 ])
                 fig.update_layout(title_text="Inclusion " + name + div[1])
-                # fig.show()
+                fig.show()
 
         fig = go.Figure(traces)
         fig.update_layout(title_text="Rank-size " + name + div[1])
@@ -161,21 +161,21 @@ else:
     # gloms = cs_mf_glom[np.isin(cs_mf_glom[:, 0], selected_mf), 1]
     # ha_grc = cs_glom_grc[np.isin(cs_glom_grc[:, 0], gloms), 1]
 
-    pcb_80 = 149
-    pcb_90 = 110
-    pcbaa_80 = 95
-    pcbaa_90 = 73
+    pcb_80 = 295
+    pcb_90 = 190
+    pcbaa_80 = 160
+    pcbaa_90 = 117
 
-    gcb_80 = 117
-    gcb_90 = 85
-    gcbaa_80 = 226
-    gcbaa_90 = 70
+    gcb_80 = 258
+    gcb_90 = 157
+    gcbaa_80 = 255
+    gcbaa_90 = 88
 
-    scb_80 = 50
-    scb_90 = 30
+    scb_80 = 84
+    scb_90 = 46
 
-    bcb_80 = 80
-    bcb_90 = 49
+    bcb_80 = 162
+    bcb_90 = 108
 
 # GrC
 ha_grc = high_activity_ids_red
@@ -267,7 +267,7 @@ if "select" in sys.argv:
             for h in g:
                 if g[h].shape[0] == 0:
                     continue
-                id = g[h][0, 1]
+                id = g[h][0, 0]
                 if id in transfer_map:
                     for transfer, attrs in transfer_map[id]:
                         print("copying", h, "part of id", id, "to", transfer, " " * 10, end="\r")

@@ -8,7 +8,7 @@ colorbar_pc = "thermal"
 
 
 network_path = os.path.join(
-    os.path.dirname(__file__), "..", "networks", "results.hdf5"
+    os.path.dirname(__file__), "..", "networks", "300x_200z.hdf5"
 )
 
 def results_path(*args):
@@ -17,13 +17,19 @@ def results_path(*args):
     )
 
 def crop(data, min, max, indices=False):
-    c = data[:, 0]
+    c = data[:, 1]
     if indices:
         return np.where((c > min) & (c < max))[0]
     return c[(c > min) & (c < max)]
 
+def pairs(arr):
+    for i in range(len(arr) - 1):
+        yield arr[i], arr[i + 1]
+
 def get_isis(spikes, selected):
-    return [spikes[i + 1] - spikes[i] for i in selected]
+    if len(selected) == 1:
+        return [spikes[selected[0]] - spikes[selected[0] - 1]]
+    return [spikes[second] - spikes[first] for first, second in pairs(selected)]
 
 def get_parallel(subset, set):
     return np.where(np.isin(set, subset))[0]
@@ -37,7 +43,7 @@ def plot():
     stim_start, stim_end = 700, 800
     print("Loading network", " " * 30, end="\r")
     scaffold = from_hdf5(network_path)
-    results = h5py.File(results_path("combined_results_300_200.hdf5"), "r")
+    results = h5py.File(results_path("results_stim_on_MFs_4syncImp.hdf5"), "r")
     ps = scaffold.get_placement_set("granule_cell")
     ids = ps.identifiers
     spikes_per_dict = {id: [] for id in ids}
@@ -47,7 +53,7 @@ def plot():
         f = g[key]
         if f.attrs["label"] != ps.tag or len(f) == 0:
             continue
-        id = int(f[0, 1])
+        id = int(f[0, 0])
         spikes_per_dict[id].extend(crop(f[()], min=stim_start, max=stim_end))
 
     spikes_per_grc = [spikes_per_dict[x] for x in sorted(spikes_per_dict)]
@@ -102,14 +108,16 @@ def plot():
     print("Loading purkinje", " " * 30, end="\r")
     ps_pc = scaffold.get_placement_set("purkinje_cell")
     pc_pos = ps_pc.positions
-    border_pc = pc_pos[:, 2] > 175
+    border_pc = np.logical_or (pc_pos[:, 2] > 300, pc_pos[:, 2] < 0)
+    print(border_pc)
     cut_off = ps_pc.identifiers[border_pc]
+    print("cutoff", cut_off)
     g = results["recorders/soma_spikes/"]
     pc_isis = {int(id): [] for id in ps_pc.identifiers}
     pc_lo_isis = {int(id): [] for id in ps_pc.identifiers}
     dur = stim_end - stim_start
     pc_freq = {int(id): 0 for id in ps_pc.identifiers}
-    pc_lo_freq = {int(id): 0 for id in ps_pc.identifiers}
+    #pc_lo_freq = {int(id): 0 for id in ps_pc.identifiers}
     print("Scanning purkinje spikes", " " * 30, end="\r")
     for key in g:
         f = g[key]
@@ -117,22 +125,23 @@ def plot():
         spikes = crop(f[()], min=stim_start, max=stim_end, indices=True)
         if f.attrs["label"] != ps_pc.tag or len(f) == 0:
             continue
-        id = int(f[0, 1])
-        pc_freq[id] += len(spikes)
-        pc_isis[id].extend(get_isis(f[:, 0], spikes))
-        pc_lo_freq[id] += len(lospikes)
-        pc_lo_isis[id].extend(get_isis(f[:, 0], lospikes))
-    pc_freq = {id: 1000 * c / (stim_end - stim_start) for id, c in pc_freq.items()}
-    pc_lo_freq = {id: 1000 * c / (base_end - base_start) for id, c in pc_lo_freq.items()}
-    pc_indices = [ps_pc.identifiers.tolist().index(id) for id in pc_isis.keys()]
-    pc_isi_freq = {id: avg(inv(v)) for id, v in pc_isis.items()}
-    pc_isi_delta_freq = {id: avg(inv(v)) - avg(inv(pc_lo_isis[id])) for id, v in pc_isis.items()}
-    pc_count_delta_freq = {id: pc_freq[id] - pc_lo_freq[id] for id in pc_freq.keys()}
+        id = int(f[0, 0])
+        #pc_freq[id] += len(spikes)
+        pc_isis[id].extend(get_isis(f[:, 1], spikes))
+        #pc_lo_freq[id] += len(lospikes)
+        pc_lo_isis[id].extend(get_isis(f[:, 1], lospikes))
+    #pc_freq = {id: 1000 * c / (stim_end - stim_start) for id, c in pc_freq.items()}
+    #pc_lo_freq = {id: 1000 * c / (base_end - base_start) for id, c in pc_lo_freq.items()}
+    pc_indices = [ps_pc.identifiers.tolist().index(id) for id in pc_isis.keys() if id not in cut_off]
+    pc_isi_freq = {id: avg(inv(v)) if len(v) else 0 for id, v in pc_isis.items() if id not in cut_off}
+    pc_isi_delta_freq = {id: (avg(inv(v)) if len(v) else 0) - (avg(inv(pc_lo_isis[id])) if len(pc_lo_isis[id]) else 0) for id, v in pc_isis.items() if id not in cut_off}
+    #pc_count_delta_freq = {id: pc_freq[id] - pc_lo_freq[id] for id in pc_freq.keys()}
     pc_delta_freq = pc_isi_delta_freq
-    min_c = -10#min([v for k, v in pc_delta_freq.items() if k not in cut_off])
-    max_c = 20#max([v for k, v in pc_delta_freq.items() if k not in cut_off])
 
-    with h5py.File(results_path("../selected_results.hdf5"), "r") as f:
+    min_c = min([v for k, v in pc_delta_freq.items() if k not in cut_off])
+    max_c = max([v for k, v in pc_delta_freq.items() if k not in cut_off])
+
+    with h5py.File(results_path("results_stim_on_MFs_4syncImp.hdf5"), "r") as f:
         print("Plotting purkinje activity", " " * 30, end="\r")
         pc_all = go.Scatter3d(
             name="All Purkinje cells",
@@ -178,24 +187,25 @@ def plot():
             )
         )
         pc_activities = [pc_activity]
-        for h in f["selections"]:
-            if "purkinje" in h:
-                pcs = np.array([id for id in f["selections"][h][()] if id not in cut_off])
-                pi = get_parallel(pcs, ps_pc.identifiers)
-                delta = [pc_delta_freq[id] for id in pcs]
-                kwargs = dict(zip(["x","z","y"], pc_pos[pi].T))
-                kwargs["text"] = ["ID: {}\n".format(pcs[i]) + str(round(delta[i], 2)) + "Hz" for i in range(len(pcs))]
-                scatter = go.Scatter3d(
-                    name="Subset " + h, **kwargs,
-                    mode="markers",
-                    marker=dict(
-                        colorscale=colorbar_pc,
-                        cmin=min_c,
-                        cmax=max_c,
-                        color=delta,
-                    )
-                )
-                pc_activities.append(scatter)
+
+        # for h in f["selections"]:
+        #     if "purkinje" in h:
+        #         pcs = np.array([id for id in f["selections"][h][()] if id not in cut_off])
+        #         pi = get_parallel(pcs, ps_pc.identifiers)
+        #         delta = [pc_delta_freq[id] for id in pcs]
+        #         kwargs = dict(zip(["x","z","y"], pc_pos[pi].T))
+        #         kwargs["text"] = ["ID: {}\n".format(pcs[i]) + str(round(delta[i], 2)) + "Hz" for i in range(len(pcs))]
+        #         scatter = go.Scatter3d(
+        #             name="Subset " + h, **kwargs,
+        #             mode="markers",
+        #             marker=dict(
+        #                 colorscale=colorbar_pc,
+        #                 cmin=min_c,
+        #                 cmax=max_c,
+        #                 color=delta,
+        #             )
+        #         )
+                # pc_activities.append(scatter)
 
     print(" " * 80, end="\r")
     fig = go.Figure([granule_cloud, pc_all, *pc_activities, pc_border])

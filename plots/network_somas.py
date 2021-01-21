@@ -3,7 +3,7 @@ from bsb.core import from_hdf5
 from bsb.plotting import plot_network
 
 test_path = os.path.join(
-    os.path.dirname(__file__), "..", "networks", "preliminary_test.hdf5"
+    os.path.dirname(__file__), "..", "networks", "300x_200z.hdf5"
 )
 
 

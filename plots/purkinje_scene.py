@@ -11,17 +11,23 @@ from bsb.output import MorphologyRepository
 import numpy as np
 
 test_path = os.path.join(
-    os.path.dirname(__file__), "..", "networks", "neuron.hdf5"
+    os.path.dirname(__file__), "..", "networks", "300x_200z.hdf5"
 )
 
 
 def plot():
     scaffold = from_hdf5(test_path)
     fig = purkinje_layer_scene(scaffold)
-    set_scene_range(fig.layout.scene, [[-100, 200], [50, 350], [-100, 200]])
+    set_scene_range(fig.layout.scene, [[-50, 310], [0, 350], [-50, 250]])
+    fig.layout.scene.xaxis.tick0=0
+    fig.layout.scene.xaxis.dtick=150
+    fig.layout.scene.yaxis.tick0=0
+    fig.layout.scene.yaxis.dtick=150
+    fig.layout.scene.zaxis.tick0=0
+    fig.layout.scene.zaxis.dtick=150
     return fig
 
-def purkinje_layer_scene(scaffold, purkinjes=8, granules=200):
+def purkinje_layer_scene(scaffold, purkinjes=6, granules=100):
     ms = MorphologyScene()
     mr = MorphologyRepository(file=test_path)
     skip = ["glomerulus", "basket_cell", "stellate_cell", "golgi_cell", "mossy_fibers"]

@@ -19,10 +19,16 @@ test_path = os.path.join(
 def plot():
     scaffold = from_hdf5(test_path)
     fig = granular_layer_scene(scaffold)
-    set_scene_range(fig.layout.scene, [[-120, 250], [-70, 300], [-120, 250]])
+    set_scene_range(fig.layout.scene, [[-50, 310], [0, 350], [-50, 250]])
+    fig.layout.scene.xaxis.tick0=0
+    fig.layout.scene.xaxis.dtick=150
+    fig.layout.scene.yaxis.tick0=0
+    fig.layout.scene.yaxis.dtick=150
+    fig.layout.scene.zaxis.tick0=0
+    fig.layout.scene.zaxis.dtick=150
     return fig
 
-def granular_layer_scene(scaffold, golgis=1, granules=20):
+def granular_layer_scene(scaffold, golgis=2, granules=100):
     ms = MorphologyScene()
     mr = MorphologyRepository(file=test_path)
     skip = [
