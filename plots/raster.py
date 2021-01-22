@@ -17,7 +17,11 @@ def select_groups(kv):
     return group.attrs.get("label", None) != "granule_cell" or np.random.rand() < 0.05
 
 def plot():
+    figs = {}
     with h5py.File(results_path("results_stim_on_MFs_Poiss.hdf5"), "r") as f:
         groups = {k: v for k, v in filter(select_groups, f["/recorders/soma_spikes"].items())}
-        fig = hdf5_plot_spike_raster(groups, show=False, cutoff=300)
-    return fig
+        figs["poiss"] = hdf5_plot_spike_raster(groups, show=False, cutoff=300)
+    with h5py.File(results_path("results_stim_on_MFs_4syncImp.hdf5"), "r") as f:
+        groups = {k: v for k, v in filter(select_groups, f["/recorders/soma_spikes"].items())}
+        figs["sync"] = hdf5_plot_spike_raster(groups, show=False, cutoff=300)
+    return figs
