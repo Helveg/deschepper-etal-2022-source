@@ -25,30 +25,36 @@ class valueify:
     def values(self):
         return self.iter
 
+network = from_hdf5(network_path)
+config = network.configuration
 
 def plot():
-    with h5py.File(results_path("results_150Hz50msPoiss_4mf_4Hzbackgr_SynCurrentRecorders_GABAscGmaxX10.hdf5"), "a") as f:
-        order=dict(mossy_fiber=0, granule_cell=1, golgi_cell=2, purkinje_cell=3, stellate_cell=4, basket_cell=5)
-        #order=dict(granule_cell=0, golgi_cell=1, purkinje_cell=2, stellate_cell=3, basket_cell=4)
-
-        # color=dict(mossy_fiber=config.cell_types["glomerulus"].plotting.color,
-        #         granule_cell=config.cell_types["granule_cell"].plotting.color,
-        #         golgi_cell=config.cell_types["golgi_cell"].plotting.color,
-        #         purkinje_cell=config.cell_types["purkinje_cell"].plotting.color,
-        #         stellate_cell=config.cell_types["stellate_cell"].plotting.color,
-        #         basket_cell=config.cell_types["basket_cell"].plotting.color)
-
-        #for g in f["/recorders/soma_spikes"].values():
-        for g in f["/all"].values():
+    figs = {}
+    order=dict(mossy_fiber=0, granule_cell=1, golgi_cell=2, purkinje_cell=3, stellate_cell=4, basket_cell=5)
+    color=dict(
+        mossy_fiber=config.cell_types["glomerulus"].plotting.color,
+        granule_cell=config.cell_types["granule_cell"].plotting.color,
+        golgi_cell=config.cell_types["golgi_cell"].plotting.color,
+        purkinje_cell=config.cell_types["purkinje_cell"].plotting.color,
+        stellate_cell=config.cell_types["stellate_cell"].plotting.color,
+        basket_cell=config.cell_types["basket_cell"].plotting.color
+    )
+    with h5py.File(results_path("results_365b0_poiss.hdf5"), "a") as f:
+        for g in f["/recorders/soma_spikes"].values():
+        # for g in f["/all"].values():
             if g.attrs["label"] not in order:
                 print("Not sorting", g.name, "no order found")
             g.attrs["order"] = order.get(g.attrs["label"], 0)
-            #g.attrs['color'] = color.get(g.attrs["label"], 0)
-        fig = hdf5_plot_psth(f["/all"], show=False, cutoff=800, duration=5)
-        #fig = hdf5_plot_psth(f["/recorders/soma_spikes"], show=False, cutoff=300, duration=5)
-        #g.attrs["order"] = order.get(g.attrs["label"], 0)
-        # fig = hdf5_plot_spike_raster(f["/recorders/soma_spikes"], show=False)
-        #fig.show()
-        #fig.show(config=dict(toImageButtonOptions=dict(format="svg", height=1080, width=1920)))
-        #fig.write_image("fig1.eps", engine="kaleido")
-    return fig
+            g.attrs['color'] = color.get(g.attrs["label"], 0)
+        figs["poiss"] = hdf5_plot_psth(network, f["/recorders/soma_spikes"], show=False, cutoff=0, duration=5)
+
+
+    with h5py.File(results_path("results_365b0_sync.hdf5"), "a") as f:
+        for g in f["/recorders/soma_spikes"].values():
+        # for g in f["/all"].values():
+            if g.attrs["label"] not in order:
+                print("Not sorting", g.name, "no order found")
+            g.attrs["order"] = order.get(g.attrs["label"], 0)
+            g.attrs['color'] = color.get(g.attrs["label"], 0)
+        figs["sync"] = hdf5_plot_psth(network, f["/recorders/soma_spikes"], show=False, cutoff=0, duration=5)
+    return figs
