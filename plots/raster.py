@@ -18,10 +18,10 @@ def select_groups(kv):
 
 def plot():
     figs = {}
-    with h5py.File(results_path("results_stim_on_MFs_Poiss.hdf5"), "r") as f:
+    with h5py.File(results_path("results_365b0.hdf5"), "r") as f:
         groups = {k: v for k, v in filter(select_groups, f["/recorders/soma_spikes"].items())}
-        figs["poiss"] = hdf5_plot_spike_raster(groups, show=False, cutoff=300)
-    with h5py.File(results_path("results_stim_on_MFs_4syncImp.hdf5"), "r") as f:
+        figs["poiss"] = hdf5_plot_spike_raster(groups, show=False, cutoff=0)
+    with h5py.File(results_path("results_365b0_sync.hdf5"), "r") as f:
         groups = {k: v for k, v in filter(select_groups, f["/recorders/soma_spikes"].items())}
-        figs["sync"] = hdf5_plot_spike_raster(groups, show=False, cutoff=300)
+        figs["sync"] = hdf5_plot_spike_raster(groups, show=False, cutoff=0)
     return figs
