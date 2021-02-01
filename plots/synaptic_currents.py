@@ -13,12 +13,14 @@ from collections import defaultdict
 
 
 def plot():
-    duration=18000
-    cutoff=8000
-    ID=24
+    duration = 18000
+    cutoff = 8000
+    ID = 561
     with h5py.File("results/results_365b0.hdf5", "r") as f:
-        synapses = {"AMPA_AA": [], "AMPA_PF": [], "AMPA_MF": [], "NMDA": [],  "GABA": []}
+        synapses = {}
         for n, g in f[f"/recorders/synapses/{ID}/current"].items():
+            if g.attrs["type"] not in synapses:
+                synapses[g.attrs["type"]] = []
             synapses[g.attrs["type"]].append(np.array(g[()]))
         Vm = np.array(f[f"/recorders/soma_voltages/{ID}"])
 
@@ -28,7 +30,7 @@ def plot():
     fig.update_xaxes(range=[cutoff, duration])
 
     for k, v in synapses.items():
-        fig.add_trace(go.Scatter(y=sum(v), name=k), row=2, col=1)
+        fig.add_trace(go.Scatter(y=sum(v), name=f"{len(v)} x {k}"), row=2, col=1)
 
     fig.update_xaxes(range=[cutoff, duration])
 
