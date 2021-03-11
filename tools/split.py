@@ -15,6 +15,7 @@ if __name__ == "__main__":
 
     dt = None
     if len(sys.argv) > 1:
+        print("Raw input:", sys.argv, flush=True)
         inp = sys.argv[1]
         outputs = sys.argv[2:3:]
         starts = sys.argv[3:3:]
@@ -24,12 +25,6 @@ if __name__ == "__main__":
         while True:
             try:
                 inp = input("Input file? ")
-                f = h5py.File(inp, "r")
-                print("Has spikes:", (spikes := "/recorders/soma_spikes" in f))
-                print("Has voltages:", (voltages := "/recorders/soma_voltages" in f))
-                print("Has all:", (all := "/all" in f))
-                if all:
-                    print("Spike chunksize:", next(iter(f["/all"].values())).chunks)
                 outputs, starts, stops = [], [], []
                 while (outp := input("Output file (empty to skip): ")):
                     outputs.append(outp)
@@ -44,6 +39,14 @@ if __name__ == "__main__":
     print("Output files:", outputs)
     print("Start times:", starts)
     print("Stop times:", stops)
+    print("-- file properties --")
+    f = h5py.File(inp, "r")
+    print("Has spikes:", (spikes := "/recorders/soma_spikes" in f))
+    print("Has voltages:", (voltages := "/recorders/soma_voltages" in f))
+    print("Has all:", (all := "/all" in f))
+    if all:
+        print("Spike chunksize:", next(iter(f["/all"].values())).chunks)
+    print("--", flush=True)
     try:
         time = f["/time"][()]
         if not len(time) and (voltages or all):
@@ -53,6 +56,7 @@ if __name__ == "__main__":
                 dt = float(input("No time vector found, give dt: "))
             check = f["/all"] if all else f["/recorders/soma_voltages"]
             time = np.arange(0, len(next(iter(check.values()))[()])) * dt
+        print("Starting copy operation", flush=True)
         for outp, start, stop in zip(outputs, starts, stops):
             os.makedirs(os.path.dirname(outp), exist_ok=True)
             crop = (start <= time) & (time < stop)
