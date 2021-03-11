@@ -1,23 +1,30 @@
 import os, sys, h5py, traceback, numpy as np
 
-def partial_copy_all(o, n, g, l, trans_short, trans_long):
+def partial_copy_all(o, n, g, sets, l, trans_short, trans_long):
+    print("Copying", g)
     ng = n.require_group(g)
-    t = len(o[g].keys())
-    for i, (key, og) in enumerate(o[g].items()):
+    for k, v in o[g].attrs.items():
+        ng.attrs[k] = v
+    for i, (key, og) in enumerate(sets.items()):
         if i // 100 == i / 100:
-            print("Copying", f"{i}/{t}", end="\r", flush=True)
+            print("Copying", f"{i}/{len(sets)}", end="\r", flush=True)
         od = og[()]
-        print("startshape:", od.shape)
         if abs(l - od.shape[0]) < 5:
-            print("longshape:", od.shape)
             data = trans_long(od)
         else:
-            print("shortshape:", od.shape)
             data = trans_short(od)
-        print("result:", data.shape)
         ds = ng.create_dataset(key, data=data)
         for k, v in og.attrs.items():
             ds.attrs[k] = v
+
+def copy_all_recursive(o, n, r, *args, **kwargs):
+    def visit_group(name, obj):
+        if not isinstance(obj, h5py.Group):
+            return None
+        sets = {k.split("/")[-1]: v for k, v in obj.items() if isinstance(v, h5py.Dataset)}
+        partial_copy_all(o, n, name, sets, *args, **kwargs)
+
+    o[r].visititems(visit_group)
 
 if __name__ == "__main__":
 
@@ -68,18 +75,9 @@ if __name__ == "__main__":
             print("creating path:", path)
             os.makedirs(path, exist_ok=True)
             crop = (start <= time) & (time < stop)
+            transformers = (lambda x: x[(start <= x[:, 1]) & (x[:, 1] <= stop), :] if len(x.shape) == 2 else x[(start <= x) & (x <= stop)], lambda x: x[crop])
             print("cropping time vector:", len(crop), sum(crop))
             with h5py.File(outp, "w") as nf:
-                if all:
-                    print("Copying all")
-                    partial_copy_all(f, nf, "/all", lambda x: x[crop])
-                else:
-                    transformers = (lambda x: x[(start <= x[:, 1]) & (x[:, 1] <= stop), :], lambda x: x[crop])
-                    if spikes:
-                        print("Copying spikes", flush=True)
-                        partial_copy_all(f, nf, "/recorders/soma_spikes", len(time), *transformers)
-                    if voltages:
-                        print("Copying voltages", flush=True)
-                        partial_copy_all(f, nf, "/recorders/soma_voltages", len(time), *transformers)
+                copy_all_recursive(f, nf, "/", len(time), *transformers)
     finally:
         f.close()
