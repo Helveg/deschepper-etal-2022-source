@@ -1,12 +1,20 @@
 import os, sys, h5py, traceback, numpy as np
 
-def partial_copy_all(o, n, g, transform):
+def partial_copy_all(o, n, g, l, trans_short, trans_long):
     ng = n.require_group(g)
     t = len(o[g].keys())
     for i, (key, og) in enumerate(o[g].items()):
         if i // 100 == i / 100:
             print("Copying", f"{i}/{t}", end="\r", flush=True)
-        data = transform(og[()])
+        od = og[()]
+        print("startshape:", od.shape)
+        if abs(l - od.shape[0]) < 5:
+            print("longshape:", od.shape)
+            data = trans_long(od)
+        else:
+            print("shortshape:", od.shape)
+            data = trans_short(od)
+        print("result:", data.shape)
         ds = ng.create_dataset(key, data=data)
         for k, v in og.attrs.items():
             ds.attrs[k] = v
@@ -66,11 +74,12 @@ if __name__ == "__main__":
                     print("Copying all")
                     partial_copy_all(f, nf, "/all", lambda x: x[crop])
                 else:
+                    transformers = (lambda x: x[(start <= x[:, 1]) & (x[:, 1] <= stop), :], lambda x: x[crop])
                     if spikes:
                         print("Copying spikes", flush=True)
-                        partial_copy_all(f, nf, "/recorders/soma_spikes", lambda x: x[(start <= x) & (x <= stop)])
+                        partial_copy_all(f, nf, "/recorders/soma_spikes", len(time), *transformers)
                     if voltages:
                         print("Copying voltages", flush=True)
-                        partial_copy_all(f, nf, "/recorders/soma_voltages", lambda x: x[crop])
+                        partial_copy_all(f, nf, "/recorders/soma_voltages", len(time), *transformers)
     finally:
         f.close()
