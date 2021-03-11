@@ -13,11 +13,13 @@ def partial_copy_all(o, n, g, transform):
 
 if __name__ == "__main__":
 
+    dt = None
     if len(sys.argv) > 1:
         inp = sys.argv[1]
         outputs = sys.argv[2:3:]
         starts = sys.argv[3:3:]
         stops = sys.argv[4:3:]
+        dt = sys.argv[-1]
     else:
         while True:
             try:
@@ -45,7 +47,10 @@ if __name__ == "__main__":
     try:
         time = f["/time"][()]
         if not len(time) and (voltages or all):
-            dt = float(input("No time vector found, give dt: "))
+            if dt is not None:
+                print("No time vector found, dt given:", dt)
+            else:
+                dt = float(input("No time vector found, give dt: "))
             check = f["/all"] if all else f["/recorders/soma_voltages"]
             time = np.arange(0, len(next(iter(check.values()))[()])) * dt
         for outp, start, stop in zip(outputs, starts, stops):
