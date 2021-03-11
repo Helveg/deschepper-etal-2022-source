@@ -1,7 +1,5 @@
 import os, sys, h5py, traceback, numpy as np
 
-if
-
 def partial_copy_all(o, n, g, transform):
     ng = n.require_group(g)
     t = len(o[g].keys())
