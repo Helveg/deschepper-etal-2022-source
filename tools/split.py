@@ -56,8 +56,9 @@ if __name__ == "__main__":
             time = np.arange(0, len(next(iter(check.values()))[()])) * dt
         print("Starting copy operation", flush=True)
         for outp, start, stop in zip(outputs, starts, stops):
-            print("creating path:", os.path.dirname(outp))
-            os.makedirs(os.path.dirname(outp), exist_ok=True)
+            path = os.path.abspath(os.path.dirname(outp))
+            print("creating path:", path)
+            os.makedirs(path, exist_ok=True)
             crop = (start <= time) & (time < stop)
             print("cropping time vector:", len(crop), sum(crop))
             with h5py.File(outp, "w") as nf:
