@@ -11,27 +11,38 @@ def partial_copy_all(o, n, g, transform):
         for k, v in og.attrs.items():
             ds.attrs[k] = v
 
-
 if __name__ == "__main__":
-    while True:
-        try:
-            inp = input("Input file? ")
-            f = h5py.File(inp, "r")
-            print("Has spikes:", (spikes := "/recorders/soma_spikes" in f))
-            print("Has voltages:", (voltages := "/recorders/soma_voltages" in f))
-            print("Has all:", (all := "/all" in f))
-            if all:
-                print("Spike chunksize:", next(iter(f["/all"].values())).chunks)
-        except Exception as e:
-            traceback.print_exc()
-        else:
-            break
+
+    if len(sys.argv) > 1:
+        inp = sys.argv[1]
+        outputs = sys.argv[2:3:]
+        starts = sys.argv[3:3:]
+        stops = sys.argv[4:3:]
+    else:
+        while True:
+            try:
+                inp = input("Input file? ")
+                f = h5py.File(inp, "r")
+                print("Has spikes:", (spikes := "/recorders/soma_spikes" in f))
+                print("Has voltages:", (voltages := "/recorders/soma_voltages" in f))
+                print("Has all:", (all := "/all" in f))
+                if all:
+                    print("Spike chunksize:", next(iter(f["/all"].values())).chunks)
+                outputs, starts, stops = [], [], []
+                while (outp := input("Output file (empty to skip): ")):
+                    outputs.append(outp)
+                    starts.append(float(input("Start time: ")))
+                    stops.append(float(input("Stop time: ")))
+            except Exception as e:
+                traceback.print_exc()
+            else:
+                break
+    print("-- overview --")
+    print("Input file:", inp)
+    print("Output files:", outputs)
+    print("Start times:", starts)
+    print("Stop times:", stops)
     try:
-        outputs, starts, stops = [], [], []
-        while (outp := input("Output file (empty to skip): ")):
-            outputs.append(outp)
-            starts.append(float(input("Start time: ")))
-            stops.append(float(input("Stop time: ")))
         time = f["/time"][()]
         if not len(time) and (voltages or all):
             dt = float(input("No time vector found, give dt: "))
