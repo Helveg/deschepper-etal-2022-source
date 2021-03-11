@@ -18,9 +18,9 @@ if __name__ == "__main__":
         print("Raw input:", sys.argv, flush=True)
         inp = sys.argv[1]
         outputs = sys.argv[2::3]
-        starts = sys.argv[3::3]
-        stops = sys.argv[4::3]
-        dt = sys.argv[-1]
+        starts = [float(i) for i in sys.argv[3::3]]
+        stops = [float(i) for i in sys.argv[4::3]]
+        dt = float(sys.argv[-1])
     else:
         while True:
             try:
