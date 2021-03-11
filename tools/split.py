@@ -1,5 +1,6 @@
 import os, sys, h5py, traceback, numpy as np
 
+if
 
 def partial_copy_all(o, n, g, transform):
     ng = n.require_group(g)
@@ -16,8 +17,7 @@ def partial_copy_all(o, n, g, transform):
 if __name__ == "__main__":
     while True:
         try:
-            # inp = input("Input file? ")
-            inp = "results/results_1MF_1kHz.hdf5"
+            inp = input("Input file? ")
             f = h5py.File(inp, "r")
             print("Has spikes:", (spikes := "/recorders/soma_spikes" in f))
             print("Has voltages:", (voltages := "/recorders/soma_voltages" in f))
@@ -29,11 +29,11 @@ if __name__ == "__main__":
         else:
             break
     try:
-        outputs, starts, stops = ["results/split/test.hdf5"], [0], [300]
-        # while (outp := input("Output file (empty to skip): ")):
-        #     outputs.append(outp)
-        #     starts.append(float(input("Start time: ")))
-        #     stops.append(float(input("Stop time: ")))
+        outputs, starts, stops = [], [], []
+        while (outp := input("Output file (empty to skip): ")):
+            outputs.append(outp)
+            starts.append(float(input("Start time: ")))
+            stops.append(float(input("Stop time: ")))
         time = f["/time"][()]
         if not len(time) and (voltages or all):
             dt = float(input("No time vector found, give dt: "))
