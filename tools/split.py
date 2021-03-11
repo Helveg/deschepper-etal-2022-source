@@ -17,7 +17,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         print("Raw input:", sys.argv, flush=True)
         inp = sys.argv[1]
-        outputs = sys.argv[2::3]
+        outputs = sys.argv[2:-1:3]
         starts = [float(i) for i in sys.argv[3::3]]
         stops = [float(i) for i in sys.argv[4::3]]
         dt = float(sys.argv[-1])
@@ -56,6 +56,7 @@ if __name__ == "__main__":
             time = np.arange(0, len(next(iter(check.values()))[()])) * dt
         print("Starting copy operation", flush=True)
         for outp, start, stop in zip(outputs, starts, stops):
+            print("creating path:", os.path.dirname(outp))
             os.makedirs(os.path.dirname(outp), exist_ok=True)
             crop = (start <= time) & (time < stop)
             print("cropping time vector:", len(crop), sum(crop))
