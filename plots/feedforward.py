@@ -6,19 +6,23 @@ from colour import Color
 import numpy as np, h5py
 from glob import glob
 from bsb.plotting import plot_morphology
+from ._paths import *
+
+def plot(run_path=None, net_path=None):
+    if net_path is None:
+        net_path = network_path(selection.network)
+    if run_path is None:
+        run_path = results_path("feedforward")
+    return plot_average_all(net_path, run_path)
 
 
-def plot():
-    return plot_average_all()
-
-
-def plot_average_all():
-    network = from_hdf5("networks/300x_200z.hdf5")
+def plot_average_all(network_path, run_path):
+    network = from_hdf5(network_path)
     grc_color = network.configuration.cell_types["granule_cell"].plotting.color
     bc_color = network.configuration.cell_types["basket_cell"].plotting.color
     ampa_currents = []
     gaba_currents = []
-    files = glob("results/mli/feedforward/*.hdf5")
+    files = glob(run_path + "/*.hdf5")
     ti = len(files)
     for i, file in enumerate(files):
         with h5py.File(file, "r") as f:

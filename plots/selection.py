@@ -2,8 +2,11 @@ import numpy as np
 
 # "networks/300x_200z.hdf5"
 
+network = "balanced.hdf5"
+
 stimulated_mf_poiss = np.array([213, 214, 222, 223])
 stimulated_mf_sync = np.array([213, 214, 222, 223, 229, 221, 206, 230, 247, 239, 231, 238, 240])
+stimulated_mf_lat = np.array([275, 261, 260, 263, 273, 267, 279, 265, 268, 280, 270, 269, 272, 274, 282, 264, 271, 266, 283, 276, 278, 281, 277, 284])
 golgi_cell_ids = np.array([14, 24, 35])
 golgi_cell_labels = ["Medium activity", "High activity", "Low activity"]
 golgi_cells = dict(zip(golgi_cell_labels, golgi_cell_ids))

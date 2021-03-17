@@ -10,9 +10,10 @@ colorbar_grc = ['rgb(158,188,218)', 'rgb(140,150,198)', 'rgb(140,107,177)', 'rgb
 colorbar_pc = "thermal"
 
 
-network_path = os.path.join(
-    os.path.dirname(__file__), "..", "networks", "300x_200z.hdf5"
-)
+def network_path(*args):
+    return os.path.join(
+        os.path.dirname(__file__), "..", "networks", *args
+    )
 
 frozen = True
 
@@ -61,11 +62,17 @@ def get_activity(ids, group, start, stop):
         num_spikes[id] += len(spikes)
     return num_spikes
 
-def plot():
+def plot(path_control=None, path_gaba=None, network=None):
+    if path_control is None:
+        path_control = "center_surround/cs_control.hdf5"
+    if path_gaba is None:
+        path_gaba = "center_surround/cs_gabazine.hdf5"
+    if network is None:
+        network = selection.network
     base_start, base_end = 400, 600
     stim_start, stim_end = 550, 650
     print("Loading network", " " * 30, end="\r")
-    scaffold = from_hdf5(network_path)
+    scaffold = from_hdf5(network_path(network))
     ps_grc = scaffold.get_placement_set("granule_cell")
     pc_pos = ps_grc.positions
     points = ps_grc.positions[:, [0, 2]]
@@ -75,23 +82,23 @@ def plot():
 
     surfaces = dict(
         control=dict(
-            file=results_path("center_surround/disinhibition_1dend_spikes/results_noBack_1SyncImpOn4mfs_forCenterSurr.hdf5"),
+            file=results_path(path_control),
             data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], stim_start, stim_end),
         ),
         gabazine=dict(
-            file=results_path("center_surround/disinhibition_1dend_spikes/results_noBack_1SyncImpOn4mfs_GABAZINE_forCenterSurr.hdf5"),
+            file=results_path(path_gaba),
             data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], stim_start, stim_end),
         ),
         n2a=dict(
-            file=results_path("center_surround/disinhibition_1dend_spikes/results_noBack_1SyncImpOn4mfs_forCenterSurr.hdf5"),
+            file=results_path(path_control),
             data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], 600, 605),
         ),
         n2b_control=dict(
-            file=results_path("center_surround/disinhibition_1dend_spikes/results_noBack_1SyncImpOn4mfs_forCenterSurr.hdf5"),
+            file=results_path(path_control),
             data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], 605, 610),
         ),
         n2b_gabazine=dict(
-            file=results_path("center_surround/disinhibition_1dend_spikes/results_noBack_1SyncImpOn4mfs_GABAZINE_forCenterSurr.hdf5"),
+            file=results_path(path_gaba),
             data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], 605, 610),
         ),
     )

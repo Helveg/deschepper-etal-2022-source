@@ -4,20 +4,20 @@ from glob import glob
 import os, numpy as np, itertools
 import plotly.graph_objs as go
 import grc_cloud
-
-network_path = os.path.join(
-    os.path.dirname(__file__), "..", "networks", "300x_200z.hdf5"
-)
-def results_path(*args):
-    return os.path.join(
-        os.path.dirname(__file__), "..", "results", *args
-    )
+from ._paths import *
+import selection
 
 def find_nearest(array, value):
     array = np.asarray(array)
     return (np.abs(array - value)).argmin()
 
-def plot():
+def plot(run_mli_path=None, run_nomli_path=None, net_path=None):
+    if run_mli_path is None:
+        run_mli_path = results_path("lateral", "mli")
+    if run_nomli_path is None:
+        run_nomli_path = results_path("lateral", "no_mli")
+    if net_path is None:
+        net_path = network_path(selection.network)
     network = from_hdf5(network_path)
     ps_pc = network.get_placement_set("purkinje_cell")
     ps_bc = network.get_placement_set("basket_cell")
@@ -27,8 +27,8 @@ def plot():
     cut_mask = (ps_pc.positions[:, 2] > 250) | (ps_pc.positions[:, 2] < 50)
     incl_mask = np.logical_not(cut_mask)
     cut_off_ids = ps_pc.identifiers[cut_mask]
-    mli_files = glob(results_path("mli/lateral_MLI/*.hdf5"))
-    no_mli_files = glob(results_path("mli/lateral_no_MLI/*.hdf5"))
+    mli_files = glob(run_mli_path + "/*.hdf5")
+    no_mli_files = glob(run_nomli_path + "/*.hdf5")
     pcs_considered = len([id for id in ps_pc.identifiers if id not in cut_off_ids])
     stim_mli = np.empty((pcs_considered, len(mli_files)))
     base_mli = np.empty((pcs_considered, len(mli_files)))

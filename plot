@@ -10,20 +10,24 @@ def mod_names():
         if f.endswith(".py") and f != "__init__.py"
     ]
 
+def with_args(plots):
+    return [(p.split(":")[0], p.split(":")[1:]) for p in plots]
+
 sys.path.append(os.path.abspath("plots"))
 path = os.path.abspath(os.path.dirname(__file__))
 plots = mod_names() if len(sys.argv) == 1 else sys.argv[1:]
+plots = with_args(plots)
 
 def plot():
     t = len(plots)
-    for i, plot in enumerate(plots):
+    for i, (plot, arg) in enumerate(plots):
         print("Plotting", plot, "... ({}/{})".format(i + 1, t))
         plotting_module = import_module("." + plot, package="plots")
-        show_figure(plotting_module)
+        show_figure(plotting_module, arg)
     print("Done", " " * 30)
 
-def show_figure(plotting_module):
-    plt = plotting_module.plot()
+def show_figure(plotting_module, arg):
+    plt = plotting_module.plot(*arg)
     if not plt:
         warnings.warn(f"No figure returned from {plotting_module.__name__}.")
         return

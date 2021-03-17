@@ -16,19 +16,22 @@ else:
 if len(plots) == 0:
     plots = [f[:-3] for f in os.listdir(os.path.join(path, "plots")) if f.endswith(".py") and f != "__init__.py"]
 
+def with_args(plots):
+    return [(p.split(":")[0], p.split(":")[1:]) for p in plots]
+
+plots = with_args(plots)
+
 def build():
-    i = 0
     t = len(plots)
-    for f in plots:
-        i = i + 1
+    for i, (f, arg) in enumerate(plots):
         print("Building plot {} {}/{}...".format(f, i, t))
         plot = import_module("." + f, package="plots")
         plot.__figname__ = f
-        build_figure(plot)
+        build_figure(plot, arg)
     print("Done")
 
-def build_figure(plotting_module):
-    fig = plotting_module.plot()
+def build_figure(plotting_module, args):
+    fig = plotting_module.plot(*args)
     if not fig:
         warnings.warn(f"No figure returned from {plotting_module.__name__}.")
         return
