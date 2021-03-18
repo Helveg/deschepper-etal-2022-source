@@ -15,7 +15,7 @@ def network_path(*args):
         os.path.dirname(__file__), "..", "networks", *args
     )
 
-frozen = True
+frozen = False
 
 def results_path(*args):
     return os.path.join(

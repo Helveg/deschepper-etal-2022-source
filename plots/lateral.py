@@ -18,7 +18,7 @@ def plot(run_mli_path=None, run_nomli_path=None, net_path=None):
         run_nomli_path = results_path("lateral", "no_mli")
     if net_path is None:
         net_path = network_path(selection.network)
-    network = from_hdf5(network_path)
+    network = from_hdf5(net_path)
     ps_pc = network.get_placement_set("purkinje_cell")
     ps_bc = network.get_placement_set("basket_cell")
     bc_pc = network.get_connectivity_set("basket_to_purkinje")
