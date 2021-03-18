@@ -1,3 +1,5 @@
+# python split.py input.hdf5 out1.hdf 0 4000 out2.hdf5 4000 8000 0.025
+
 import os, sys, h5py, traceback, numpy as np
 
 def partial_copy_all(o, n, g, sets, l, trans_short, trans_long):
