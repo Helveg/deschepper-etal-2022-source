@@ -6,6 +6,7 @@ import scipy.ndimage, scipy.interpolate
 import pickle, selection
 import collections
 from ._paths import *
+from glob import glob
 
 colorbar_grc = ['rgb(158,188,218)', 'rgb(140,150,198)', 'rgb(140,107,177)', 'rgb(136,65,157)', 'rgb(129,15,124)', 'rgb(77,0,75)']
 colorbar_pc = "thermal"
@@ -35,9 +36,9 @@ def get_activity(ids, group, start, stop):
 
 def plot(path_control=None, path_gaba=None, network=None):
     if path_control is None:
-        path_control = results_path("center_surround/cs_control.hdf5")
+        path_control = results_path("center_surround", "control")
     if path_gaba is None:
-        path_gaba = results_path("center_surround/cs_gabazine.hdf5")
+        path_gaba = results_path("center_surround", "gabazine")
     if network is None:
         network = network_path(selection.network)
     base_start, base_end = 600, 800
@@ -51,37 +52,45 @@ def plot(path_control=None, path_gaba=None, network=None):
     grid_spacing = np.array([5., 5.])  #um
     gpoints = np.round((points - grid_offset) / grid_spacing)
 
+    run_avg = lambda datas: {k: sum(d.get(k) for d in datas) / len(datas) for k in datas[0].keys()}
     surfaces = dict(
         control=dict(
-            file=path_control,
+            files=glob(os.path.join(path_control, "*.hdf5")),
             data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], stim_start, stim_end),
+            reduce=run_avg,
         ),
         gabazine=dict(
-            file=path_gaba,
+            files=glob(os.path.join(path_gaba, "*.hdf5")),
             data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], stim_start, stim_end),
+            reduce=run_avg,
         ),
-        n2a=dict(
-            file=path_control,
-            data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], 1000, 1003),
-        ),
-        n2b_control=dict(
-            file=path_control,
-            data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], 1003, 1010),
-        ),
-        n2b_gabazine=dict(
-            file=path_gaba,
-            data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], 1003, 1010),
-        ),
+        # n2a=dict(
+        #     file=path_control,
+        #     data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], 1000, 1003),
+        # ),
+        # n2b_control=dict(
+        #     file=path_control,
+        #     data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], 1003, 1010),
+        # ),
+        # n2b_gabazine=dict(
+        #     file=path_gaba,
+        #     data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], 1003, 1010),
+        # ),
     )
 
     if not frozen:
         for sname, sdict in surfaces.items():
             sdict["grid"] = grid = {}
             print(f"Creating {sname} surface", " " * 30, end="\r")
-            if "file" in sdict:
-                f = h5py.File(sdict["file"], "r")
-                data = sdict["data"](f)
-                f.close()
+            if "files" in sdict:
+                datas = []
+                for f in sdict["files"]:
+                    with h5py.File(f, "r") as f:
+                        datas.append(sdict["data"](f))
+                data = sdict["reduce"](datas)
+            elif "file" in sdict:
+                with h5py.File(sdict["file"], "r") as f:
+                    data = sdict["data"](f)
             elif "parent" in sdict:
                 data = sdict["data"](surfaces[sdict["parent"]]["_data"])
             else:
@@ -94,6 +103,9 @@ def plot(path_control=None, path_gaba=None, network=None):
                     grid[coords] = []
                 grid[coords].append(data[id])
 
+            if sname == "gabazine":
+                print(grid.values())
+                print()
             isosurface_values = [avg(v) for v in grid.values()]
             # "sort" the isosurface {coord: value} map into an ordered square surface matrix
             surface_xcoords = [int(k[0]) for k in grid.keys()]
@@ -108,26 +120,39 @@ def plot(path_control=None, path_gaba=None, network=None):
         for surface in surfaces.values():
             # Delete the local unpicklable data lambda
             del surface["data"]
+            if "reduce" in surface:
+                del surface["reduce"]
         with open("surfaces.pickle", "wb") as f:
             pickle.dump(surfaces, f)
     else:
         with open("surfaces.pickle", "rb") as f:
             surfaces = pickle.load(f)
 
+    # control = surfaces["control"]["surface"]
+    # gabazine = surfaces["gabazine"]["surface"]
+    # n2a = surfaces["n2a"]["surface"]
+    # n2b_control = surfaces["n2b_control"]["surface"]
+    # n2b_gabazine = surfaces["n2b_gabazine"]["surface"]
+    # E = n2a / np.max(n2a)
+    # I = (n2b_gabazine - n2b_control) / np.max(n2b_gabazine - n2b_control)
+    # B = (E - I) / (E + 1)
+    # plots = {
+    #     "control": control,
+    #     "gabazine": gabazine,
+    #     "n2a": n2a,
+    #     "n2b_control": n2b_control,
+    #     "n2b_gabazine": n2b_gabazine,
+    #     "excitation": E,
+    #     "inhibition": I,
+    # }
     control = surfaces["control"]["surface"]
     gabazine = surfaces["gabazine"]["surface"]
-    n2a = surfaces["n2a"]["surface"]
-    n2b_control = surfaces["n2b_control"]["surface"]
-    n2b_gabazine = surfaces["n2b_gabazine"]["surface"]
-    E = n2a / np.max(n2a)
-    I = (n2b_gabazine - n2b_control) / np.max(n2b_gabazine - n2b_control)
+    E = control
+    I = gabazine - control
     B = (E - I) / (E + 1)
     plots = {
         "control": control,
         "gabazine": gabazine,
-        "n2a": n2a,
-        "n2b_control": n2b_control,
-        "n2b_gabazine": n2b_gabazine,
         "excitation": E,
         "inhibition": I,
     }
