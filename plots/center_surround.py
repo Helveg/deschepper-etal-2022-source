@@ -104,36 +104,6 @@ def plot(path_control=None, path_gaba=None, network=None):
     )
 
     if not frozen:
-        filename = 'networks/300x_200z.hdf5'
-        f = h5py.File(filename,'r')
-        scaffoldInstance = from_hdf5(filename)
-
-        excitedMFs = selection.stimulated_mf_poiss
-
-        connMfGlom = np.array(f['/cells/connections/mossy_to_glomerulus'])
-        excitedGlom=[]
-        for i in range(0,len(excitedMFs)):
-            excitedGlom.append(connMfGlom[connMfGlom[:,0]==int(excitedMFs[i]),1])
-
-        excitedGlomA = np.concatenate( (np.array(excitedGlom)[:]))
-        connGlomGrC = np.array(f['/cells/connections/glomerulus_to_granule'])
-        excitedGrC=[]
-        for i in range(0,len(excitedGlomA)):
-            excitedGrC.append(connGlomGrC[connGlomGrC[:,0]==int(excitedGlomA[i]),1])
-
-        excitedGrCA = np.concatenate( (np.array(excitedGrC)[:]))
-        grIDs= scaffoldInstance.get_placement_set("granule_cell").identifiers
-        NOexcitedGrC = grIDs[np.logical_not(np.isin(grIDs, excitedGrCA))]
-
-        counterExcGrC=collections.Counter(excitedGrCA)
-        counterSynInGrC=collections.Counter(counterExcGrC.values())
-
-        pos=np.array(f['/cells/positions'])
-        InGrC = []
-        for key, val in sorted(counterExcGrC.items()):
-            if val > 0:
-                InGrC.append(key)
-
         for sname, sdict in surfaces.items():
             sdict["grid"] = grid = {}
             print(f"Creating {sname} surface", " " * 30, end="\r")
