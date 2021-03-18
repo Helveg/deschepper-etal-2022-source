@@ -3,25 +3,19 @@ from bsb.core import from_hdf5
 from bsb.plotting import hdf5_plot_psth, hdf5_plot_spike_raster
 import numpy as np, h5py
 from scipy import stats
-
-network_path = os.path.join(
-    os.path.dirname(__file__), "..", "networks", "results.hdf5"
-)
-def results_path(*args):
-    return os.path.join(
-        os.path.dirname(__file__), "..", "results", *args
-    )
+import selection
+from ._paths import *
 
 def select_groups(kv):
     name, group = kv
     return group.attrs.get("label", None) != "granule_cell" or np.random.rand() < 0.05
 
-def plot():
-    figs = {}
-    with h5py.File(results_path("results_365b0.hdf5"), "r") as f:
+def plot(path=None, net_path=None):
+    if path is None:
+        path = results_path("results.hdf5")
+    if net_path is None:
+        net_path = network_path(selection.network)
+    with h5py.File(path, "r") as f:
         groups = {k: v for k, v in filter(select_groups, f["/recorders/soma_spikes"].items())}
-        figs["poiss"] = hdf5_plot_spike_raster(groups, show=False, cutoff=0)
-    with h5py.File(results_path("results_365b0_sync.hdf5"), "r") as f:
-        groups = {k: v for k, v in filter(select_groups, f["/recorders/soma_spikes"].items())}
-        figs["sync"] = hdf5_plot_spike_raster(groups, show=False, cutoff=0)
-    return figs
+        fig = hdf5_plot_spike_raster(groups, show=False, cutoff=0)
+    return fig

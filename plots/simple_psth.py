@@ -23,8 +23,8 @@ def plot(path=None, net_path=None):
     if path is None:
         path = results_path("results.hdf5")
     if net_path is None:
-        net_path = selection.network
-    network = from_hdf5(network_path(net_path))
+        net_path = network_path(selection.network)
+    network = from_hdf5(net_path)
     config = network.configuration
     order=dict(mossy_fiber=0, granule_cell=1, golgi_cell=2, purkinje_cell=3, stellate_cell=4, basket_cell=5)
     color=dict(
