@@ -12,4 +12,5 @@ def flip(f):
             for k, v in attrs.items():
                 h.attrs[k] = v
 
-flip(h5py.File(sys.argv[1], "a"))
+for f in sys.argv[1:]:
+    flip(h5py.File(f, "a"))
