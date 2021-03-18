@@ -5,22 +5,11 @@ from scipy import stats
 import scipy.ndimage, scipy.interpolate
 import pickle, selection
 import collections
+from ._paths import *
 
 colorbar_grc = ['rgb(158,188,218)', 'rgb(140,150,198)', 'rgb(140,107,177)', 'rgb(136,65,157)', 'rgb(129,15,124)', 'rgb(77,0,75)']
 colorbar_pc = "thermal"
-
-
-def network_path(*args):
-    return os.path.join(
-        os.path.dirname(__file__), "..", "networks", *args
-    )
-
 frozen = False
-
-def results_path(*args):
-    return os.path.join(
-        os.path.dirname(__file__), "..", "results", *args
-    )
 
 def crop(data, min, max, indices=False):
     c = data[:, 1]
@@ -28,26 +17,8 @@ def crop(data, min, max, indices=False):
         return np.where((c > min) & (c < max))[0]
     return c[(c > min) & (c < max)]
 
-def pairs(arr):
-    for i in range(len(arr) - 1):
-        yield arr[i], arr[i + 1]
-
-def get_isis(spikes, selected):
-    if len(selected) == 1:
-        if selected[0] - 1 == -1:
-            return []
-        return [spikes[selected[0]] - spikes[selected[0] - 1]]
-    return [spikes[second] - spikes[first] for first, second in pairs(selected)]
-
-def get_parallel(subset, set):
-    return np.where(np.isin(set, subset))[0]
-
 inv = lambda x: [1000 / y for y in x]
 avg = lambda x: sum(x) / len(x)
-
-def normaliz(lista, maxValue):
-    lista = {k: v / maxValue for k, v in lista.items()}
-    return lista
 
 def get_activity(ids, group, start, stop):
     num_spikes = {int(id): 0 for id in ids}
@@ -64,15 +35,15 @@ def get_activity(ids, group, start, stop):
 
 def plot(path_control=None, path_gaba=None, network=None):
     if path_control is None:
-        path_control = "center_surround/cs_control.hdf5"
+        path_control = results_path("center_surround/cs_control.hdf5")
     if path_gaba is None:
-        path_gaba = "center_surround/cs_gabazine.hdf5"
+        path_gaba = results_path("center_surround/cs_gabazine.hdf5")
     if network is None:
-        network = selection.network
+        network = network_path(selection.network)
     base_start, base_end = 600, 800
     stim_start, stim_end = 1000, 1050
     print("Loading network", " " * 30, end="\r")
-    scaffold = from_hdf5(network_path(network))
+    scaffold = from_hdf5(network)
     ps_grc = scaffold.get_placement_set("granule_cell")
     pc_pos = ps_grc.positions
     points = ps_grc.positions[:, [0, 2]]
@@ -82,23 +53,23 @@ def plot(path_control=None, path_gaba=None, network=None):
 
     surfaces = dict(
         control=dict(
-            file=results_path(path_control),
+            file=path_control,
             data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], stim_start, stim_end),
         ),
         gabazine=dict(
-            file=results_path(path_gaba),
+            file=path_gaba,
             data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], stim_start, stim_end),
         ),
         n2a=dict(
-            file=results_path(path_control),
+            file=path_control,
             data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], 1000, 1003),
         ),
         n2b_control=dict(
-            file=results_path(path_control),
+            file=path_control,
             data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], 1003, 1010),
         ),
         n2b_gabazine=dict(
-            file=results_path(path_gaba),
+            file=path_gaba,
             data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], 1003, 1010),
         ),
     )
