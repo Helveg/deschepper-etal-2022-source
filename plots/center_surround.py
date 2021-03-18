@@ -69,8 +69,8 @@ def plot(path_control=None, path_gaba=None, network=None):
         path_gaba = "center_surround/cs_gabazine.hdf5"
     if network is None:
         network = selection.network
-    base_start, base_end = 400, 600
-    stim_start, stim_end = 550, 650
+    base_start, base_end = 600, 800
+    stim_start, stim_end = 1000, 1050
     print("Loading network", " " * 30, end="\r")
     scaffold = from_hdf5(network_path(network))
     ps_grc = scaffold.get_placement_set("granule_cell")
@@ -91,15 +91,15 @@ def plot(path_control=None, path_gaba=None, network=None):
         ),
         n2a=dict(
             file=results_path(path_control),
-            data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], 600, 605),
+            data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], 1000, 1003),
         ),
         n2b_control=dict(
             file=results_path(path_control),
-            data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], 605, 610),
+            data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], 1003, 1010),
         ),
         n2b_gabazine=dict(
             file=results_path(path_gaba),
-            data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], 605, 610),
+            data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], 1003, 1010),
         ),
     )
 
