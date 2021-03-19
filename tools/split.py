@@ -26,6 +26,12 @@ def copy_all_recursive(o, n, r, *args, **kwargs):
         sets = {k.split("/")[-1]: v for k, v in obj.items() if isinstance(v, h5py.Dataset)}
         partial_copy_all(o, n, name, sets, *args, **kwargs)
 
+    # Copy root attrs
+    ng = n.require_group(r.name)
+    for k, v in r.attrs.items():
+        ng.attrs[k] = v
+
+    # Copy children
     o[r].visititems(visit_group)
 
 if __name__ == "__main__":
