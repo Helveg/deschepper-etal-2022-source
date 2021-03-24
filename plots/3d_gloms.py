@@ -1,20 +1,15 @@
 from bsb.core import from_hdf5
 import plotly.graph_objs as go
 import os, _layouts
-
-network_path = os.path.join(
-    os.path.dirname(__file__), "..", "networks", "300x_200z.hdf5"
-)
-
-def results_path(*args):
-    return os.path.join(
-        os.path.dirname(__file__), "..", "results", *args
-    )
+import selection
+from ._paths import *
 
 individually_labelled = False
 
-def plot():
-    scaffold = from_hdf5(network_path)
+def plot(net_path=None):
+    if net_path is None:
+        net_path = selection.network
+    scaffold = from_hdf5(net_path)
     selected_mf = {
         "4": [213, 214, 222, 223],
         "13": [213, 214, 222, 223, 229, 221, 206, 230, 247, 239, 231, 238, 240],
