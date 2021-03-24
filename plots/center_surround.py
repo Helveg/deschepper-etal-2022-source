@@ -112,29 +112,11 @@ def plot(path_control=None, path_gaba=None, network=None):
     else:
         with open("surfaces.pickle", "rb") as f:
             surfaces = pickle.load(f)
-
-    # control = surfaces["control"]["surface"]
-    # gabazine = surfaces["gabazine"]["surface"]
-    # n2a = surfaces["n2a"]["surface"]
-    # n2b_control = surfaces["n2b_control"]["surface"]
-    # n2b_gabazine = surfaces["n2b_gabazine"]["surface"]
-    # E = n2a / np.max(n2a)
-    # I = (n2b_gabazine - n2b_control) / np.max(n2b_gabazine - n2b_control)
-    # B = (E - I) / (E + 1)
-    # plots = {
-    #     "control": control,
-    #     "gabazine": gabazine,
-    #     "n2a": n2a,
-    #     "n2b_control": n2b_control,
-    #     "n2b_gabazine": n2b_gabazine,
-    #     "excitation": E,
-    #     "inhibition": I,
-    # }
+    
     control = surfaces["control"]["surface"]
     gabazine = surfaces["gabazine"]["surface"]
     E = control
     I = gabazine - control
-    B = (E - I) / (E + 1)
     plots = {
         "control": control,
         "gabazine": gabazine,
@@ -154,32 +136,9 @@ def plot(path_control=None, path_gaba=None, network=None):
                 zaxis_range=[-0.3, 1.5],
                 xaxis_title="Y",
                 yaxis_title="X",
+                camera=dict(up=dict(x=0,y=0,z=1),center=dict(x=0,y=0,z=0),eye=dict(x=-0.903754304010216,y=1.34612207303165,z=1.4348113194702579)),
                 aspectratio=dict(x=2/3, y=1, z=0.3)
             )
         )
         figs[name] = fig
-    fig = go.Figure(go.Surface(z=B, colorscale="balance", cmin=-0.5, cmax=0.5))
-    fig.update_layout(
-        title_text="E/I balance",
-        scene=dict(
-            zaxis_range=[-1, 1],
-            xaxis_title="Y",
-            yaxis_title="X",
-            zaxis_title="B",
-            aspectratio=dict(x=2/3, y=1, z=0.3),
-        )
-    )
-    fig.update_layout(
-        scene_yaxis=dict(
-            tickmode="array",
-            tickvals=[0, 20, 40, 60],
-            ticktext=["0", "100", "200", "300"]
-        ),
-        scene_xaxis=dict(
-            tickmode="array",
-            tickvals=[0, 10, 20, 30, 40],
-            ticktext=["0", "50", "100", "150", "200"]
-        )
-    )
-    figs["balance"] = fig
     return figs
