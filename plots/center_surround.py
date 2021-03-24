@@ -112,15 +112,13 @@ def plot(path_control=None, path_gaba=None, network=None):
     else:
         with open("surfaces.pickle", "rb") as f:
             surfaces = pickle.load(f)
-    
+
     control = surfaces["control"]["surface"]
     gabazine = surfaces["gabazine"]["surface"]
-    E = control
     I = gabazine - control
     plots = {
         "control": control,
         "gabazine": gabazine,
-        "excitation": E,
         "inhibition": (I, 0.4),
     }
     figs = {}
