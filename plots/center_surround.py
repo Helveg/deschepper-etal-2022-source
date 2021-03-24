@@ -42,7 +42,7 @@ def plot(path_control=None, path_gaba=None, network=None):
     if network is None:
         network = network_path(selection.network)
     base_start, base_end = 600, 800
-    stim_start, stim_end = 1000, 1050
+    stim_start, stim_end = 1000, 1010
     print("Loading network", " " * 30, end="\r")
     scaffold = from_hdf5(network)
     ps_grc = scaffold.get_placement_set("granule_cell")
@@ -64,18 +64,6 @@ def plot(path_control=None, path_gaba=None, network=None):
             data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], stim_start, stim_end),
             reduce=run_avg,
         ),
-        # n2a=dict(
-        #     file=path_control,
-        #     data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], 1000, 1003),
-        # ),
-        # n2b_control=dict(
-        #     file=path_control,
-        #     data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], 1003, 1010),
-        # ),
-        # n2b_gabazine=dict(
-        #     file=path_gaba,
-        #     data=lambda f: get_activity(ps_grc.identifiers, f["recorders/soma_spikes/"], 1003, 1010),
-        # ),
     )
 
     if not frozen:
@@ -103,9 +91,6 @@ def plot(path_control=None, path_gaba=None, network=None):
                     grid[coords] = []
                 grid[coords].append(data[id])
 
-            if sname == "gabazine":
-                print(grid.values())
-                print()
             isosurface_values = [avg(v) for v in grid.values()]
             # "sort" the isosurface {coord: value} map into an ordered square surface matrix
             surface_xcoords = [int(k[0]) for k in grid.keys()]
@@ -154,15 +139,19 @@ def plot(path_control=None, path_gaba=None, network=None):
         "control": control,
         "gabazine": gabazine,
         "excitation": E,
-        "inhibition": I,
+        "inhibition": (I, 0.4),
     }
     figs = {}
     for name, z in plots.items():
-        fig = go.Figure(go.Surface(z=z))
+        cmax = 1.5
+        if isinstance(z, tuple):
+            cmax = z[1]
+            z = z[0]
+        fig = go.Figure(go.Surface(z=z,cmin=0, cmax=cmax))
         fig.update_layout(
             title_text=name,
             scene=dict(
-                zaxis_range=[0, 1],
+                zaxis_range=[-0.3, 1.5],
                 xaxis_title="Y",
                 yaxis_title="X",
                 aspectratio=dict(x=2/3, y=1, z=0.3)
