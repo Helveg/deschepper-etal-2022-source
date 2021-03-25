@@ -8,7 +8,6 @@ def plot(*files):
 
     configs = []
     files = list(itertools.chain(*map(glob.glob, map(os.path.abspath, files))))
-    print(len(files))
     for file in files:
         # Figure out whether it's an HDF5 or a config file and extract the cfg
         # All the try/except/finally's make sure that we close all files we open
@@ -26,7 +25,6 @@ def plot(*files):
                 configs.append(f.read())
             finally:
                 f.close()
-    print(len(configs))
     figs = {}
     for file, conf in zip(files, configs):
         figs[file] = fig = go.Figure(layout=dict(title_text=file))
@@ -35,15 +33,15 @@ def plot(*files):
         except Exception as e:
             raise IOError(f"Unable to make conf for `{file}`: {e}")
         for sim_name, sim in cfg_obj.simulations.items():
-            plottable_devices = {k: v for k, v in sim.devices.items() if hasattr(v, "parameters")}
+            plottable_devices = {k: v for k, v in sim.devices.items() if hasattr(v, "parameters") or hasattr(v, "spike_times")}
             t = len(plottable_devices)
             frac = 1 / t
             for i, (device_name, device) in enumerate(plottable_devices.items()):
-                params = device.parameters
-                if hasattr(params, "spike_times"):
-                    start = min(map(float, params.spike_times))
-                    stop = max(map(float, params.spike_times))
+                if hasattr(device, "spike_times"):
+                    start = min(map(float, device.spike_times))
+                    stop = max(map(float, device.spike_times))
                 else:
+                    params = device.parameters
                     start = float(params["start"])
                     stop = start + (float(params["interval"]) * float(params["number"]))
                 fig.add_trace(
