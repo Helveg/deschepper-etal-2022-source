@@ -107,10 +107,10 @@ def plot(path_control=None, path_gaba=None, network=None):
             del surface["data"]
             if "reduce" in surface:
                 del surface["reduce"]
-        with open("surfaces.pickle", "wb") as f:
+        with open("surfaces_bad.pickle", "wb") as f:
             pickle.dump(surfaces, f)
     else:
-        with open("surfaces.pickle", "rb") as f:
+        with open("surfaces_bad.pickle", "rb") as f:
             surfaces = pickle.load(f)
 
     control = surfaces["control"]["surface"]
@@ -122,7 +122,7 @@ def plot(path_control=None, path_gaba=None, network=None):
     E = control
     I = gabazine - control
     En = E / np.max(E)
-    In = I / np.max(idea)
+    In = I / np.max(I)
     nc = control / np.max(control)
     ng = gabazine / np.max(gabazine)
     B = (E - I) / E
@@ -145,7 +145,7 @@ def plot(path_control=None, path_gaba=None, network=None):
         if isinstance(z, tuple):
             cmax = z[1]
             z = z[0]
-        fig = go.Figure(go.Surface(z=z,cmin=-cmax, cmax=cmax))
+        fig = go.Figure(go.Surface(z=z,colorscale="balance", cmin=-cmax, cmax=cmax))
         fig.update_layout(
             title_text=name,
             scene=dict(

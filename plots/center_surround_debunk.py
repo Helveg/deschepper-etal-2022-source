@@ -37,4 +37,32 @@ fig.add_scatter(y=(nE - nI), row=3, col=1, name="afternorm. EI diff")
 fig.add_scatter(y=(pE - pI), row=3, col=1, name="prenorm. EI diff")
 
 fig.update_yaxes(range=[-10, 10], row=3, col=1)
-fig.write_html("cs.html")
+fig.write_html("bad_cs.html")
+
+# Mapelli fraud plot
+
+from scipy.interpolate import interp1d
+i = [(0, 147), (18, 140), (32, 137), (51, 130), (59, 124), (65, 121), (74, 113), (82, 105), (100, 81), (117, 59), (131, 48), (141, 42), (154, 40), (160, 39), (168, 40), (184, 42), (195, 40), (207, 36), (225, 20), (232, 14), (244, 4), (258, 0), (268, 3), (277, 12), (291, 36), (315, 87), (323, 102), (334, 117), (351, 131), (363, 137), (388, 144), (398, 148)]
+ix = np.array([x[0] for x in i])
+iy = np.array([x[1] for x in i])
+e = [(5, 148), (11, 145), (26, 139), (42, 134), (55, 129), (72, 123), (99, 113), (115, 106), (130, 96), (138, 89), (151, 70), (162, 50), (168, 40), (178, 23), (187, 12), (195, 3), (206, 0), (218, 4), (226, 10), (232, 14), (250, 35), (269, 53), (280, 64), (293, 79), (310, 97), (322, 109), (334, 117), (349, 129), (363, 136), (376, 140), (389, 145), (395, 148)]
+ex = np.array([x[0] for x in e])
+ey = np.array([x[1] for x in e])
+
+def coord_x(inp):
+    return inp * 0.75
+
+def coord_y(inp):
+    return (150 - inp) / 150
+
+interpI = interp1d(coord_x(ix), coord_y(iy), kind="cubic")
+interpE = interp1d(coord_x(ex), coord_y(ey), kind="cubic")
+smooth_x = np.arange(5 * 0.75, 395 * 0.75, 0.1)
+
+fig = go.Figure([
+    go.Scatter(x=smooth_x, y=interpI(smooth_x), name="inhibition", line=dict(width=4, color="red")),
+    go.Scatter(x=smooth_x, y=interpE(smooth_x), name="excitation", line=dict(width=4, color="black")),
+    go.Scatter(x=smooth_x, y=(interpE(smooth_x) - interpI(smooth_x)), name="errata", line=dict(width=4, color="black", dash='dash')),
+    go.Scatter(x=smooth_x, y=(interpE(smooth_x) - interpI(smooth_x)) / interpE(smooth_x), name="real result", line=dict(width=4, color="black", dash='dash')),
+])
+fig.show()
