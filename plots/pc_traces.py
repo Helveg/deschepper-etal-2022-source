@@ -3,10 +3,15 @@ from bsb.plotting import plot_morphology, hdf5_gather_voltage_traces, plot_trace
 from plotly import graph_objs as go
 import selection, numpy as np, h5py
 from colour import Color
+from ._paths import *
 
-def plot():
-    network = from_hdf5("networks/300x_200z.hdf5")
-    with h5py.File("results/results_stim_on_MFs_Poiss.hdf5", "r") as f:
+def plot(path=None, net_path=None):
+    if path is None:
+        raise ValueError("Give a path")
+    if net_path is None:
+        net_path = network_path(selection.network)
+    network = from_hdf5(net_path)
+    with h5py.File(path, "r") as f:
         traces = hdf5_gather_voltage_traces(f, "recorders/soma_voltages/", map(str, map(int, selection.purkinje_cell_ids)))
         traces.set_legends(["Membrane potential"])
         order = [1, 2, 0]
@@ -19,6 +24,6 @@ def plot():
 
 def meta():
     return {"width": 1920 / 3 * 2}
-    
+
 if __name__ == "__main__":
     plot().show()
