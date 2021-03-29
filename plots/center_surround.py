@@ -42,7 +42,7 @@ def plot(path_control=None, path_gaba=None, network=None):
     if network is None:
         network = network_path(selection.network)
     base_start, base_end = 600, 800
-    stim_start, stim_end = 1000, 1010
+    stim_start, stim_end = 1000, 1020
     print("Loading network", " " * 30, end="\r")
     scaffold = from_hdf5(network)
     ps_grc = scaffold.get_placement_set("granule_cell")
