@@ -1,4 +1,4 @@
-import os, plotly.graph_objects as go
+import os, plotly.graph_objects as go, glob
 from plotly.subplots import make_subplots
 from bsb.core import from_hdf5
 from bsb.plotting import hdf5_plot_psth, hdf5_plot_spike_raster
@@ -32,7 +32,8 @@ def nth_after(n, after):
 
 def plot(path_control=None, path_gaba=None, net_path=None):
     if path_control is None or path_gaba is None:
-        ValueError("Give control and gaba paths")
+        path_control = glob.glob(results_path("center_surround", "control", "*"))[0]
+        path_gaba = glob.glob(results_path("center_surround", "gabazine", "*"))[0]
     if net_path is None:
         net_path = network_path(selection.network)
     netw = from_hdf5(net_path)
