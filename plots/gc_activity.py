@@ -34,10 +34,12 @@ avg = lambda x: sum(x) / len(x)
 def plot(path=None, net_path=None, base_start=5700, base_end=5900, stim_start=6000, stim_end=6050):
     if path is None:
         path = glob(results_path("sensory_burst", "*"))[0]
+    if net_path is None:
+        net_path = network_path(selection.network)
     print("Loading network", " " * 30, end="\r")
-    scaffold = from_hdf5(net_path)
+    network = from_hdf5(net_path)
     results = h5py.File(path, "r")
-    ps = scaffold.get_placement_set("granule_cell")
+    ps = network.get_placement_set("granule_cell")
     ids = ps.identifiers
     spikes_per_dict = {id: [] for id in ids}
     print("Scanning granule spikes", " " * 30, end="\r")
@@ -99,7 +101,7 @@ def plot(path=None, net_path=None, base_start=5700, base_end=5900, stim_start=60
     )
 
     print("Loading golgi", " " * 30, end="\r")
-    ps_pc = scaffold.get_placement_set("golgi_cell")
+    ps_pc = network.get_placement_set("golgi_cell")
     pc_pos = ps_pc.positions
     border_pc = pc_pos[:, 2] > 500
     cut_off = []
@@ -133,7 +135,7 @@ def plot(path=None, net_path=None, base_start=5700, base_end=5900, stim_start=60
     min_c = min([v for k, v in pc_delta_freq.items() if k not in cut_off])
     max_c = max([v for k, v in pc_delta_freq.items() if k not in cut_off])
 
-    with h5py.File(results_path("results_stim_on_MFs_4syncImp.hdf5"), "r") as f:
+    with h5py.File(path, "r") as f:
         print("Plotting golgi activity", " " * 30, end="\r")
         pc_all = go.Scatter3d(
             name="All golgi cells",

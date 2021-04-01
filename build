@@ -2,6 +2,7 @@
 import os, sys, warnings
 from types import ModuleType
 from importlib import import_module
+import traceback
 
 sys.path.append(os.path.abspath("plots"))
 path = os.path.abspath(os.path.dirname(__file__))
@@ -27,7 +28,10 @@ def build():
         print("Building plot {} {}/{}...".format(f, i, t))
         plot = import_module("." + f, package="plots")
         plot.__figname__ = f
-        build_figure(plot, arg)
+        try:
+            build_figure(plot, arg)
+        except Exception as e:
+            traceback.print_exc()
     print("Done")
 
 def build_figure(plotting_module, args):
