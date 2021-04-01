@@ -5,14 +5,6 @@ import numpy as np, h5py
 from scipy import stats
 import random
 
-network_path = os.path.join(
-    os.path.dirname(__file__), "..", "networks", "results.hdf5"
-)
-def results_path(*args):
-    return os.path.join(
-        os.path.dirname(__file__), "..", "results", *args
-    )
-
 # def select_groups(kv):
 #     name, group = kv
 #     cell_id = []
@@ -68,7 +60,14 @@ class FakeDataset:
     def shape(self):
         return self.arr.shape
 
-def plot():
+from ._paths import *
+from glob import glob
+import selection
+
+def plot(path=None):
+    return go.Figure(layout=dict(title_text="Alice has to provide the NEST result files"))
+    if path is None:
+        path = glob(results_path("sensory_burst", "*"))[0]
     with h5py.File(results_path("nest_PoissFinal2/results_NEST_stim_on_MFs_PoissFinal2_finetuning0-02.hdf5"), "r") as f:
         groups = {k: v for k, v in map(select_ids, f["/recorders/soma_spikes"].items(), generate(sel_labels), generate(cell_ids))}
         fig = hdf5_plot_spike_raster(groups, show=False, cutoff=300, sorted_labels=sel_labels, sorted_ids=cell_ids)

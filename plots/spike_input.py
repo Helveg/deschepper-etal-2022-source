@@ -3,8 +3,6 @@ import selection, h5py, numpy as np
 from scipy import sparse
 from plotly import graph_objs as go
 
-network = from_hdf5("networks/300x_200z.hdf5")
-
 def crop(data, min, max, indices=False):
     if len(data.shape) > 1:
         c = data[:, 1]
@@ -40,7 +38,6 @@ def prep_figure(name, h5file, cell, bin_width, window_widths, conn_sets):
     with h5py.File(h5file, "r") as f:
         activity = f["recorders/soma_spikes"]
         input_spikes = np.array(calc_spike_input(activity, conn_sets, cell))
-        print(input_spikes.shape)
         bins = np.bincount(np.floor(input_spikes / bin_width).astype(int))
         fig = go.Figure(
             go.Bar(name=f"Input spikes per {bin_width}ms", y=bins, x=np.arange(0, len(bins) * bin_width, bin_width)),
@@ -52,14 +49,22 @@ def prep_figure(name, h5file, cell, bin_width, window_widths, conn_sets):
             fig.add_scatter(y=sliding_avg, x=np.arange(offset, len(bins) * bin_width - offset, bin_width), name=f"Sliding average ({window_width})")
     return fig
 
-def plot():
+from ._paths import *
+from glob import glob
+import selection
+
+def plot(path=None, net_path=None):
+    if path is None:
+        path = glob(results_path("sensory_burst", "*"))[0]
+    if net_path is None:
+        net_path = network_path(selection.network)
+    network = from_hdf5(net_path)
 
     cell = 561
     bin_width = 5
     window_widths = (5, 7, 11, 20)
     conn_sets = [network.get_connectivity_set(x) for x in ("parallel_fiber_to_stellate",)]
     figs = {}
-    figs["sync"] = prep_figure("sync", "results/results_365b0_sync.hdf5", cell, bin_width, window_widths, conn_sets)
-    figs["sensory"] = prep_figure("sensory burst", "results/results_365b0.hdf5", cell, bin_width, window_widths, conn_sets)
+    figs["sensory"] = prep_figure("sensory burst", path, cell, bin_width, window_widths, conn_sets)
 
     return figs

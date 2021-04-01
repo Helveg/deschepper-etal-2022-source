@@ -12,11 +12,17 @@ import collections
 from collections import defaultdict
 
 
-def plot():
+from ._paths import *
+from glob import glob
+import selection
+
+def plot(path=None):
+    if path is None:
+        path = glob(results_path("single_impulse", "*"))[0]
     duration = 18000
     cutoff = 8000
-    ID = 561
-    with h5py.File("results/results_365b0.hdf5", "r") as f:
+    ID = 126
+    with h5py.File(path, "r") as f:
         synapses = {}
         for n, g in f[f"/recorders/synapses/{ID}/current"].items():
             if g.attrs["type"] not in synapses:

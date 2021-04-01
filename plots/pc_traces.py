@@ -7,7 +7,7 @@ from ._paths import *
 
 def plot(path=None, net_path=None):
     if path is None:
-        raise ValueError("Give a path")
+        path = glob(results_path("sensory_burst", "*"))[0]
     if net_path is None:
         net_path = network_path(selection.network)
     network = from_hdf5(net_path)

@@ -6,16 +6,6 @@ from scipy import stats
 colorbar_grc = ['rgb(158,188,218)', 'rgb(140,150,198)', 'rgb(140,107,177)', 'rgb(136,65,157)', 'rgb(129,15,124)', 'rgb(77,0,75)']
 colorbar_pc = "thermal"
 
-
-network_path = os.path.join(
-    os.path.dirname(__file__), "..", "networks", "300x_200z.hdf5"
-)
-
-def results_path(*args):
-    return os.path.join(
-        os.path.dirname(__file__), "..", "results", *args
-    )
-
 def crop(data, min, max, indices=False):
     c = data[:, 1]
     if indices:
@@ -37,22 +27,23 @@ def get_parallel(subset, set):
 inv = lambda x: [1000 / y for y in x]
 avg = lambda x: sum(x) / len(x)
 
+from ._paths import *
+from glob import glob
+import selection
 
-def plot():
-    filename = '/home/claudia/deschepper-etal-2020/networks/300x_200z.hdf5'
-
-    scaffoldInstance = from_hdf5(filename)
-    config = scaffoldInstance.configuration
-    f = h5py.File(filename,'r')
-    specIDs=306
-    posSPEC=np.array(f['/cells/positions'])
-
-    base_start, base_end = 400, 600
-    stim_start, stim_end = 700, 800
+def plot(path=None, net_path=None, base_start=5700, base_end=5900, stim_start=6000, stim_end=6050):
+    if path is None:
+        path = glob(results_path("sensory_burst", "*"))[0]
+    if net_path is None:
+        net_path = network_path(selection.network)
+    network = from_hdf5(net_path)
+    config = network.configuration
+    f = h5py.File(net_path,'r')
+    specIDs = 306
+    posSPEC = np.array(f['/cells/positions'])
     print("Loading network", " " * 30, end="\r")
-    scaffold = from_hdf5(network_path)
-    results = h5py.File(results_path("results_stim_on_MFs_4syncImp.hdf5"), "r")
-    ps = scaffold.get_placement_set("granule_cell")
+    results = h5py.File(path, "r")
+    ps = network.get_placement_set("granule_cell")
     ids = ps.identifiers
     spikes_per_dict = {id: [] for id in ids}
     print("Scanning granule spikes", " " * 30, end="\r")
@@ -114,7 +105,7 @@ def plot():
     )
 
     print("Loading basket", " " * 30, end="\r")
-    ps_pc = scaffold.get_placement_set("basket_cell")
+    ps_pc = network.get_placement_set("basket_cell")
     pc_pos = ps_pc.positions
     border_pc = pc_pos[:, 2] > 500
     cut_off = []
@@ -150,7 +141,7 @@ def plot():
 
     posSpecCells= posSPEC[posSPEC[:,0]==int(specIDs),2:5][0]
 
-    with h5py.File(results_path("results_stim_on_MFs_4syncImp.hdf5"), "r") as f:
+    with h5py.File(path, "r") as f:
         print("Plotting basket activity", " " * 30, end="\r")
         pc_all = go.Scatter3d(
             name="All basket cells",

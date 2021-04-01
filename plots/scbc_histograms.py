@@ -11,9 +11,16 @@ def crop(data, min, max, indices=False):
     if indices:
         return np.where((c > min) & (c < max))[0]
     return c[(c > min) & (c < max)]
+from ._paths import *
+from glob import glob
+import selection
 
-def plot():
-    network = from_hdf5("networks/300x_200z.hdf5")
+def plot(path=None, net_path=None):
+    if path is None:
+        path = glob(results_path("sensory_burst", "*"))[0]
+    if net_path is None:
+        net_path = network_path(selection.network)
+    network = from_hdf5(net_path)
     MFs = selection.stimulated_mf_sync
     mf_glom = network.get_connectivity_set("mossy_to_glomerulus").get_dataset()
     glom_grc = network.get_connectivity_set("glomerulus_to_granule").get_dataset()
@@ -30,33 +37,33 @@ def plot():
     sc_roi = grc_sc[np.isin(grc_sc[:, 0], very_active_grc)]
     sc_x = np.unique(sc_roi, return_counts=True)[1]
     figs = {"structural": go.Figure(go.Histogram(x=sc_x))}
-    with h5py.File("results/results_stim_on_MFs_4syncImp.hdf5", "r") as f:
+    with h5py.File(path, "r") as f:
         g = f["recorders/soma_spikes"]
         spikes_inc_sc = {id: [] for id in sc_ps.identifiers}
         for id, d in g.items():
             if d.attrs["label"] != "granule_cell":
                 continue
-            spikes = crop(d[()], 700, 800)
+            spikes = crop(d[()], 6000, 6100)
             targets = sc_m.getrow(id).nonzero()[1]
             for t in targets:
                 spikes_inc_sc[t].extend(spikes)
         spikes_inc_sc = {id: np.array(v) for id, v in spikes_inc_sc.items()}
-        sc_spikes = np.array([np.bincount(np.ceil((v - 700) / 5).astype(int), minlength=21) for v in spikes_inc_sc.values()])
+        sc_spikes = np.array([np.bincount(np.ceil((v - 6000) / 5).astype(int), minlength=21) for v in spikes_inc_sc.values()])
         fig = go.Figure()
         for sc in sc_spikes:
-            fig.add_trace(go.Scatter(x=np.arange(700, 800, 5), y=sc, mode="lines", line=dict(color="blue"), opacity=0.1))
+            fig.add_trace(go.Scatter(x=np.arange(6000, 6100, 5), y=sc, mode="lines", line=dict(color="blue"), opacity=0.1))
         figs["skyscrapers"] = fig
         fig = go.Figure()
         for sc in sc_spikes:
-            fig.add_trace(go.Scatter(x=np.arange(700, 800, 5) + np.random.rand(20) * 5 - 2.5, y=sc, mode="markers", marker=dict(color="blue", size=2)))
+            fig.add_trace(go.Scatter(x=np.arange(6000, 6100, 5) + np.random.rand(20) * 5 - 2.5, y=sc, mode="markers", marker=dict(color="blue", size=2)))
         figs["manhattan"] = fig
         fig = go.Figure()
         for i, bin in enumerate(sc_spikes.T):
             print(i, len(bin))
-            fig.add_trace(go.Violin(x0=700 + i * 5, y=bin, showlegend=False, fillcolor="aquamarine", line_color="black"))
+            fig.add_trace(go.Violin(x0=6000 + i * 5, y=bin, showlegend=False, fillcolor="aquamarine", line_color="black"))
         figs["violin"] = fig
         fig.show()
-        spikes_per_impulse = np.array([[len(crop(v, 700 + i * 25, 700 + (i + 1) * 25)) for i in range(4)] for v in spikes_inc_sc.values()])
+        spikes_per_impulse = np.array([[len(crop(v, 6000 + i * 25, 6000 + (i + 1) * 25)) for i in range(4)] for v in spikes_inc_sc.values()])
         for i in range(4):
             figs[f"impulse{i+1}"] = go.Figure(go.Histogram(x=spikes_per_impulse[:, i]))
     return figs

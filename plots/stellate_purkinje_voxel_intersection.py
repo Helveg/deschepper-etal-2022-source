@@ -7,19 +7,24 @@ from random import sample
 import os, numpy as np, selection
 from colour import Color
 
-network = os.path.join(os.path.dirname(__file__), "..", "networks", "300x_200z.hdf5")
-scaffold = from_hdf5(network)
 camera = dict(up=dict(x=0,y=0,z=1),center=dict(x=-0.03131647105611321,y=0.039403276571002094,z=0.06362627967144648),eye=dict(x=2.9750537902845013,y=0.89709471640103,z=0.40722192762454806))
 
-def plot():
+from ._paths import *
+from glob import glob
+import selection
+
+def plot(net_path=None):
+    if net_path is None:
+        net_path = network_path(selection.network)
+    network = from_hdf5(net_path)
     connection_name = "stellate_to_purkinje"
-    ct = scaffold.get_connection_type(connection_name)
-    cs = scaffold.get_connectivity_set(ct.name)
+    ct = network.get_connection_type(connection_name)
+    cs = network.get_connectivity_set(ct.name)
     connections = cs.connections
     from_type = ct.from_cell_types[0]
     to_type = ct.to_cell_types[0]
-    ps_pre = scaffold.get_placement_set(from_type)
-    ps_post = scaffold.get_placement_set(to_type)
+    ps_pre = network.get_placement_set(from_type)
+    ps_post = network.get_placement_set(to_type)
     from_comp_types = ct.from_cell_compartments[0]
     to_comp_types = ct.to_cell_compartments[0]
 
@@ -38,9 +43,9 @@ def plot():
     pos_pre = ps_pre.positions[from_id - ps_pre.identifiers[0]]
     pos_post = ps_post.positions[to_id - ps_post.identifiers[0]]
 
-    m_pre = scaffold.morphology_repository.get_morphology(from_type.list_all_morphologies()[0])
-    m_pre2 = scaffold.morphology_repository.get_morphology(from_type.list_all_morphologies()[0])
-    m_post = scaffold.morphology_repository.get_morphology(to_type.list_all_morphologies()[0])
+    m_pre = network.morphology_repository.get_morphology(from_type.list_all_morphologies()[0])
+    m_pre2 = network.morphology_repository.get_morphology(from_type.list_all_morphologies()[0])
+    m_post = network.morphology_repository.get_morphology(to_type.list_all_morphologies()[0])
     m_pre.voxelize(50, compartments=m_pre.get_compartments(from_comp_types))
     m_pre2.voxelize(150)
     m_post.voxelize(50, compartments=m_post.get_compartments(to_comp_types))

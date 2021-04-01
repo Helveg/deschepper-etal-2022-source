@@ -4,10 +4,15 @@ from plotly import graph_objs as go
 import numpy as np, pickle
 from radialdf import rdf
 
-frozen = True
+frozen = False
+from ._paths import *
+from glob import glob
+import selection
 
-def plot():
-    network = from_hdf5("networks/300x_200z.hdf5")
+def plot(net_path=None):
+    if net_path is None:
+        net_path = network_path(selection.network)
+    network = from_hdf5(net_path)
 
     figs = {}
     for ct in network.get_cell_types(entities=False):

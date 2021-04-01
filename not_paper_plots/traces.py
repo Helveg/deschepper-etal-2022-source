@@ -1,23 +1,17 @@
 from bsb.plotting import hdf5_gather_voltage_traces, plot_traces, CellTraceCollection
 from h5py import File
 import os
+from ._paths import *
+from glob import glob
+import selection
 
-network_path = os.path.join(
-    os.path.dirname(__file__), "..", "networks", "300x_200z.hdf5"
-)
-def results_path(*args):
-    return os.path.join(
-        os.path.dirname(__file__), "..", "results", *args
-    )
-
-def figmod(fig):
-    pass
-
-def plot():
+def plot(path=None):
+    if path is None:
+        path = glob(results_path("sensory_burst", "*"))[0]
     # Open the last generated HDF5 file of the `poc` simulation
-    with File(results_path('results_10imp50Hz4mf_LTPLTD.hdf5'), "r") as f:
+    with File(path, "r") as f:
         # Collect traces from cells across multiple recording groups.
-        cell_traces = hdf5_gather_voltage_traces(f, "/recorders/", ["granules_Poiss"])
+        cell_traces = hdf5_gather_voltage_traces(f, "/recorders/soma_voltages")
         #cell_traces1 = hdf5_gather_voltage_traces(f, "/recorders/", ["granules_la"])
         # Take only those cells that on top of their soma also had a dendrite recorded
         selected = "granule_cell"
@@ -35,7 +29,7 @@ def plot():
         representatives = CellTraceCollection(representatives)
         representatives.set_legends(["Soma (mV)"])
         representatives.set_colors(["red"])
-        fig = plot_traces(representatives, show=False, mod=figmod, cutoff=3000)
+        fig = plot_traces(representatives, show=False, cutoff=3000)
         fig.update_layout(xaxis = dict( tickmode='array',
             tickvals=[0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000],
             ticktext=['0', '100', '200', '300', '400', '500', '600', '700', '800', '900']))

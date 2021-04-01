@@ -25,6 +25,7 @@ class valueify:
 
 
 def plot():
+    return go.Figure(layout=dict(title_text="Alice has to provide NEST results file"))
     scaffoldInstance = from_hdf5(network_path)
     config = scaffoldInstance.configuration
     cells = list(scaffoldInstance.get_cell_types())

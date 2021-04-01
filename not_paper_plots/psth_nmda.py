@@ -5,14 +5,6 @@ import numpy as np, h5py
 from scipy import stats
 from glob import glob
 
-network_path = os.path.join(
-    os.path.dirname(__file__), "..", "networks", "300x_200z.hdf5"
-)
-def results_path(*args):
-    return os.path.join(
-        os.path.dirname(__file__), "..", "results", *args
-    )
-
 
 class valueify:
     def __init__(self, iter):
@@ -22,11 +14,19 @@ class valueify:
         return self.iter
 
 
-def plot():
-    network = from_hdf5(network_path)
+from ._paths import *
+from glob import glob
+import selection
+
+def plot(path=None, net_path=None):
+    if path is None:
+        path = glob(results_path("sensory_burst", "*"))[0]
+    if net_path is None:
+        net_path = network_path(selection.network)
+    network = from_hdf5(net_path)
     figs = {}
-    with h5py.File(results_path("results_stim_on_MFs_4syncImp.hdf5"), "a") as f:
-        figs["grc_NMDA"] = hdf5_plot_psth(network, {k: v for k, v in f["/all"].items() if v.attrs["label"] == "granule_cell"}, show=False, cutoff=300, duration=2)
+    with h5py.File(path, "r") as f:
+        figs["grc_NMDA"] = hdf5_plot_psth(network, {k: v for k, v in f["/recorders/soma_spikes"].items() if v.attrs["label"] == "granule_cell"}, show=False, cutoff=300, duration=2)
         figs["grc_NMDA"].update_xaxes(range=[375, 500])
         figs["grc_NMDA"].update_yaxes(range=[0, 75])
     with h5py.File(results_path("results_stim_on_MFs_4syncImp_noNMDAglomgrc.hdf5"), "a") as f:
