@@ -9,12 +9,12 @@ from bsb.plotting import (
 )
 from bsb.output import MorphologyRepository
 import numpy as np
+from ._paths import *
+from glob import glob
+import selection
 
-test_path = os.path.join(
-    os.path.dirname(__file__), "..", "networks", "neuron.hdf5"
-)
-
-
-def plot():
-    scaffold = from_hdf5(test_path)
-    return plot_network(scaffold, from_memory=False, show=False)
+def plot(net_path=None):
+    if net_path is None:
+        net_path = network_path(selection.network)
+    network = from_hdf5(net_path)
+    return plot_network(network, from_memory=False, show=False)

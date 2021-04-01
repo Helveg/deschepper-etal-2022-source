@@ -1,6 +1,11 @@
 from bsb.plotting import *
+from ._paths import *
+from glob import glob
+import selection, h5py
 
-def plot():
+def plot(net_path=None):
+    if net_path is None:
+        net_path = network_path(selection.network)
     import os, sys
     sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
     from bsb.core import Scaffold, from_hdf5
@@ -9,14 +14,9 @@ def plot():
 
     import numpy as np
     import plotly.graph_objects as go
-    import h5py
+    f = h5py.File(net_path,'r')
 
-    import collections
-
-    filename = 'networks/300x_200z.hdf5'
-    f = h5py.File(filename,'r')
-
-    scaffoldInstance = from_hdf5(filename)
+    scaffoldInstance = from_hdf5(net_path)
     config = scaffoldInstance.configuration
     key = 'golgi_to_granule'
 

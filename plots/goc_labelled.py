@@ -5,13 +5,20 @@ import numpy as np
 import bsb.plotting as plotting
 import selection
 from colour import Color
+from ._paths import *
+from glob import glob
+import selection
 
 camera = dict(up=dict(x=0,y=0,z=1),center=dict(x=0,y=0,z=0),eye=dict(x=-0.6946206917338876,y=1.9557279422403595,z=0.6165470870545304))
 
-def plot():
-    network = from_hdf5("networks/300x_200z.hdf5")
+def plot(path=None, net_path=None):
+    if path is None:
+        path = glob(results_path("sensory_burst", "*"))[0]
+    if net_path is None:
+        net_path = network_path(selection.network)
+    network = from_hdf5(net_path)
     traces = []
-    traces.append(granule_disc("networks/300x_200z.hdf5", "results/results_stim_on_MFs_Poiss.hdf5"))
+    traces.append(granule_disc(net_path, path))
 
     gm = network.morphology_repository.get_morphology("GolgiCell")
     goc_labels = selection.golgi_cells

@@ -19,7 +19,6 @@ from scipy import signal
 import collections
 from collections import defaultdict
 
-import shelve
 
 filename = '/home/claudia/deschepper-etal-2020/networks/300x_200z.hdf5'
 f = h5py.File(filename,'r')

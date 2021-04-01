@@ -35,10 +35,10 @@ def plot(run_mli_path=None, run_nomli_path=None, net_path=None):
     stim_no_mli = np.empty((pcs_considered, len(no_mli_files)))
     base_no_mli = np.empty((pcs_considered, len(no_mli_files)))
 
-    base_start = 1500
-    base_end = 1800
-    stim_start = 1000
-    stim_end = 1100
+    base_start = 5700
+    base_end = 5900
+    stim_start = 6000
+    stim_end = 6100
 
     # Get mean ISI during baseline and stimulus windows for each PC for each run
     for i, fname in enumerate(mli_files):

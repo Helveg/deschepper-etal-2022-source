@@ -3,9 +3,14 @@ from bsb.plotting import plot_morphology #, plot_synapses
 from plotly import graph_objs as go
 import selection, numpy as np
 from colour import Color
+from ._paths import *
+from glob import glob
+import selection
 
-def plot():
-    network = from_hdf5("networks/300x_200z.hdf5")
+def plot(net_path=None):
+    if net_path is None:
+        net_path = network_path(selection.network)
+    network = from_hdf5(net_path)
     mr = network.morphology_repository
     mb = mr.get_morphology("BasketCell")
     ms = mr.get_morphology("StellateCell")
@@ -94,13 +99,9 @@ def plot():
                 name=gaba_titles[key],
                 mode="markers",
                 marker=dict(
-                    size=3.0,
+                    size=1.0,
                     color=colors["soma"],
                     symbol="diamond",
-                    line=dict(
-                        width=1,
-                        color="black",
-                    )
                 )
             ))
             fig.layout.scene.yaxis.dtick = 10

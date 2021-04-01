@@ -6,6 +6,7 @@ from plotly import graph_objs as go
 import selection, numpy as np, h5py
 from colour import Color
 from ._paths import *
+from glob import glob
 
 def crop(data, min, max, indices=False):
     if len(data.shape) > 1:
@@ -21,7 +22,7 @@ def get_spike_zero(spikes, stimulus):
 
 def plot(path=None, net_path=None, input_device="mossy_fiber_sensory_burst", buffer=200, cutoff=5000, bin_width=5):
     if path is None:
-        raise ValueError("Give a path")
+        path = glob(results_path("sensory_burst", "*"))[0]
     if net_path is None:
         net_path = network_path(selection.network)
     network = from_hdf5(net_path)

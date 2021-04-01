@@ -9,7 +9,7 @@ colorbar_grc = ['rgb(158,188,218)', 'rgb(140,150,198)', 'rgb(140,107,177)', 'rgb
 colorbar_grc_hex = ["#9ebcda", "#8c96c6", "#8c6bb1", "#88419d", "#810f7c", "#4d004b"]
 colorbar_pc = "thermal"
 
-def granule_kde(network_file, results_file, base_start=400, base_end=600, stim_start=700, stim_end=800):
+def granule_kde(network_file, results_file, base_start=5700, base_end=5900, stim_start=6000, stim_end=6050):
 
     def crop(data, min, max, indices=False):
         c = data[:, 1]
@@ -70,7 +70,7 @@ def granule_kde(network_file, results_file, base_start=400, base_end=600, stim_s
         norm = grc_densities / np.max(grc_densities)
         return ids[pos_roi], pos[pos_roi], norm
 
-def granule_cloud(network_file, results_file, base_start=400, base_end=600, stim_start=700, stim_end=800):
+def granule_cloud(network_file, results_file, base_start=5700, base_end=5900, stim_start=6000, stim_end=6050):
     ids, pos, norm = granule_kde(network_file, results_file, base_start, base_end, stim_start, stim_end)
     print("Plotting granule cloud", " " * 30, end="\r")
     return go.Scatter3d(x=pos[:,0],y=pos[:,2],z=pos[:,1],
@@ -93,7 +93,7 @@ def granule_cloud(network_file, results_file, base_start=400, base_end=600, stim
         )
     )
 
-def granule_disc(network_file, results_file, base_start=400, base_end=600, stim_start=700, stim_end=800, bar_l=0.8):
+def granule_disc(network_file, results_file, base_start=5700, base_end=5900, stim_start=6000, stim_end=6050, bar_l=0.8):
     ids, pos, norm = granule_kde(network_file, results_file, base_start, base_end, stim_start, stim_end)
     print("Plotting granule disc", " " * 30, end="\r")
     return go.Scatter(x=pos[:,0],y=pos[:,2],
@@ -116,7 +116,7 @@ def granule_disc(network_file, results_file, base_start=400, base_end=600, stim_
         )
     )
 
-def granule_beam(network_file, results_file, base_start=400, base_end=600, stim_start=700, stim_end=800, bar_l=0.8, nbins=30):
+def granule_beam(network_file, results_file, base_start=5700, base_end=5900, stim_start=6000, stim_end=6050, bar_l=0.8, nbins=30):
     ids, pos, norm = granule_kde(network_file, results_file, base_start, base_end, stim_start, stim_end)
     x = pos[:, 0]
     sorter = np.argsort(x)

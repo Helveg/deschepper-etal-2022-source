@@ -4,14 +4,18 @@ from bsb.plotting import *
 from bsb.core import from_hdf5
 import plotly.graph_objects as go
 import h5py, selection, _layouts
+from ._paths import *
+from glob import glob
+import selection
 
 import collections
 from collections import defaultdict
 
-def plot():
-    filename = 'networks/300x_200z.hdf5'
-    f = h5py.File(filename,'r')
-    scaffoldInstance = from_hdf5(filename)
+def plot(net_path=None):
+    if net_path is None:
+        net_path = network_path(selection.network)
+    f = h5py.File(net_path,'r')
+    scaffoldInstance = from_hdf5(net_path)
 
     excitedMFs = selection.stimulated_mf_poiss
 

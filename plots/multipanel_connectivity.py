@@ -5,26 +5,29 @@ import plotly.graph_objs as go
 from . import make_3dsubplots
 from random import sample
 import os, numpy as np
+from ._paths import *
+from glob import glob
+import selection
 
-network = os.path.join(os.path.dirname(__file__), "..", "networks", "neuron.hdf5")
-scaffold = from_hdf5(network)
-
-def plot():
+def plot(net_path=None):
+    if net_path is None:
+        net_path = network_path(selection.network)
+    network = from_hdf5(net_path)
     connection_name = "stellate_to_purkinje"
-    ct = scaffold.get_connection_type(connection_name)
-    cs = scaffold.get_connectivity_set(ct.name)
+    ct = network.get_connection_type(connection_name)
+    cs = network.get_connectivity_set(ct.name)
     connections = cs.connections
     from_type = ct.from_cell_types[0]
     to_type = ct.to_cell_types[0]
-    ps_pre = scaffold.get_placement_set(from_type)
-    ps_post = scaffold.get_placement_set(to_type)
+    ps_pre = network.get_placement_set(from_type)
+    ps_post = network.get_placement_set(to_type)
     from_comp_types = ct.from_cell_compartments[0]
     to_comp_types = ct.to_cell_compartments[0]
 
     pair = sample(connections, 1)[0]
-    m_pre = scaffold.morphology_repository.get_morphology(from_type.list_all_morphologies()[0])
-    m_pre2 = scaffold.morphology_repository.get_morphology(from_type.list_all_morphologies()[0])
-    m_post = scaffold.morphology_repository.get_morphology(to_type.list_all_morphologies()[0])
+    m_pre = network.morphology_repository.get_morphology(from_type.list_all_morphologies()[0])
+    m_pre2 = network.morphology_repository.get_morphology(from_type.list_all_morphologies()[0])
+    m_post = network.morphology_repository.get_morphology(to_type.list_all_morphologies()[0])
     m_pre.voxelize(50, compartments=m_pre.get_compartments(from_comp_types))
     m_pre2.voxelize(150)
     m_post.voxelize(50, compartments=m_post.get_compartments(to_comp_types))
@@ -68,7 +71,7 @@ def plot():
     fig4.add_trace(go.Scatter3d(x=i_pre[:,0], y=i_pre[:,2], z=i_pre[:,1], mode="markers", marker=dict(size=5,color="red")))
     fig4.add_trace(go.Scatter3d(x=i_post[:,0], y=i_post[:,2], z=i_post[:,1], mode="markers", marker=dict(size=5,color="red")))
     # fig4.show()
-    fig3, granule_pos = tasteful_touching_scene()
+    fig3, granule_pos = tasteful_touching_scene(network)
     # fig3.show()
 
     for t in fig1.data:
@@ -81,21 +84,21 @@ def plot():
         fig.add_trace(t, 2, 2)
     return fig
 
-def tasteful_touching_scene():
-    cs_aa = scaffold.get_connectivity_set("ascending_axon_to_golgi")
-    cs_pf = scaffold.get_connectivity_set("parallel_fiber_to_golgi")
+def tasteful_touching_scene(network):
+    cs_aa = network.get_connectivity_set("ascending_axon_to_golgi")
+    cs_pf = network.get_connectivity_set("parallel_fiber_to_golgi")
     c_aa = cs_aa.intersections
     c_pf = cs_pf.intersections
-    from_type = scaffold.get_cell_type("granule_cell")
-    to_type = scaffold.get_cell_type("golgi_cell")
-    ps_pre = scaffold.get_placement_set(from_type)
-    ps_post = scaffold.get_placement_set(to_type)
+    from_type = network.get_cell_type("granule_cell")
+    to_type = network.get_cell_type("golgi_cell")
+    ps_pre = network.get_placement_set(from_type)
+    ps_post = network.get_placement_set(to_type)
     grc_id = ps_pre.identifiers
     grc_pos = ps_pre.positions
     goc_id = ps_post.identifiers
     goc_pos = ps_post.positions
-    mgr = scaffold.morphology_repository.get_morphology("GranuleCell")
-    mgc = scaffold.morphology_repository.get_morphology("GolgiCell")
+    mgr = network.morphology_repository.get_morphology("GranuleCell")
+    mgc = network.morphology_repository.get_morphology("GolgiCell")
     flat = {}
     # Flatten both connection sets based on from id
     for c in c_pf:
@@ -147,19 +150,19 @@ def tasteful_touching_scene():
     plot_morphology(mgc, show=False, fig=fig, offset=gpf_pos, segment_radius=2.5, set_range=False, color="#639EEC")
     return fig, frc_pos
 
-def blurred_out_nasty_scene():
-    cs = scaffold.get_connectivity_set("stellate_to_purkinje")
+def blurred_out_nasty_scene(network):
+    cs = network.get_connectivity_set("stellate_to_purkinje")
     conn = cs.intersections
-    from_type = scaffold.get_cell_type("stellate_cell")
-    to_type = scaffold.get_cell_type("purkinje_cell")
-    ps_pre = scaffold.get_placement_set(from_type)
-    ps_post = scaffold.get_placement_set(to_type)
+    from_type = network.get_cell_type("stellate_cell")
+    to_type = network.get_cell_type("purkinje_cell")
+    ps_pre = network.get_placement_set(from_type)
+    ps_post = network.get_placement_set(to_type)
     scid = ps_pre.identifiers
     scpos = ps_pre.positions
     pcid = ps_post.identifiers
     ppos = ps_post.positions
-    m_pre = scaffold.morphology_repository.get_morphology("StellateCell")
-    m_post = scaffold.morphology_repository.get_morphology("PurkinjeCell")
+    m_pre = network.morphology_repository.get_morphology("StellateCell")
+    m_post = network.morphology_repository.get_morphology("PurkinjeCell")
 
     t = sample(conn, 1)[0]
     intersections = [i for i in conn if i.from_id == t.from_id and i.to_id == t.to_id]

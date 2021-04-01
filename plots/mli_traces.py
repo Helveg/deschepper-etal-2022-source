@@ -3,13 +3,20 @@ from bsb.plotting import plot_morphology, hdf5_gather_voltage_traces, plot_trace
 from plotly import graph_objs as go
 import selection, numpy as np, h5py
 from colour import Color
+from ._paths import *
+from glob import glob
+import selection
 
-def plot():
-    network = from_hdf5("networks/300x_200z.hdf5")
+def plot(path=None, net_path=None):
+    if path is None:
+        path = glob(results_path("sensory_burst", "*"))[0]
+    if net_path is None:
+        net_path = network_path(selection.network)
+    network = from_hdf5(net_path)
     bc_info = ("bc", "basket_cell", selection.basket_cells)
     sc_info = ("sc", "stellate_cell", selection.stellate_cells)
     figs = {}
-    with h5py.File("results/results_stim_on_MFs_Poiss.hdf5", "r") as f:
+    with h5py.File(path, "r") as f:
         for tag, key, select in (bc_info, sc_info):
             traces = hdf5_gather_voltage_traces(f, "recorders/soma_voltages/", map(str, map(int, select.values())))
             traces.set_legends(["Membrane potential"])

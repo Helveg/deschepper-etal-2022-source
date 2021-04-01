@@ -5,16 +5,10 @@ from scipy import stats
 
 colorbar_grc = ['rgb(158,188,218)', 'rgb(140,150,198)', 'rgb(140,107,177)', 'rgb(136,65,157)', 'rgb(129,15,124)', 'rgb(77,0,75)']
 colorbar_pc = "thermal"
+from ._paths import *
+from glob import glob
+import selection
 
-
-network_path = os.path.join(
-    os.path.dirname(__file__), "..", "networks", "300x_200z.hdf5"
-)
-
-def results_path(*args):
-    return os.path.join(
-        os.path.dirname(__file__), "..", "results", *args
-    )
 
 def crop(data, min, max, indices=False):
     c = data[:, 1]
@@ -38,12 +32,14 @@ inv = lambda x: [1000 / y for y in x]
 avg = lambda x: sum(x) / len(x)
 
 
-def plot():
-    base_start, base_end = 400, 600
-    stim_start, stim_end = 700, 800
+def plot(path=None, net_path=None, base_start=5700, base_end=5900, stim_start=6000, stim_end=6050):
+    if path is None:
+        path = glob(results_path("sensory_burst", "*"))[0]
+    if net_path is None:
+        net_path = network_path(selection.network)
     print("Loading network", " " * 30, end="\r")
-    scaffold = from_hdf5(network_path)
-    results = h5py.File(results_path("results_stim_on_MFs_4syncImp.hdf5"), "r")
+    scaffold = from_hdf5(net_path)
+    results = h5py.File(path, "r")
     ps = scaffold.get_placement_set("granule_cell")
     ids = ps.identifiers
     spikes_per_dict = {id: [] for id in ids}
@@ -141,7 +137,7 @@ def plot():
     min_c = min([v for k, v in pc_delta_freq.items() if k not in cut_off])
     max_c = max([v for k, v in pc_delta_freq.items() if k not in cut_off])
 
-    with h5py.File(results_path("results_stim_on_MFs_4syncImp.hdf5"), "r") as f:
+    with h5py.File(path, "r") as f:
         print("Plotting purkinje activity", " " * 30, end="\r")
         pc_all = go.Scatter3d(
             name="All Purkinje cells",

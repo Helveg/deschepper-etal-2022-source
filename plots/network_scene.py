@@ -9,17 +9,19 @@ from bsb.plotting import (
 )
 from bsb.output import MorphologyRepository
 import numpy as np
+from ._paths import *
+from glob import glob
+import selection
 
-test_path = os.path.join(
-    os.path.dirname(__file__), "..", "networks", "300x_200z.hdf5"
-)
 
 camera = dict(up=dict(x=0,y=0,z=1),center=dict(x=0.014630658146720252,y=0.02534642697221434,z=-0.11515199306852882),eye=dict(x=9.88018501112187,y=0.14634744535299443,z=0.5590972887418161))
 net_cam = dict(up=dict(x=0,y=0,z=1),center=dict(x=0.9516507843396513,y=-0.7480738883245212,z=-0.48851824490599444),eye=dict(x=7.556075851557944,y=6.546386629756536,z=2.3610400567393985))
 
-def plot():
-    scaffold = from_hdf5(test_path)
-    fig = network_scene(scaffold)
+def plot(net_path=None):
+    if net_path is None:
+        net_path = network_path(selection.network)
+    network = from_hdf5(net_path)
+    fig = network_scene(network)
     fig.layout.scene.xaxis.range = [-100, 300]
     fig.layout.scene.yaxis.range = [-100, 200]
     fig.layout.scene.zaxis.range = [-100, 400]
@@ -36,11 +38,11 @@ def plot():
     fig2.update_layout(scene_camera=camera)
     return [fig, fig2]
 
-def network_scene(scaffold):
+def network_scene(network):
     ms = MorphologyScene()
-    mr = MorphologyRepository(file=test_path)
+    mr = network.morphology_repository
     skip = ["glomerulus", "mossy_fibers"]
-    for cell_type in scaffold.configuration.cell_types.values():
+    for cell_type in network.configuration.cell_types.values():
         if cell_type.name in skip:
             continue
         segment_radius = 1.0
@@ -50,7 +52,7 @@ def network_scene(scaffold):
         else:
             count = 10
         positions = np.random.permutation(
-            scaffold.get_cells_by_type(cell_type.name)[:, 2:5]
+            network.get_cells_by_type(cell_type.name)[:, 2:5]
         )[:count]
         morpho = mr.get_morphology(cell_type.list_all_morphologies()[0])
         for cell_pos in positions:

@@ -3,11 +3,13 @@ import os, sys, h5py, numpy as np
 sys.path.insert(0, os.path.join("..", "plots"))
 import selection, plotly.graph_objs as go, scipy.stats
 import pickle
+from ._paths import *
+from glob import glob
+import selection
 
 MFs = selection.stimulated_mf_poiss
 # Re-use previous results?
-frozen = True
-
+frozen = False
 
 def crop(data, min, max, indices=False):
     c = data[:, 1]
@@ -15,12 +17,16 @@ def crop(data, min, max, indices=False):
         return np.where((c > min) & (c < max))[0]
     return c[(c > min) & (c < max)]
 
-def plot():
-    network = from_hdf5("networks/300x_200z.hdf5")
+def plot(path=None, net_path=None, stim_start=6000, stim_end=6050):
+    if path is None:
+        path = glob(results_path("sensory_burst", "*"))[0]
+    if net_path is None:
+        net_path = network_path(selection.network)
+    network = from_hdf5(net_path)
     ids = network.get_placement_set("granule_cell").identifiers
     if not frozen:
-        with h5py.File("results/results_stim_on_MFs_Poiss.hdf5") as f:
-            activity = {id: len(crop(f["recorders/soma_spikes/" + str(id)], 700, 800)) for id in ids}
+        with h5py.File(path, "r") as f:
+            activity = {id: len(crop(f["recorders/soma_spikes/" + str(id)], stim_start, stim_end)) for id in ids}
         with open("grc_act.pickle", "wb") as f:
             pickle.dump(activity, f)
     else:
