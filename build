@@ -15,7 +15,7 @@ else:
     format = ".png"
 
 if len(plots) == 0:
-    plots = [f[:-3] for f in os.listdir(os.path.join(path, "plots")) if f.endswith(".py") and not f.beginswith("_")]
+    plots = [f[:-3] for f in os.listdir(os.path.join(path, "plots")) if f.endswith(".py") and not f.startswith("_")]
 
 def with_args(plots):
     return [(p.split(":")[0], p.split(":")[1:]) for p in plots]
