@@ -105,9 +105,7 @@ def plot(path=None, net_path=None, base_start=5700, base_end=5900, stim_start=60
     ps_pc = scaffold.get_placement_set("purkinje_cell")
     pc_pos = ps_pc.positions
     border_pc = np.logical_or (pc_pos[:, 2] > 300, pc_pos[:, 2] < 0)
-    print(border_pc)
     cut_off = ps_pc.identifiers[border_pc]
-    print("cutoff", cut_off)
     g = results["recorders/soma_spikes/"]
     pc_isis = {int(id): [] for id in ps_pc.identifiers}
     pc_lo_isis = {int(id): [] for id in ps_pc.identifiers}

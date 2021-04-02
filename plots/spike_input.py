@@ -16,7 +16,6 @@ def calc_spike_input(activity, conn_sets, id):
     multiplier_map = {}
     for conn_set in conn_sets:
         data = conn_set.get_dataset().astype(int)
-        print(data.shape)
         roi = data[data[:, 1] == id]
         inputs, multiplicity = np.unique(roi, axis=0, return_counts=True)
         senders = inputs[:, 0]

@@ -166,7 +166,6 @@ def blurred_out_nasty_scene(network):
 
     t = sample(conn, 1)[0]
     intersections = [i for i in conn if i.from_id == t.from_id and i.to_id == t.to_id]
-    print(len(intersections))
     sc_pos = grc_pos[grc_id.tolist().index(f_grc)]
 
     from_i_pos = np.array([i.from_compartment.end + _pos for i in intersections])

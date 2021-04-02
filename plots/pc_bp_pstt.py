@@ -146,8 +146,6 @@ def plot(path=None, net_path=None, input_device="mossy_fiber_sensory_burst", buf
             ),
         )
         n_burst_bins = int(40 // bin_width)
-        print("burst bins:", n_burst_bins)
-        print("lens", [len(v) for v in pf_spikes])
         burst_spikes_pf = [np.sum(v[: n_burst_bins + 1], initial=0) for v in pf_spikes]
         burst_spikes_aa = [np.sum(v[: n_burst_bins + 1], initial=0) for v in aa_spikes]
         b = list(b_factors.values())

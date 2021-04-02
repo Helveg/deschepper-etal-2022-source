@@ -22,8 +22,6 @@ def plot(net_path=None):
 
     p = np.array(f['/cells/connections/' + key])
     pairs, counts = np.unique(p, return_counts=True, axis=0)
-    print(pairs.shape)
-    print(pairs, counts)
     distr = [sum(counts == i) for i in range(5)]
 
     return go.Figure(go.Bar(x=list(range(5)), y=distr))

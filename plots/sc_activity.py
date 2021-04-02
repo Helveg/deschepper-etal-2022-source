@@ -109,7 +109,6 @@ def plot(path=None, net_path=None, base_start=5700, base_end=5900, stim_start=60
     pc_pos = ps_pc.positions
     border_pc = pc_pos[:, 2] > 500
     cut_off = []
-    print("cutoff", cut_off)
     g = results["recorders/soma_spikes/"]
     pc_isis = {int(id): [] for id in ps_pc.identifiers}
     pc_lo_isis = {int(id): [] for id in ps_pc.identifiers}
