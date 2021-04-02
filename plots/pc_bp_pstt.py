@@ -204,7 +204,7 @@ def plot(path=None, net_path=None, input_device="mossy_fiber_sensory_burst", buf
 
     return figs
 
-def meta():
+def meta(key):
     return {"width": 1920 / 3 * 2}
 
 if __name__ == "__main__":
