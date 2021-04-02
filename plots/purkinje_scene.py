@@ -29,7 +29,7 @@ def plot(net_path=None):
 
 def purkinje_layer_scene(network, purkinjes=6, granules=100):
     ms = MorphologyScene()
-    mr = MorphologyRepository(file=test_path)
+    mr = network.morphology_repository
     skip = ["glomerulus", "basket_cell", "stellate_cell", "golgi_cell", "mossy_fibers"]
     spacing = {"purkinje_cell": purkinjes, "granule_cell": granules}
     for cell_type in network.configuration.cell_types.values():
