@@ -1,5 +1,8 @@
 import numpy as np
 
+def plot():
+    pass
+
 # "networks/300x_200z.hdf5"
 
 network = "balanced.hdf5"

@@ -5,6 +5,9 @@ from scipy import stats
 import itertools
 from colour import Color
 
+def plot():
+    pass
+
 colorbar_grc = ['rgb(158,188,218)', 'rgb(140,150,198)', 'rgb(140,107,177)', 'rgb(136,65,157)', 'rgb(129,15,124)', 'rgb(77,0,75)']
 colorbar_grc_hex = ["#9ebcda", "#8c96c6", "#8c6bb1", "#88419d", "#810f7c", "#4d004b"]
 colorbar_pc = "thermal"
