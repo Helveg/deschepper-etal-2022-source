@@ -4,6 +4,8 @@ from plotly import graph_objs as go
 import selection, numpy as np, h5py
 from colour import Color
 from ._paths import *
+from glob import glob
+import selection
 
 def plot(path=None, net_path=None):
     if path is None:
