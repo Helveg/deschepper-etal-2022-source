@@ -62,7 +62,6 @@ def plot(path=None, net_path=None):
             print(i, len(bin))
             fig.add_trace(go.Violin(x0=6000 + i * 5, y=bin, showlegend=False, fillcolor="aquamarine", line_color="black"))
         figs["violin"] = fig
-        fig.show()
         spikes_per_impulse = np.array([[len(crop(v, 6000 + i * 25, 6000 + (i + 1) * 25)) for i in range(4)] for v in spikes_inc_sc.values()])
         for i in range(4):
             figs[f"impulse{i+1}"] = go.Figure(go.Histogram(x=spikes_per_impulse[:, i]))
