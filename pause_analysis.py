@@ -15,7 +15,7 @@ def results_path(*args):
     )
 
 cutoff = 300
-window_burst = [400, 425]           # Time window where we analyse the burst (number of spikes or mean ISI)
+window_burst = [400, 500]           # Time window where we analyse the burst (number of spikes or mean ISI)
 
 sel_labels = ["record_bc_spikes","record_sc_spikes","record_pc_spikes","record_golgi_spikes", "record_granules_spikes"]
 #sel_labels = ["record_granules_spikes"]
@@ -97,8 +97,8 @@ with h5py.File(results_path("results_NEST_stim_on_MFs_1syncFinal2_finetuning0-02
         y_labelled[label].extend(set_ids)
     times = x_labelled
     neurons = y_labelled
-    pc_times = times['record_pc_spikes']
-    pc_ids = np.unique(neurons['record_pc_spikes'])
+    pc_times = times['record_golgi_spikes']
+    pc_ids = np.unique(neurons['record_golgi_spikes'])
     spike_burst = {}
     count_burst = {}
     isi_burst = {}
@@ -107,7 +107,7 @@ with h5py.File(results_path("results_NEST_stim_on_MFs_1syncFinal2_finetuning0-02
     spike_baseline = {}
     isi_baseline = []
     for p in pc_ids:        # For each PC we compute number of spikes in window burst and pause duration
-        current_pc_spikes_ids = np.where(neurons['record_pc_spikes'] == p)
+        current_pc_spikes_ids = np.where(neurons['record_golgi_spikes'] == p)
         current_pc_spikes = np.array([pc_times[i] for i in list(current_pc_spikes_ids[0])])
         # Spikes in baseline (time window before the window_burst)
         spike_baseline[p]  = current_pc_spikes[(current_pc_spikes > 0) & (current_pc_spikes < window_burst[0])]
@@ -229,21 +229,21 @@ with h5py.File(results_path("results_NEST_stim_on_MFs_1syncFinal2_finetuning0-02
     fig.update_xaxes(
         title='ISI in burst window [ms]',
         tickmode = 'array',
-        tickvals = [-1, 5, 10, 15, 20],
-        ticktext = ['no burst', '5', '10', '15', '20'],
+        tickvals = [-1, 5, 10, 15, 20, 30, 40, 50, 60],
+        ticktext = ['no burst', '5', '10', '15', '20','30','40','50','60'],
         row=1, col=2
     )
     fig.update_yaxes(
         title='pause duration [ms]',
         tickmode = 'linear',
         tick0 = 5,
-        dtick = 5, row=1, col=1
+        dtick = 50, row=1, col=1
     )
     fig.update_yaxes(
         title='pause duration [ms]',
         tickmode = 'linear',
         tick0 = 5,
-        dtick = 5, row=1, col=2
+        dtick = 50, row=1, col=2
     )
 
     # Pause ratio
@@ -257,8 +257,8 @@ with h5py.File(results_path("results_NEST_stim_on_MFs_1syncFinal2_finetuning0-02
     fig.update_xaxes(
         title='ISI in burst window [ms]',
         tickmode = 'array',
-        tickvals = [-1, 5, 10, 15, 20],
-        ticktext = ['no burst', '5', '10', '15', '20'],
+        tickvals =  [-1, 5, 10, 15, 20, 30, 40, 50, 60],
+        ticktext = ['no burst', '5', '10', '15', '20','30','40','50','60'],
         row=2, col=2
     )
     fig.update_yaxes(
