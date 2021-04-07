@@ -10,14 +10,15 @@ from bsb.plotting import (
 )
 from bsb.output import MorphologyRepository
 import numpy as np
+from ._paths import *
+from glob import glob
+import selection
 
-test_path = os.path.join(
-    os.path.dirname(__file__), "..", "networks", "300x_200z.hdf5"
-)
 
-
-def plot():
-    scaffold = from_hdf5(test_path)
+def plot(net_path=None):
+    if net_path is None:
+        net_path = network_path(selection.network)
+    scaffold = from_hdf5(net_path)
     fig = granular_layer_scene(scaffold)
     set_scene_range(fig.layout.scene, [[-50, 310], [0, 350], [-50, 250]])
     fig.layout.scene.xaxis.tick0=0
@@ -30,7 +31,7 @@ def plot():
 
 def granular_layer_scene(scaffold, golgis=2, granules=100):
     ms = MorphologyScene()
-    mr = MorphologyRepository(file=test_path)
+    mr = scaffold.morphology_repository
     skip = [
         "glomerulus",
         "basket_cell",
@@ -49,7 +50,6 @@ def granular_layer_scene(scaffold, golgis=2, granules=100):
             scaffold.get_placement_set(cell_type).positions
         )[: count[cell_type.name]]
         morpho = mr.get_morphology(cell_type.list_all_morphologies()[0])
-        plot_morphology(morpho)
         for cell_pos in positions:
             ms.add_morphology(
                 morpho,

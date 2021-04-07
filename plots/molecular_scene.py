@@ -9,15 +9,17 @@ from bsb.plotting import (
 )
 from bsb.output import MorphologyRepository
 import numpy as np
+from ._paths import *
+from glob import glob
+import selection
 
-test_path = os.path.join(
-    os.path.dirname(__file__), "..", "networks", "300x_200z.hdf5"
-)
-
-
-def plot():
-    scaffold = from_hdf5(test_path)
-    fig = molecular_scene(scaffold)
+def plot(path=None, net_path=None):
+    if path is None:
+        path = glob(results_path("sensory_burst", "*"))[0]
+    if net_path is None:
+        net_path = network_path(selection.network)
+    network = from_hdf5(net_path)
+    fig = molecular_scene(network)
     set_scene_range(fig.layout.scene, [[-50, 310], [0, 350], [-50, 250]])
     fig.layout.scene.xaxis.tick0=0
     fig.layout.scene.xaxis.dtick=150
@@ -30,7 +32,7 @@ def plot():
 
 def molecular_scene(scaffold, basket=3, stellate=3, granule=100):
     ms = MorphologyScene()
-    mr = MorphologyRepository(file=test_path)
+    mr = scaffold.morphology_repository
     skip = [
         "glomerulus",
         "golgi_cell",
@@ -43,7 +45,7 @@ def molecular_scene(scaffold, basket=3, stellate=3, granule=100):
             continue
         segment_radius = 2.5
         if cell_type.name == "granule_cell":
-            segment_radius = 1.0        
+            segment_radius = 1.0
         positions = np.random.permutation(
             scaffold.get_placement_set(cell_type).positions
         )[: count[cell_type.name]]

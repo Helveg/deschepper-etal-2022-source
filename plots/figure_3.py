@@ -3,12 +3,16 @@ from bsb.plotting import plot_morphology, MorphologyScene, get_soma_trace
 from plotly import graph_objs as go
 import selection, numpy as np
 from colour import Color
+from ._paths import *
+import selection
 
 inset_camera = dict(up=dict(x=0,y=0,z=1),center=dict(x=-0.03919936633492447,y=0.009141280925267406,z=-0.10532701007298666),eye=dict(x=0.05258464298628989,y=3.7406970544611196,z=0.46626663726890044))
 main_camera = dict(up=dict(x=0,y=0,z=1),center=dict(x=0.2611522632004053,y=-0.08918589935156633,z=-0.11138213903939993),eye=dict(x=0.5572186773156746,y=0.34571594537572065,z=0.06494803443249005))
 
-def plot():
-    network = from_hdf5("networks/300x_200z.hdf5")
+def plot(net_path=None):
+    if net_path is None:
+        net_path = network_path(selection.network)
+    network = from_hdf5(net_path)
     mr = network.morphology_repository
     grm = mr.get_morphology("GranuleCell")
     gom = mr.get_morphology("GolgiCell")

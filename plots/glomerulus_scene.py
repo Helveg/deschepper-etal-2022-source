@@ -10,17 +10,16 @@ from bsb.plotting import (
 )
 from bsb.output import MorphologyRepository
 import numpy as np
-
-test_path = os.path.join(
-    os.path.dirname(__file__), "..", "networks", "neuron.hdf5"
-)
-
-network = os.path.join(os.path.dirname(__file__), "..", "networks", "neuron.hdf5")
-scaffold = from_hdf5(network)
+from ._paths import *
+from glob import glob
+import selection
 
 max_golgis = 2
 
-def plot():
+def plot(net_path=None):
+    if net_path is None:
+        net_path = network_path(selection.network)
+    scaffold = from_hdf5(net_path)
     cs = scaffold.get_connectivity_set("glomerulus_to_golgi")
     conns = cs.get_dataset()
     from_type = scaffold.get_cell_type("glomerulus")

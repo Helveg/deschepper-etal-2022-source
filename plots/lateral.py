@@ -4,21 +4,21 @@ from glob import glob
 import os, numpy as np, itertools
 import plotly.graph_objs as go
 import grc_cloud
-
-network_path = os.path.join(
-    os.path.dirname(__file__), "..", "networks", "300x_200z.hdf5"
-)
-def results_path(*args):
-    return os.path.join(
-        os.path.dirname(__file__), "..", "results", *args
-    )
+from ._paths import *
+import selection
 
 def find_nearest(array, value):
     array = np.asarray(array)
     return (np.abs(array - value)).argmin()
 
-def plot():
-    network = from_hdf5(network_path)
+def plot(run_mli_path=None, run_nomli_path=None, net_path=None):
+    if run_mli_path is None:
+        run_mli_path = results_path("lateral", "mli")
+    if run_nomli_path is None:
+        run_nomli_path = results_path("lateral", "no_mli")
+    if net_path is None:
+        net_path = network_path(selection.network)
+    network = from_hdf5(net_path)
     ps_pc = network.get_placement_set("purkinje_cell")
     ps_bc = network.get_placement_set("basket_cell")
     bc_pc = network.get_connectivity_set("basket_to_purkinje")
@@ -27,30 +27,33 @@ def plot():
     cut_mask = (ps_pc.positions[:, 2] > 250) | (ps_pc.positions[:, 2] < 50)
     incl_mask = np.logical_not(cut_mask)
     cut_off_ids = ps_pc.identifiers[cut_mask]
-    mli_files = glob(results_path("mli/lateral_MLI/*.hdf5"))
-    no_mli_files = glob(results_path("mli/lateral_no_MLI/*.hdf5"))
+    mli_files = glob(run_mli_path + "/*.hdf5")
+    no_mli_files = glob(run_nomli_path + "/*.hdf5")
     pcs_considered = len([id for id in ps_pc.identifiers if id not in cut_off_ids])
     stim_mli = np.empty((pcs_considered, len(mli_files)))
     base_mli = np.empty((pcs_considered, len(mli_files)))
     stim_no_mli = np.empty((pcs_considered, len(no_mli_files)))
     base_no_mli = np.empty((pcs_considered, len(no_mli_files)))
 
-    base_start = 500
-    base_end = 600
-    stim_start = 700
-    stim_end = 800
+    base_start = 5700
+    base_end = 5900
+    stim_start = 6000
+    stim_end = 6100
 
     # Get mean ISI during baseline and stimulus windows for each PC for each run
     for i, fname in enumerate(mli_files):
         with File(fname, "r") as f:
-            base_mli[:, i] = np.array([np.mean(np.diff((times := f[f"/recorders/soma_spikes/{id}"][:, 1])[(times > 480) & (times < 600)])) for id in ps_pc.identifiers if id not in cut_off_ids])
-            stim_mli[:, i] = np.array([np.mean(np.diff((times := f[f"/recorders/soma_spikes/{id}"][:, 1])[(times > 676) & (times < 800)])) for id in ps_pc.identifiers if id not in cut_off_ids])
-
+            base_mli[:, i] = np.array([np.mean(np.diff((times := f[f"/recorders/soma_spikes/{id}"][:, 1])[(times > base_start) & (times < base_end)])) for id in ps_pc.identifiers if id not in cut_off_ids])
+            # print("---", fname)
+            # print(*((times := f[f"/recorders/soma_spikes/{id}"][:, 1]) for id in ps_pc.identifiers if id not in cut_off_ids))
+            # print(base_mli[:, i])
+            stim_mli[:, i] = np.array([np.mean(np.diff((times := f[f"/recorders/soma_spikes/{id}"][:, 1])[(times > stim_start) & (times < stim_end)])) for id in ps_pc.identifiers if id not in cut_off_ids])
+            # print(stim_mli[:, i])
 
     for i, fname in enumerate(no_mli_files):
         with File(fname, "r") as f2:
-            base_no_mli[:, i] = np.array([np.mean(np.diff((times := f2[f"/recorders/soma_spikes/{id}"][:, 1])[(times > 480) & (times < 600)])) for id in ps_pc.identifiers if id not in cut_off_ids])
-            stim_no_mli[:, i] = np.array([np.mean(np.diff((times := f2[f"/recorders/soma_spikes/{id}"][:, 1])[(times > 676) & (times < 800)])) for id in ps_pc.identifiers if id not in cut_off_ids])
+            base_no_mli[:, i] = np.array([np.mean(np.diff((times := f2[f"/recorders/soma_spikes/{id}"][:, 1])[(times > base_start) & (times < base_end)])) for id in ps_pc.identifiers if id not in cut_off_ids])
+            stim_no_mli[:, i] = np.array([np.mean(np.diff((times := f2[f"/recorders/soma_spikes/{id}"][:, 1])[(times > stim_start) & (times < stim_end)])) for id in ps_pc.identifiers if id not in cut_off_ids])
     # ISIs
     stim_mli = np.mean(stim_mli, axis=1)
     stim_no_mli = np.mean(stim_no_mli, axis=1)
@@ -99,7 +102,7 @@ def plot():
         X_plot = np.linspace(np.min(X), np.max(X), 100000)[:, None]
         kr = GridSearchCV(KernelRidge(kernel='rbf', gamma=0.1),
                           param_grid={"alpha": [1e0, 0.1, 1e-2, 1e-3],
-                                      "gamma": np.logspace(-100, 20, 50)})
+                                      "gamma": np.logspace(-100, 20, 200)})
         kr.fit(X, y)
         inhib_score = kr.score(X, y)
         print("R^2 score inhibited: ", inhib_score)
@@ -140,7 +143,7 @@ def plot():
                 )
             ))
         ])
-        fig.layout.shapes = grc_cloud.granule_beam("networks/300x_200z.hdf5", mli_files[0], base_start=base_start, base_end=base_end, stim_start=stim_start, stim_end=stim_end)
+        fig.layout.shapes = grc_cloud.granule_beam(net_path, mli_files[0], base_start=base_start, base_end=base_end, stim_start=stim_start, stim_end=stim_end)
         fig.update_layout(
             title_text=f"Lateral response of PC to activated GrC bundle",
             yaxis_title="Relative elongation of ISI",
@@ -163,8 +166,8 @@ def plot():
         hnmi = find_nearest(y_kr2, nm / 2)
         slope_m = np.diff(y_kr)[hmi] / np.diff(x_plot)[hmi]
         slope_nm = np.diff(y_kr2)[hnmi] / np.diff(x_plot)[hnmi]
-        print("MLI Slope at half:", round(slope_m, 2))
-        print("No MLI Slope at half:", round(slope_nm, 2))
+        print("MLI Slope at half:", round(slope_m, 5))
+        print("No MLI Slope at half:", round(slope_nm, 5))
         figs[name] = fig
 
     return figs

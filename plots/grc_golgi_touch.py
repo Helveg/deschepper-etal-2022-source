@@ -5,12 +5,16 @@ import plotly.graph_objs as go
 from . import make_3dsubplots
 from random import sample
 import os, numpy as np
+from ._paths import *
+from glob import glob
+import selection
 
-network = os.path.join(os.path.dirname(__file__), "..", "networks", "300x_200z.hdf5")
-scaffold = from_hdf5(network)
 camera = dict(up=dict(x=0,y=0,z=1),center=dict(x=-0.009716506474688111,y=0.06185058580133833,z=-0.23025933249395017),eye=dict(x=1.0836828981355624,y=1.2166861339342228,z=0.14336010736471308))
 
-def plot():
+def plot(net_path=None):
+    if net_path is None:
+        net_path = network_path(selection.network)
+    scaffold = from_hdf5(net_path)
     cs_aa = scaffold.get_connectivity_set("ascending_axon_to_golgi")
     cs_pf = scaffold.get_connectivity_set("parallel_fiber_to_golgi")
     c_aa = cs_aa.intersections
@@ -50,7 +54,8 @@ def plot():
         candidates.append((grc, goc1, goc2))
 
     f_grc, f_aa, f_pf = sample(candidates, 1)[0]
-    f_grc, f_aa, f_pf = 15972.0, 22.0, 37.0
+    # f_grc, f_aa, f_pf = 15972.0, 22.0, 37.0
+    print("Picked:", f_grc, f_aa, f_pf)
     intersections_aa = []
     intersections_pf = []
     frc_pos = grc_pos[grc_id.tolist().index(f_grc)]
@@ -75,8 +80,8 @@ def plot():
     fig.add_trace(go.Scatter3d(x=to_p_pos[:,0], y=to_p_pos[:,2], z=to_p_pos[:,1],  name="Postsyn. PF location", mode="markers", marker=dict(symbol="diamond-open", size=8,color="violet")))
     plot_morphology(mgc, show=False, fig=fig, offset=gaa_pos, segment_radius=2.5, set_range=False, color=to_type.plotting.color, soma_radius=to_type.placement.soma_radius)
     plot_morphology(mgc, show=False, fig=fig, offset=gpf_pos, segment_radius=2.5, set_range=False, color="#639EEC", soma_radius=to_type.placement.soma_radius)
-    rng = [[80, 470], [-90, 300], [-50, 200]]
-    set_scene_range(fig.layout.scene, rng)
-    set_scene_aspect(fig.layout.scene, rng)
-    fig.layout.scene.camera = camera
+    # rng = [[80, 470], [-90, 300], [-50, 200]]
+    # set_scene_range(fig.layout.scene, rng)
+    # set_scene_aspect(fig.layout.scene, rng)
+    # fig.layout.scene.camera = camera
     return fig

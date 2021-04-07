@@ -1,4 +1,5 @@
-import h5py, sys
+import h5py, sys, itertools
+from glob import glob
 
 def flip(f):
     for g in f:
@@ -12,4 +13,6 @@ def flip(f):
             for k, v in attrs.items():
                 h.attrs[k] = v
 
-flip(h5py.File(sys.argv[1], "a"))
+for f in itertools.chain(*map(glob, sys.argv[1:])):
+    print("Flipping", f, " " * 30, end="\r")
+    flip(h5py.File(f, "a"))

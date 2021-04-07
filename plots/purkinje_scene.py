@@ -9,15 +9,15 @@ from bsb.plotting import (
 )
 from bsb.output import MorphologyRepository
 import numpy as np
+from ._paths import *
+from glob import glob
+import selection
 
-test_path = os.path.join(
-    os.path.dirname(__file__), "..", "networks", "300x_200z.hdf5"
-)
-
-
-def plot():
-    scaffold = from_hdf5(test_path)
-    fig = purkinje_layer_scene(scaffold)
+def plot(net_path=None):
+    if net_path is None:
+        net_path = network_path(selection.network)
+    network = from_hdf5(net_path)
+    fig = purkinje_layer_scene(network)
     set_scene_range(fig.layout.scene, [[-50, 310], [0, 350], [-50, 250]])
     fig.layout.scene.xaxis.tick0=0
     fig.layout.scene.xaxis.dtick=150
@@ -27,18 +27,18 @@ def plot():
     fig.layout.scene.zaxis.dtick=150
     return fig
 
-def purkinje_layer_scene(scaffold, purkinjes=6, granules=100):
+def purkinje_layer_scene(network, purkinjes=6, granules=100):
     ms = MorphologyScene()
-    mr = MorphologyRepository(file=test_path)
+    mr = network.morphology_repository
     skip = ["glomerulus", "basket_cell", "stellate_cell", "golgi_cell", "mossy_fibers"]
     spacing = {"purkinje_cell": purkinjes, "granule_cell": granules}
-    for cell_type in scaffold.configuration.cell_types.values():
+    for cell_type in network.configuration.cell_types.values():
         if cell_type.name in skip:
             continue
         segment_radius = 2.5
         if cell_type.name == "granule_cell":
             segment_radius = 1.0
-        positions = scaffold.get_placement_set(cell_type).positions[
+        positions = network.get_placement_set(cell_type).positions[
             :: spacing[cell_type.name]
         ]
         morpho = mr.get_morphology(cell_type.list_all_morphologies()[0])
@@ -52,7 +52,7 @@ def purkinje_layer_scene(scaffold, purkinjes=6, granules=100):
                 reduce_branches=True,
             )
         if cell_type.name == "purkinje_cell":
-            positions = scaffold.get_placement_set(cell_type).positions
+            positions = network.get_placement_set(cell_type).positions
             for cell_pos in positions:
                 ms.fig.add_trace(
                     get_soma_trace(

@@ -6,7 +6,7 @@ from importlib import import_module
 def mod_names():
     return [
         f[:-3]
-        for f in os.listdir(os.path.join(path, "plots"))
+        for f in os.listdir(os.path.join(path, "not_paper_plots"))
         if f.endswith(".py") and f != "__init__.py"
     ]
 
@@ -22,7 +22,7 @@ def plot():
     t = len(plots)
     for i, (plot, arg) in enumerate(plots):
         print("Plotting", plot, "... ({}/{})".format(i + 1, t))
-        plotting_module = import_module("." + plot, package="plots")
+        plotting_module = import_module("." + plot, package="not_paper_plots")
         show_figure(plotting_module, arg)
     print("Done", " " * 30)
 
