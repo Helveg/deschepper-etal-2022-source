@@ -1,0 +1,71 @@
+#!/usr/bin/env python3
+import os, sys, warnings
+from types import ModuleType
+from importlib import import_module
+import traceback
+
+sys.path.append(os.path.abspath("tables"))
+path = os.path.abspath(os.path.dirname(__file__))
+formats = ['csv', 'html', 'pkl']
+if len(sys.argv) > 1 and sys.argv[1] in formats:
+    format = sys.argv[1]
+    tables = sys.argv[2:]
+else:
+    tables = sys.argv[1:]
+    format = "csv"
+
+if len(tables) == 0:
+    tables = [f[:-3] for f in os.listdir(os.path.join(path, "tables")) if f.endswith(".py") and not f.startswith("_")]
+
+def with_args(tables):
+    return [(p.split(":")[0], p.split(":")[1:]) for p in tables]
+
+tables = with_args(tables)
+
+def build():
+    t = len(tables)
+    for i, (f, arg) in enumerate(tables):
+        print("Building table {} {}/{}...".format(f, i, t))
+        table = import_module("." + f, package="tables")
+        table.__table__ = f
+        try:
+            build_table(table, arg)
+        except Exception as e:
+            traceback.print_exc()
+    print("Done")
+
+def build_table(table_module, args):
+    table = table_module.table(*args)
+    if not table:
+        warnings.warn(f"No table returned from {table_module.__name__}.")
+        return
+    if "meta" in dir(table_module):
+        meta = table_module.meta
+    else:
+        def meta(*args):
+            return None
+    if isinstance(table, dict):
+        for suffix, f in table.items():
+            _build_table(table_module, f, suffix, meta(suffix))
+    else:
+        _build_table(table_module, table, None, meta())
+
+def _build_table(table_module, table, suffix=None, meta=None):
+    fname = os.path.join(
+        path, "tables", table_module.__table__ + (f"_{suffix}" if suffix is not None else "") + "." + format
+    )
+    globals().get(f"write_{format}", lambda *args: None)(fname, table, meta)
+
+def write_html(path, table, meta):
+    pass
+
+def write_csv(path, table, meta):
+    import csv
+
+    with open(path, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        for row in table:
+            writer.writerow(row)
+
+if __name__ == "__main__":
+    build()
