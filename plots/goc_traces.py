@@ -21,7 +21,7 @@ def plot(path=None, net_path=None):
             traces.cells[id].title = label
         traces.set_colors([network.configuration.cell_types["golgi_cell"].plotting.color])
         traces.reorder(order)
-        fig = plot_traces(traces, x=list(np.arange(0, 900, 0.1)), input_region=[400, 500], cutoff=3000, show=False)
+        fig = plot_traces(traces, x=list(f["time"]), input_region=[400, 500], cutoff=0, show=False)
     return fig
 
 def meta():
