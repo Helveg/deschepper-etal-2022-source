@@ -8,7 +8,7 @@ import numpy as np
 from bsb.plotting import *
 import plotly.graph_objects as go
 import h5py
-from scipy import signal, fft
+from scipy import signal, fft, blackman
 import collections
 from collections import defaultdict
 import selection
@@ -18,7 +18,7 @@ import math
 
 def plot(path=None, net_path=None):
     if path is None:
-        path = results_path("oscillations", "oscillations_nomf.hdf5")
+        path = results_path("oscillations", "oscillations_20Hz.hdf5")
     if net_path is None:
         net_path = network_path(selection.network)
 
@@ -61,8 +61,6 @@ def plot(path=None, net_path=None):
             ],
             layout_title_text="raster " + path
         )
-    from scipy.signal import blackman
-    from statsmodels.tsa.stattools import acf
     w = blackman(N)
     sig = binned_spikes
     wsig = binned_spikes * w
@@ -74,28 +72,17 @@ def plot(path=None, net_path=None):
     figs["fft"] = go.Figure(
         [
             go.Scatter(
-                x=x, y=sig, name="signal"
+                x=fft_freq, y=fft_wsig, name="Golgi cells unfiltered"
             ),
             go.Scatter(
-                x=x[::bin_width], y=acf(sig, nlags=len(sig), fft=True), name="sig_autocorr"
-            ),
-            go.Scatter(
-                x=fft_freq, y=fft_sig, name="fft"
-            ),
-            go.Scatter(
-                x=fft_freq, y=fft_filtered, name="fft_filtered"
-            ),
-            go.Scatter(
-                x=fft_freq, y=acf(fft_filtered, nlags=1000, fft=True), name="fft_autocorr"
-            ),
-            go.Scatter(
-                x=fft_freq, y=fft_wsig, name="fftw"
-            ),
-            go.Scatter(
-                x=fft_freq, y=fft_wfiltered, name="fftw_filtered"
+                x=fft_freq, y=fft_wfiltered, name="Golgi cells"
             ),
         ],
-        layout_title_text="fft"
+        layout=dict(
+            title_text="Fourier Transform of Golgi cell population",
+            xaxis_title="Frequency (Hz)",
+            yaxis_title="Energy",
+        ),
     )
 
     return figs["fft"]

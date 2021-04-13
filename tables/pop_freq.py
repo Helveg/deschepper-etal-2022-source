@@ -11,13 +11,10 @@ def table(path=None, net_path=None, cutoff=4000, duration=8000):
         for ds in itertools.chain(f["/recorders/soma_spikes"].values(), f["/recorders/input/background"].values()):
             cell_type = ds.attrs.get("label", "mossy_fibers")
             pop_stats = tracker.setdefault(cell_type, [])
-            if len(ds.shape) == 2:
-                spikes = ds[:, 1]
-            else:
-                spikes = ds[()]
+            spikes = ds[:, 1] if len(ds.shape) == 2 else ds[()]
             pop_stats.append(sum((spikes > cutoff) & (spikes < duration)) / (duration - cutoff) * 1000)
 
-    print(list(tracker.get("golgi_cell")))
+    go.Figure(go.Histogram(x=tracker.get("golgi_cell"))).show()
     pop_freq = list(zip(tracker.keys(), map(np.mean, tracker.values()), map(np.std, tracker.values())))
     pop_freq.insert(0, ("cell_name", "mean", "stdev"))
     return pop_freq

@@ -57,7 +57,13 @@ def _build_table(table_module, table, suffix=None, meta=None):
     globals().get(f"write_{format}", lambda *args: None)(fname, table, meta)
 
 def write_html(path, table, meta):
-    pass
+    itr = iter(table)
+    out = "<table><tr>" + "".join(f"<th>{h}</th>" for h in next(itr, [])) + "</tr>"
+    for r in itr:
+        out += "<tr>" + "".join(f"<td>{c}</td>" for c in r) + "</tr>"
+    out += "</table>"
+    with open(path, "w") as writer:
+        writer.write(out)
 
 def write_csv(path, table, meta):
     import csv
