@@ -25,7 +25,8 @@ def plot(path=None, net_path=None):
                 traces.cells[id].title = label
             traces.set_colors([network.configuration.cell_types[key].plotting.color])
             traces.reorder(order)
-            fig = plot_traces(traces, x=list(np.arange(0, 900, 0.1)), show=False, input_region=[400, 500], cutoff=3000)
+            fig = plot_traces(traces, x=list(f["time"]), input_region=[6000, 6100], range=[5800, 6300], show=False)
+            fig.update_yaxes(range=[-70, 25])
             cfg = selection.btn_config.copy()
             cfg["filename"] = key + "_traces"
             figs[tag] = fig
