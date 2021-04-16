@@ -78,6 +78,7 @@ def plot(path=None, net_path=None, bg_start=5700, bg_end=5900, stim_start=6000, 
     bg_p = (bg_end - bg_start) / 1000
     stim_p = (stim_end - stim_start) / 1000
     inhibitory = {"basket_to_basket", "stellate_to_stellate", "golgi_to_golgi", "basket_to_purkinje", "stellate_to_purkinje", "golgi_to_granule"}
+    tbl = [[""]]
     for ct in network.get_cell_types():
         if ct.name == "glomerulus" or ct.name == "mossy_fibers":
             continue

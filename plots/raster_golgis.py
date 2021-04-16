@@ -6,7 +6,7 @@ from scipy import stats
 
 def select_golgis(kv):
     name, group = kv
-    return group.attrs.get("label", None) == "granule_cell"
+    return group.attrs.get("label", None) == "golgi_cell"
 
 from ._paths import *
 from glob import glob
@@ -14,7 +14,7 @@ import selection
 
 def plot(path=None, net_path=None):
     if path is None:
-        path = glob(results_path("sensory_burst", "*"))[0]
+        path = glob(results_path("oscillations", "*"))[0]
     if net_path is None:
         net_path = network_path(selection.network)
     network = from_hdf5(net_path)

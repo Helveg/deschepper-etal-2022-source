@@ -71,7 +71,8 @@ def plot(path=None, net_path=None, stim_start=6000, stim_end=6050):
     # p values above this impossible value, for example with 100 ramdom samples the p
     # value was 2.4e-31 and with 30 samples p = 2.1e-8. So it's safe to assume that the
     # test actually works and that because of our large sample size p < ϵ where ϵ is the
-    # tiniest possible float value that can be represented on this machine.
+    # tiniest possible float value that can be represented on this machine. When
+    # it reports 0.0 it is reporting p < ϵ
     print("Tiniest possible value on this machine:", np.finfo(float).tiny)
     r, p = scipy.stats.pearsonr(x[x != 0], y[x != 0])
     print("r=", r, " p=", max(p, np.finfo(float).tiny))
