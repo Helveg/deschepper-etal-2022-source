@@ -43,5 +43,5 @@ def plot(path=None, net_path=None):
         for handle in handles:
             handle.close()
 
-def meta(key):
+def meta():
     return {"width": 1920 / 2}
