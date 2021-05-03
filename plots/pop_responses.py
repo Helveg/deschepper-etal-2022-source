@@ -114,6 +114,8 @@ def plot(path=None, net_path=None, bg_start=5700, bg_end=5900, stim_start=6000, 
         #         ],
         #         layout_title_text=f"{ct.name} {cstag}",
         #     )
+        if len(ct_map[ct.name]) > 2:
+            ct_map[ct.name] = ct_map[ct.name][:2]
         if len(ct_map[ct.name]) == 2:
             x_axis = ct_map[ct.name][0]
             y_axis = ct_map[ct.name][1]
