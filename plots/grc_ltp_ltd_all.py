@@ -10,7 +10,7 @@ from glob import glob
 
 colorbar_grc = ['rgb(158,188,218)', 'rgb(140,150,198)', 'rgb(140,107,177)', 'rgb(136,65,157)', 'rgb(129,15,124)', 'rgb(77,0,75)']
 colorbar_pc = "thermal"
-frozen = False
+frozen = True
 
 def make_psi():
     # Use traced data from "A Nonlinear Cable Framework for Bidirectional Synaptic Plasticity"
@@ -113,6 +113,7 @@ def plot(path=None, network=None):
             files=glob(os.path.join(path, "*.hdf5")),
             data=lambda f: analyze_calcium(ps_grc.identifiers, f["recorders/ions/ca/"], stim_start, stim_end + after_effects, soma=False),
             data_subpop=lambda v: v > 0,
+            bin_reduce=sum,
             reduce=run_avg,
             smoothen=True,
         ),
@@ -205,25 +206,6 @@ def plot(path=None, network=None):
         with open("calcium_all.pickle", "rb") as f:
             surfaces = pickle.load(f)
 
-    surf = surfaces["mixed"]
-    slct = slice(None, None, None) if "population" not in surf else surf["population"]
-    go.Figure(data=[
-        go.Scatter3d(
-            x=ps_grc.positions[slct, 0],
-            y=ps_grc.positions[slct, 2],
-            z=ps_grc.positions[slct, 1],
-            text=[f"data: {d}" for d in surf['_data']],
-            mode="markers",
-            marker=dict(
-                color=[surf["_data"][id] for id in ps_grc.identifiers],
-                colorbar=dict(
-                    len=1,
-                    xanchor="right"
-                )
-            )
-        )
-    ], layout_title_text="scatter mixed").show()
-
     plots = {k: v["surface"] for k, v in surfaces.items()}
     plots["mixed"] = plots["ltp_cont"] - plots["ltd_cont"]
     figs = {}
@@ -232,7 +214,7 @@ def plot(path=None, network=None):
         if isinstance(z, tuple):
             cmax = z[1]
             z = z[0]
-        figs[name] = fig = go.Figure(go.Surface(z=z, name=name, opacity=0.7, colorscale="Viridis"))
+        figs[name] = fig = go.Figure(go.Surface(z=z, name=name, colorscale="Viridis"))
         fig.update_layout(
             title_text=name,
             scene=dict(
@@ -244,17 +226,22 @@ def plot(path=None, network=None):
         )
         fig.update_layout(showlegend=True)
 
-    side_by_side = [(plots["ltp_cat"], plots["ltd_cat"])] * 2
+    side_by_side = [(plots["ltp_cat"], plots["ltd_cat"])] * 2 + [(plots["ltp_cont"], plots["ltd_cont"])] * 2
     for i, (ltp, ltd) in enumerate(side_by_side):
         fig_overlap = go.Figure(
             [
-                go.Scatter3d(z=ltp, name="ltp", colorscale="Viridis"),
-                go.Scatter3d(z=-ltd, name="ltd", colorscale="Viridis", reversescale=True),
+                go.Surface(z=ltp, name="ltp", colorscale="Viridis"),
+                go.Surface(z=-ltd, name="ltd", colorscale="Viridis", reversescale=True),
             ],
             layout=dict(
                 title_text="Side-by-side"
             )
         )
-        figs[f"sideview_{i}"].append(fig_overlap)
-
+        figs[f"sideview_{i}"] = fig_overlap
+    figs["psi"] = go.Figure(
+        [
+            go.Scatter(x=np.linspace(0, 0.00105, 1000), y=psi(np.linspace(0, 0.00105, 1000)), name="interpolated")
+        ],
+        layout_title_text="psicheck"
+    )
     return figs
