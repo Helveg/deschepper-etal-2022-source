@@ -1,5 +1,5 @@
-from neuro3d.render import Renderer
-from neuro3d._blender.render import BlenderRender
+from neuro3d import set_backend
+from neuro3d.render import render
 
-r = Renderer(BlenderRender, "linear_scale10.blend", 4)
-r.render_portions()
+set_backend("blender")
+render("with_plots.blend", 4)

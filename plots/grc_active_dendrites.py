@@ -11,13 +11,16 @@ import selection
 import collections
 from collections import defaultdict
 
-def plot(net_path=None):
+def plot(net_path=None,batch_id=None):
     if net_path is None:
         net_path = network_path(selection.network)
     f = h5py.File(net_path,'r')
     scaffoldInstance = from_hdf5(net_path)
 
-    excitedMFs = selection.stimulated_mf_poiss
+    if batch_id is None:
+        excitedMFs = selection.stimulated_mf_poiss
+    else:
+        excitedMFs = selection.mf_batch_1[int(batch_id)]
 
     connMfGlom = np.array(f['/cells/connections/mossy_to_glomerulus'])
     excitedGlom=[]

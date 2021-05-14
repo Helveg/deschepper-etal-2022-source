@@ -15,7 +15,7 @@ def crop(data, min, max, indices=False):
 
 def plot(path=None, net_path=None, stim_start=5500, stim_end=6500):
     if path is None:
-        path = results_path("results_grc_calcium.hdf5")
+        path = results_path("grc_ltp_ltd", "recon_grc_calcium_0.hdf5")
     if net_path is None:
         net_path = network_path(selection.network)
     network = from_hdf5(net_path)
@@ -26,14 +26,9 @@ def plot(path=None, net_path=None, stim_start=5500, stim_end=6500):
             [
                 go.Scatter(
                     mode="lines",
-                    y=f[f"recorders/ions/ca/{id}/concentration/1"][()]
+                    y=[v for k, v in f[f"recorders/ions/ca/{id}/concentration/"].items() if k != "0"][0][()]
                 )
                 for id in random.choices(ids, k=300) if str(id) in f[f"recorders/ions/ca/"]
-            ] + [
-                go.Scatter(
-                    mode="lines",
-                    y=f[f"recorders/ions/ca/10001/concentration/1"][()]
-                )
             ]
         )
     return fig
