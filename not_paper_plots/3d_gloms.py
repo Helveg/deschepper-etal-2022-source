@@ -7,7 +7,7 @@ from _paths import *
 import numpy as np
 
 individually_labelled = True
-skip_selected = True
+skip_selected = False
 
 def plot(net_path=None):
     selected_mf = {

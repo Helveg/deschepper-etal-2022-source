@@ -10,7 +10,7 @@ from glob import glob
 
 colorbar_grc = ['rgb(158,188,218)', 'rgb(140,150,198)', 'rgb(140,107,177)', 'rgb(136,65,157)', 'rgb(129,15,124)', 'rgb(77,0,75)']
 colorbar_pc = "thermal"
-frozen = True
+frozen = False
 
 def make_psi():
     # Use traced data from "A Nonlinear Cable Framework for Bidirectional Synaptic Plasticity"
@@ -54,7 +54,9 @@ def skip_spike_regions(data, threshold=-20, width=100):
     return data[~excluded(np.arange(len(data)))]
 
 def analyze_calcium(ids, group, start, stop, soma=True, inv=False):
-    lin_time = np.linspace(0, 8000, len(next(iter(group.values()))["concentration/0"]))
+    # IMPORTANT: This assumes that you've pre-cropped your datasets to the ROI
+    # and have recorded 1 soma and 1 dendrite per granule cell!!!
+    lin_time = np.linspace(start, stop, len(next(iter(group.values()))["concentration/0"]))
     mask = (start < lin_time) & (lin_time < stop)
     analysed = {id: 0 for id in ids}
     for key in group:

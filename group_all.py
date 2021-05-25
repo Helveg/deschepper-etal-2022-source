@@ -1,7 +1,7 @@
 import sys, h5py, numpy as np
 
 file = sys.argv[1]
-duration = 1200
+duration = 8000
 
 with h5py.File(file, "a") as f:
     # del f["/all"]

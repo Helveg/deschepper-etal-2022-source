@@ -11,13 +11,16 @@ import selection
 import collections
 from collections import defaultdict
 
-def plot(net_path=None,batch_id=None):
+def plot(net_path=None,batch_id=None, lookup_mf=False):
     if net_path is None:
         net_path = network_path(selection.network)
     f = h5py.File(net_path,'r')
     scaffoldInstance = from_hdf5(net_path)
 
-    if batch_id is None:
+    if not lookup_mf:
+        sim = next(iter(scaffoldInstance.configuration.simulations.values()))
+        excitedMFs = sim.devices["mossy_fiber_sensory_burst"].targets
+    elif batch_id is None:
         excitedMFs = selection.stimulated_mf_poiss
     else:
         excitedMFs = selection.mf_batch_1[int(batch_id)]

@@ -46,6 +46,8 @@ def plot(path_control=None, path_gaba=None, net_path=None):
 def plot_condition(fig, row, path, grc_pos_map):
     colors = ("blue", "red", "purple", "lime")
     with h5py.File(path, "r") as f:
+        print("recorded minmax:", min(map(lambda kv: int(kv[0]), filter(select_groups, f["/recorders/soma_spikes"].items()))), max(map(lambda kv: int(kv[0]), filter(select_groups, f["/recorders/soma_spikes"].items()))))
+        print("net minmax:", min(grc_pos_map.keys()), max(grc_pos_map.keys()))
         groups = {k: v for k, v in sorted(filter(select_groups, f["/recorders/soma_spikes"].items()), key=sorter(grc_pos_map))}
         ys = list(itertools.chain(*(np.ones(len(y)) * i for i, y in enumerate(groups.values()))))
         xs = list(itertools.chain(*map(lambda x: x[:,1], groups.values())))
