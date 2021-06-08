@@ -41,9 +41,20 @@ def plot():
                 order = IDs.index(g.attrs["cell_id"])+1
                 fig.add_scatter(x=timeVect, y=g[int(timeVect[0]/timeRes):-1], name=str(g.attrs["cell_id"]),mode='lines',line={'dash': 'solid','color': 'grey'},row=order, col=1)
                 for j in range(0, len(pattern)):
-                    fig.add_shape(type="line", x0=pattern[j], y0=min(g[int(timeVect[0]/timeRes):-1]), x1=pattern[j],
+                    fig.add_shape(
+                        type="line",
+                        x0=pattern[j],
+                        x1=pattern[j],
+                        y0=min(g[int(timeVect[0]/timeRes):-1]),
                         y1=max(g[int(timeVect[0]/timeRes):-1]),
-                        line=dict(color="black", width=1, dash="dot"),row=order, col=1 )
+                        line=dict(
+                            color="black",
+                            width=1,
+                            dash="dot",
+                        ),
+                        row=order,
+                        col=1,
+                    )
     with h5py.File("/home/claudia/deschepper-etal-2020/results/sensory_burst/results_sensory_burst_16172284097089670601430045.hdf5", "a") as f:
         # Collect traces from cells across multiple recording groups.
         for n, g in f["/recorders/granules"].items():
