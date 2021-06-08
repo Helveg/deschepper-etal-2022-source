@@ -8,7 +8,7 @@ from glob import glob
 import itertools
 
 network_path = os.path.join(
-    os.path.dirname(__file__), "..", "networks", "300x_200z.hdf5"
+    os.path.dirname(__file__), "..", "networks", "balanced.hdf5"
 )
 def results_path(*args):
     return os.path.join(

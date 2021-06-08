@@ -8,7 +8,8 @@ import plotly.express as px
 from scipy import signal
 import collections
 from collections import defaultdict
-from ._paths import *
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "plots"))
+from _paths import *
 import selection
 
 def matrix_synchronization_index(matrix):
@@ -71,7 +72,7 @@ def plot(path=None, net_path=None, bin_width=2, cutoff=4000, duration=8000):
 
     bins = np.arange(0, duration - cutoff, bin_width)
     n_bins = int(np.ceil((duration - cutoff) / bin_width))
-    golgi_spikes = spikes.get("golgi_cell", list())
+    golgi_spikes = spikes.get("granule_cell", list())
     print("n. golgi cells:", len(golgi_spikes))
     counts_goc = np.zeros((len(golgi_spikes), n_bins))
 

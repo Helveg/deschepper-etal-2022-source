@@ -9,12 +9,14 @@ from glob import glob
 
 def select_groups(kv):
     name, group = kv
-    return group.attrs.get("label", None) != "granule_cell" or np.random.rand() < 0.05
+    #return group.attrs.get("label", None) != "granule_cell" or np.random.rand() < 0.2
+    return group.attrs.get("label", None) in ("golgi_cell")
 
 def plot(path=None):
     if path is None:
         path = glob(results_path("sensory_burst", "*"))[0]
     with h5py.File(path, "r") as f:
         groups = {k: v for k, v in filter(select_groups, f["/recorders/soma_spikes"].items())}
-        fig = hdf5_plot_spike_raster(groups, show=False, cutoff=0)
+        fig = hdf5_plot_spike_raster(groups, show=False, cutoff=5800, colors="grey")
+        fig.update_layout(xaxis_range= [0, 500]) #, yaxis_range=[0, 40])
     return fig

@@ -11,11 +11,17 @@ MFs = selection.stimulated_mf_poiss
 # Re-use previous results?
 frozen = False
 
+def plot():
+    fig = plot2(glob(results_path("sensory_burst", "*"))[0], color='red', shift=0)
+    fig2 = plot2(results_path("sensory_burst_gabazine.hdf5"), color='grey', shift=0.2)
+    fig.add_traces(fig2.data)
+    return fig
+
 def latency(data, min, max):
     c = data[:, 1]
     return np.min(c[(c > min) & (c < max)], initial=float("+inf"))
 
-def plot(path=None, net_path=None, stim_start=6000, stim_end=6020):
+def plot2(path=None, net_path=None, stim_start=6000, stim_end=6020, color='red', shift=0):
     if path is None:
         path = glob(results_path("sensory_burst", "*"))[0]
     if net_path is None:
@@ -58,13 +64,13 @@ def plot(path=None, net_path=None, stim_start=6000, stim_end=6020):
     print("Tiniest possible value on this machine:", np.finfo(float).tiny)
     r, p = scipy.stats.pearsonr(x, y)
     print("r=", r, " p=", max(p, np.finfo(float).tiny))
-    fig = go.Figure([go.Box(y=y[x == i], name=f"{i} active dendrites") for i in range(1, 5)])
+    fig = go.Figure([go.Box(y=y[x == i], name=f"{i} active dendrites", marker_color =color) for i in range(1, 5)])
     fig.update_layout(xaxis_title="Granule cells", yaxis_title="latencies of first spike [ms]")
     fig.update_layout(
         xaxis = dict(
             tickmode = 'array',
             tickvals = [1, 2, 3, 4],
-            ticktext = [f"n={len(y[x == i])}" for i in range(1, 5)]
+            #ticktext = [f"n={len(y[x == i])}" for i in range(1, 5)]
         )
     )
     return fig

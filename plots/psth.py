@@ -34,10 +34,8 @@ def plot(path=None, net_path=None):
             print("Run ids already detected in:", handle.filename)
             print("Skipping run id insertion")
             break
-        fig = hdf5_plot_psth(network, valueify(itertools.chain(*(handle["/recorders/soma_spikes"].values() for handle in handles))), show=False, cutoff=300, duration=5)
+        fig = hdf5_plot_psth(network, valueify(itertools.chain(*(handle["/recorders/soma_spikes"].values() for handle in handles))), show=False, cutoff=5800, duration=5)
         # ranges = [[0, 10], [0, 10], [0, 65], [0, 75], [0, 60], [0, 60]]
-        # for i in range(len(ranges)):
-        #     figs["poiss"].update_yaxes(range=ranges[i], row=i + 1, col=1)
         return fig
     finally:
         for handle in handles:

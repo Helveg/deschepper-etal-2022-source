@@ -41,10 +41,14 @@ def skip_spike_regions(data, threshold=-20, width=100):
     excluded = bools_to_lambda(["|", *(["&", (">", s - width), ("<", s + width)] for s in spikes)])
     return data[~excluded(np.arange(len(data)))]
 
+file_time_start = 6000
+file_time_stop = 6520
+
 def analyze_calcium(ids, group, start, stop, soma=True, inv=False):
     # IMPORTANT: This assumes that you've pre-cropped your datasets to the ROI
     # and have recorded 1 soma and 1 dendrite per granule cell!!!
-    lin_time = np.linspace(start, stop, len(next(iter(group.values()))["concentration/0"]))
+    #lin_time = np.linspace(5500, 6500, len(next(iter(group.values()))["concentration/1"]))
+    lin_time = np.linspace(file_time_start, file_time_stop, len(next(iter(group.values()))["concentration/0"]))
     mask = (start < lin_time) & (lin_time < stop)
     analysed = {id: 0 for id in ids}
     for key in group:
@@ -76,10 +80,13 @@ def generate(path=None, net_path=None):
     if net_path is None:
         net_path = network_path("batch_1")
     paths = glob(path)
+    #paths = ["/home/claudia/deschepper-etal-2020/results/CaRecording/sensoryBurst_CaRecordingOnGrCdend.hdf5"]
     for path in paths:
         with h5py.File(path, "r") as f:
             id = int(list(json.loads(f.attrs["configuration_string"])["simulations"].keys())[0].split("_")[-1])
+            #id=0
             network = from_hdf5(os.path.join(net_path, f"network_{id}.hdf5"))
+            #network=from_hdf5('/home/claudia/deschepper-etal-2020/networks/balanced.hdf5')
             gen_map(id, f, network)
 
 def gen_map(net_id, f, scaffold):

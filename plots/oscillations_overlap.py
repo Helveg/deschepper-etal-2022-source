@@ -16,7 +16,13 @@ from ._paths import *
 from glob import glob
 import math
 
-def plot(path=None, net_path=None):
+def plot():
+    fig = plot2(results_path("oscillations", "oscillations_4Hz.hdf5"), color='blue')
+    fig2 = plot2(results_path("oscillations", "oscillations_4Hz_noGap.hdf5"), color='grey')
+    fig.add_traces(fig2.data)
+    return fig
+
+def plot2(path=None, net_path=None, color='red'):
     if path is None:
         path = results_path("oscillations", "oscillations_4Hz_noGap.hdf5")
     if net_path is None:
@@ -31,7 +37,7 @@ def plot(path=None, net_path=None):
         cutoff = 4
         duration = 8
         zero_skip = 5
-        population = "granule_cell"
+        population = "golgi_cell"
 
         time = handle["time"][()] / 1000
         x = time[(time >= cutoff) & (time <= duration)]
@@ -59,23 +65,23 @@ def plot(path=None, net_path=None):
     sig = binned_spikes
     wsig = binned_spikes * w
     fft_sig = 2.0/N * np.abs(fft.fft(sig)[zero_skip:N//2])
-    fft_wsig = 2.0/N * np.abs(fft.fft(wsig)[zero_skip:N//2])
+    fft_wsig = 2.0/N * np.square(np.abs(fft.fft(wsig)[zero_skip:N//2]))
     fft_freq = fft.fftfreq(N, T)[zero_skip:N // 2]
     fft_filtered = signal.savgol_filter(fft_sig, win_width, 6)
     fft_wfiltered = signal.savgol_filter(fft_wsig, win_width, 6)
     figs["fft"] = go.Figure(
         [
             go.Scatter(
-                x=fft_freq, y=fft_wsig, name="granule cells unfiltered"
+                x=fft_freq, y=fft_wsig, name="golgi cells unfiltered"
             ),
             go.Scatter(
-                x=fft_freq, y=fft_wfiltered, name="granule cells"
+                x=fft_freq, y=fft_wfiltered, name="golgi cells", line={'dash': 'solid','color': color}
             ),
         ],
         layout=dict(
-            title_text="Fourier Transform of granule cell population",
+            title_text="Fourier Transform of golgi cell population",
             xaxis_title="Frequency (Hz)",
-            yaxis_title="Energy",
+            yaxis_title=" power spectrum ",
         ),
     )
 
