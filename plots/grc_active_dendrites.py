@@ -14,6 +14,7 @@ from collections import defaultdict
 def plot(net_path=None,batch_id=None, lookup_mf=False):
     if net_path is None:
         net_path = network_path(selection.network)
+        lookup_mf = True
     f = h5py.File(net_path,'r')
     scaffoldInstance = from_hdf5(net_path)
 
@@ -130,6 +131,7 @@ def plot(net_path=None,batch_id=None, lookup_mf=False):
     fig = go.Figure(data=[In0, In1, In2, In3, In4])
 
     fig.update_layout(
+        title_text="Activated granule cells",
         scene=dict(
             xaxis=dict(title="X", range=[0, 300], autorange=False),
             yaxis=dict(title="Z", range=[0, 200], autorange=False),

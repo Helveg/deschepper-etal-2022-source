@@ -45,6 +45,18 @@ def plot(net_path=None, stim_start=6000, stim_end=6020):
     y = carry_y
     r, p = scipy.stats.pearsonr(x, y)
     print("r=", r, " p=", max(p, np.finfo(float).tiny))
-    fig = go.Figure([go.Box(y=y[x == d], name=f"{d} active dendrites") for d in range(5)])
-    fig.update_layout(xaxis_title="Granule cells", yaxis_title="[Ca]")
+    fig = go.Figure([
+        go.Box(
+            y=y[x == d] * 1000,
+            name=f"{d} active dendrite" + "s" * (d > 1),
+            boxpoints=False
+        )
+        for d in range(5)
+    ])
+    fig.update_layout(
+        title_text="Granule cell calcium concentration",
+        xaxis_title="Granule cells",
+        yaxis_title="Dendritic calcium concentration [μM]",
+        showlegend=False
+    )
     return fig

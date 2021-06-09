@@ -6,22 +6,28 @@ import pickle
 from ._paths import *
 from glob import glob
 import selection
+import hashlib
+
+def hash(s):
+    return hashlib.sha256(str(s).encode()).hexdigest()
 
 MFs = selection.stimulated_mf_poiss
 # Re-use previous results?
 frozen = False
 
 def plot():
-    fig = plot2(glob(results_path("sensory_burst", "*"))[0], color='red', shift=0)
-    fig2 = plot2(results_path("sensory_burst_gabazine.hdf5"), color='grey', shift=0.2)
-    fig.add_traces(fig2.data)
+    trc_control = plot2(title="Control", path=results_path("sensory_gabazine", "sensory_burst_control.hdf5"), color='red', shift=0)
+    trc_gaba = plot2(title="Gabazine", path=results_path("sensory_gabazine", "sensory_burst_gabazine.hdf5"), color='grey', shift=0.2)
+    fig = go.Figure(trc_control + trc_gaba)
+    fig.update_layout(title_text="Granule cell latency", xaxis_title="Granule cells", yaxis_title="Number of spikes", boxmode="group", xaxis_type="category", xaxis_range=[-0.5, 3.5])
+    fig.update_layout(xaxis_title="Granule cells", yaxis_title="Latency of first spike [ms]")
     return fig
 
 def latency(data, min, max):
     c = data[:, 1]
     return np.min(c[(c > min) & (c < max)], initial=float("+inf"))
 
-def plot2(path=None, net_path=None, stim_start=6000, stim_end=6020, color='red', shift=0):
+def plot2(title=None, path=None, net_path=None, stim_start=6000, stim_end=6020, color='red', shift=0):
     if path is None:
         path = glob(results_path("sensory_burst", "*"))[0]
     if net_path is None:
@@ -31,10 +37,10 @@ def plot2(path=None, net_path=None, stim_start=6000, stim_end=6020, color='red',
     if not frozen:
         with h5py.File(path, "r") as f:
             latencies = {id: v - stim_start for id in ids if (v := latency(f["recorders/soma_spikes/" + str(id)], stim_start, stim_end)) != float("+inf")}
-        with open("grc_lat.pickle", "wb") as f:
+        with open(f"grc_lat_{hash(path)}.pickle", "wb") as f:
             pickle.dump(latencies, f)
     else:
-        with open("grc_lat.pickle", "rb") as f:
+        with open(f"grc_lat_{hash(path)}.pickle", "rb") as f:
             latencies = pickle.load(f)
 
 
@@ -48,10 +54,10 @@ def plot2(path=None, net_path=None, stim_start=6000, stim_end=6020, color='red',
         ids = np.array(list(latencies.keys()))
         x = [active_dend_count[act_grc_list.index(id)] if id in act_grc_list else 0 for id in ids]
         y = [latencies[id] for id in ids]
-        with open("grc_lat2.pickle", "wb") as f:
+        with open(f"grc_lat2_{hash(path)}.pickle", "wb") as f:
             pickle.dump((ids, active_glom, active_dendrites, active_grc_ids, active_dend_count, x, y), f)
     else:
-        with open("grc_lat2.pickle", "rb") as f:
+        with open(f"grc_lat2_{hash(path)}.pickle", "rb") as f:
             ids, active_glom, active_dendrites, active_grc_ids, active_dend_count, x, y = pickle.load(f)
     m = np.column_stack((x, y))
     combos, counts = np.unique(m, return_counts=True, axis=0)
@@ -64,16 +70,18 @@ def plot2(path=None, net_path=None, stim_start=6000, stim_end=6020, color='red',
     print("Tiniest possible value on this machine:", np.finfo(float).tiny)
     r, p = scipy.stats.pearsonr(x, y)
     print("r=", r, " p=", max(p, np.finfo(float).tiny))
-    fig = go.Figure([go.Box(y=y[x == i], name=f"{i} active dendrites", marker_color =color) for i in range(1, 5)])
-    fig.update_layout(xaxis_title="Granule cells", yaxis_title="latencies of first spike [ms]")
-    fig.update_layout(
-        xaxis = dict(
-            tickmode = 'array',
-            tickvals = [1, 2, 3, 4],
-            #ticktext = [f"n={len(y[x == i])}" for i in range(1, 5)]
+    return [
+        go.Box(
+            y=y[x == i],
+            name=f"{i} active dendrite" + "s" * (i > 1),
+            legendgroup=title,
+            showlegend=False,
+            boxpoints=False,
+            marker_color=color,
         )
-    )
-    return fig
+        for i in range(1, 5)
+    ] + [go.Box(y=[1], marker_color=color, name=title, legendgroup=title)]
+
 
 def meta():
     return {"width": 800, "height": 800}

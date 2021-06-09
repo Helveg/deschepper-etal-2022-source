@@ -19,7 +19,14 @@ def plot():
     trc_control = plot2(title="Control", path=results_path("sensory_gabazine", "sensory_burst_control.hdf5"), color='red', shift=0)
     trc_gaba = plot2(title="Gabazine", path=results_path("sensory_gabazine", "sensory_burst_gabazine.hdf5"), color='grey', shift=0.2)
     fig = go.Figure(trc_control + trc_gaba)
-    fig.update_layout(title_text="Influence of gabazine on granule cell activity", xaxis_title="Granule cells", yaxis_title="Number of spikes", boxmode="group", xaxis_type="category", xaxis_range=[-0.5, 3.5])
+    fig.update_layout(
+        title_text="Granule cell activity",
+        xaxis_title="Granule cells",
+        yaxis_title="Number of spikes",
+        boxmode="group",
+        xaxis_type="category",
+        xaxis_range=[-0.5, 3.5]
+    )
     return fig
 
 def crop(data, min, max, indices=False):
