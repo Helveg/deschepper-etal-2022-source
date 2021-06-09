@@ -6,15 +6,20 @@ import pickle
 from ._paths import *
 from glob import glob
 import selection
+import hashlib
+
+def hash(s):
+    return hashlib.sha256(str(s).encode()).hexdigest()
 
 MFs = selection.stimulated_mf_poiss
 # Re-use previous results?
-frozen = False
+frozen = True
 
 def plot():
-    fig = plot2(glob(results_path("sensory_burst", "*"))[0], color='red', shift=0)
-    fig2 = plot2(results_path("sensory_burst_gabazine.hdf5"), color='grey', shift=0.2)
-    fig.add_traces(fig2.data)
+    trc_control = plot2(title="Control", path=results_path("sensory_gabazine", "sensory_burst_control.hdf5"), color='red', shift=0)
+    trc_gaba = plot2(title="Gabazine", path=results_path("sensory_gabazine", "sensory_burst_gabazine.hdf5"), color='grey', shift=0.2)
+    fig = go.Figure(trc_control + trc_gaba)
+    fig.update_layout(title_text="Influence of gabazine on granule cell activity", xaxis_title="Granule cells", yaxis_title="Number of spikes", boxmode="group", xaxis_type="category", xaxis_range=[-0.5, 3.5])
     return fig
 
 def crop(data, min, max, indices=False):
@@ -23,7 +28,7 @@ def crop(data, min, max, indices=False):
         return np.where((c > min) & (c < max))[0]
     return c[(c > min) & (c < max)]
 
-def plot2(path=None, net_path=None, stim_start=6000, stim_end=6040, color='red', shift=0):
+def plot2(path=None, title=None, net_path=None, stim_start=6000, stim_end=6040, color='red', shift=0):
     if path is None:
         path = glob(results_path("sensory_burst", "*"))[0]
     if net_path is None:
@@ -39,10 +44,10 @@ def plot2(path=None, net_path=None, stim_start=6000, stim_end=6040, color='red',
                 if len(response[id])>0:
                     firstSpikeLat = {id: (response[id][0]-stim_start)}
 
-        with open("grc_act.pickle", "wb") as f:
+        with open(f"grc_act_{hash(path)}.pickle", "wb") as f:
             pickle.dump(activity, f)
     else:
-        with open("grc_act.pickle", "rb") as f:
+        with open(f"grc_act_{hash(path)}.pickle", "rb") as f:
             activity = pickle.load(f)
 
 
@@ -55,10 +60,10 @@ def plot2(path=None, net_path=None, stim_start=6000, stim_end=6040, color='red',
         act_grc_list = list(active_grc_ids)
         x = [active_dend_count[act_grc_list.index(id)] if id in act_grc_list else 0 for id in ids]
         y = [activity[id] for id in ids]
-        with open("grc_act2.pickle", "wb") as f:
+        with open(f"grc_act2_{hash(path)}.pickle", "wb") as f:
             pickle.dump((active_glom, active_dendrites, active_grc_ids, active_dend_count, x, y), f)
     else:
-        with open("grc_act2.pickle", "rb") as f:
+        with open(f"grc_act2_{hash(path)}.pickle", "rb") as f:
             active_glom, active_dendrites, active_grc_ids, active_dend_count, x, y = pickle.load(f)
     m = np.column_stack((x, y))
     combos, counts = np.unique(m, return_counts=True, axis=0)
@@ -86,25 +91,22 @@ def plot2(path=None, net_path=None, stim_start=6000, stim_end=6040, color='red',
     # test actually works and that because of our large sample size p < ϵ where ϵ is the
     # tiniest possible float value that can be represented on this machine. When
     # it reports 0.0 it is reporting p < ϵ
+
     print("Tiniest possible value on this machine:", np.finfo(float).tiny)
     r, p = scipy.stats.pearsonr(x[x != 0], y[x != 0])
     print("r=", r, " p=", max(p, np.finfo(float).tiny))
-    fig = go.Figure([go.Box(y=y, name=f"{d} active dendrites", marker_color =color) for d, y in enumerate(combo_iter())])
-    fig.update_layout(xaxis_title="Granule cells", yaxis_title="Number of spikes")
-    for dends, spikes, count in map(lambda y: (y[1][0], y[1][1], counts[y[0]]), enumerate(combos)):
-        if (dends + spikes == 0) or (dends == 1 and spikes < 3) or (dends == 2 and spikes < 5) or (dends == 3 and np.abs(spikes - 5.5) <= 1.5) or dends == 4:
-            continue
-        fig.add_annotation(text=f"n={count}", x=dends + 0.12, y=spikes, showarrow=False)
-    fig.update_layout(
-        xaxis = dict(
-            tickmode = 'array',
-            tickvals = [1, 2, 3, 4],
-            #ticktext = [f"n={len(y)}" for y in combo_iter()]
+    fig = go.Figure()
+    return [
+        go.Box(
+            y=y,
+            name=f"{d} active dendrite" + "s" * (d > 1),
+            legendgroup=title,
+            showlegend=False,
+            marker_color=color,
+            boxpoints=False,
         )
-        )
-    fig.update_xaxes(range=[0.5, 4.5])
-
-    return fig
+        for d, y in enumerate(combo_iter()) if d > 0
+    ] + [go.Box(y=[1], marker_color=color, name=title, legendgroup=title)]
 
 def meta():
     return {"width": 800, "height": 800}
