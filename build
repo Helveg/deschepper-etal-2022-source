@@ -4,6 +4,10 @@ from types import ModuleType
 from importlib import import_module
 import traceback
 
+# Sets the plotly default theme
+import plotly.io as pio
+pio.templates.default = "simple_white"
+
 sys.path.append(os.path.abspath("plots"))
 path = os.path.abspath(os.path.dirname(__file__))
 formats = ['html', 'eps', 'jpeg', 'jpg', 'pdf', 'png', 'svg', 'webp']

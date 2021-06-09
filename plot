@@ -3,6 +3,10 @@ import os, sys, warnings
 from types import ModuleType
 from importlib import import_module
 
+# Sets the plotly default theme
+import plotly.io as pio
+pio.templates.default = "simple_white"
+
 def mod_names():
     return [
         f[:-3]
