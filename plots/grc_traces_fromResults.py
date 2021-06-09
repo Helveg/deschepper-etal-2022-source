@@ -1,25 +1,26 @@
+import os, sys
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+from bsb.core import Scaffold
+from bsb.config import JSONConfig
+from bsb.output import MorphologyRepository
+
+import matplotlib
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import numpy as np
+from bsb.plotting import *
+import scipy.spatial.distance as dist
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import h5py
+from random import randrange, uniform
+import plotly.express as px
+from scipy import signal
+import collections
+from collections import defaultdict
+from ._paths import *
+
 def plot():
-    import os, sys
-    sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-    from bsb.core import Scaffold
-    from bsb.config import JSONConfig
-    from bsb.output import MorphologyRepository
-
-    import matplotlib
-    import matplotlib.pyplot as plt
-    from mpl_toolkits.mplot3d import Axes3D
-    import numpy as np
-    from bsb.plotting import *
-    import scipy.spatial.distance as dist
-    import plotly.graph_objects as go
-    from plotly.subplots import make_subplots
-    import h5py
-    from random import randrange, uniform
-    import plotly.express as px
-    from scipy import signal
-    import collections
-    from collections import defaultdict
-
     duration=6500 #ms
     timeRes=0.025  #ms
     cutoff=5500
