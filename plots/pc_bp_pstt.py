@@ -7,6 +7,10 @@ import selection, numpy as np, h5py
 from colour import Color
 from ._paths import *
 from glob import glob
+import scipy.stats
+from sklearn.linear_model import LinearRegression
+
+camera = dict(up=dict(x=0,y=0,z=1),center=dict(x=0,y=0,z=0),eye=dict(x=-2.0677762887754425,y=1.1277939435309905,z=0.7732784652746101))
 
 def crop(data, min, max, indices=False):
     if len(data.shape) > 1:
@@ -116,11 +120,14 @@ def plot(path=None, net_path=None, input_device="mossy_fiber_sensory_burst", buf
         bc_spikes = [np.bincount(np.ceil((v - start) / bin_width).astype(int), minlength=40) for v in map(np.array, spikes_inc_bc.values())]
         sc_spikes = [np.bincount(np.ceil((v - start) / bin_width).astype(int), minlength=40) for v in map(np.array, spikes_inc_sc.values())]
         mli_spikes = list(map(sum, zip(bc_spikes, sc_spikes)))
+        mli_x = list(p_factors.values())
+        mli_y = [sum(mli_spikes[i][:int(window // bin_width + 2)]) for i, id in enumerate(ps_pc.identifiers)]
+        mli_r, mli_p = scipy.stats.pearsonr(mli_x, mli_y)
+        print(f"Correlation between pause factor and MLI spikes: r={mli_r}, p={mli_p}")
         figs["mli_p"] = go.Figure(
             go.Scatter(
-                # Take
-                y=[sum(mli_spikes[i][:int(window // bin_width + 2)]) for i, id in enumerate(ps_pc.identifiers)],
-                x=list(p_factors.values()),
+                y=mli_y,
+                x=mli_x,
                 mode="markers",
             ),
             layout=dict(
@@ -132,7 +139,13 @@ def plot(path=None, net_path=None, input_device="mossy_fiber_sensory_burst", buf
         n_burst_bins = int(40 // bin_width)
         burst_spikes_pf = [np.sum(v[: n_burst_bins + 1], initial=0) for v in pf_spikes]
         burst_spikes_aa = [np.sum(v[: n_burst_bins + 1], initial=0) for v in aa_spikes]
+        b_x = np.array(list(zip(burst_spikes_aa, burst_spikes_pf)))
         b = list(b_factors.values())
+        regressor = LinearRegression().fit(b_x, b)
+        print("--- Multiple regression of PF/AA/B")
+        print("score", regressor.score(b_x, b))
+        print("coeff", dict(zip(("AA", "PF"), regressor.coef_)))
+        print("intercept", regressor.intercept_)
         figs["bcoeff"] = go.Figure(
             [
                 go.Scatter3d(
@@ -147,8 +160,9 @@ def plot(path=None, net_path=None, input_device="mossy_fiber_sensory_burst", buf
                 title_text="Burst coefficient analysis",
                 scene=dict(
                     xaxis=dict(title="# PF spikes"),
-                    yaxis=dict(title="# AA spikes"),
+                    yaxis=dict(title="# AA spikes", autorange="reversed"),
                     zaxis=dict(title="Burst coefficient"),
+                    camera=camera,
                 )
             )
         )
