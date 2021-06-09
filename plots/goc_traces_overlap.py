@@ -28,7 +28,11 @@ def plot2(path=None, net_path=None, color='blue'):
         traces.set_colors([color])
         traces.reorder(order)
         #fig.add_scatter(x=timeVect, y=g[int(timeVect[0]/timeRes):-1], name=str(g.attrs["cell_id"]),mode='lines',line={'dash': 'solid','color': 'grey'},row=order, col=1)
-        fig = plot_traces(traces, x=list(f["time"]), input_region=[6000, 6040], range=[5500, 6500], show=False)
+        fig = plot_traces(traces, x=list(f["time"]), input_region=[6000, 6040], range=[5500, 6500], show=False, shared_xaxes=True)
+        # Share xaxes but show all ticks, see: https://github.com/plotly/plotly.js/issues/2539#issuecomment-522917132
+        for i in range(len(traces.cells)):
+            xaxis_name = 'xaxis' if i == 0 else f'xaxis{i + 1}'
+            getattr(fig.layout, xaxis_name).showticklabels = True
         fig.update_yaxes(range=[-70, 25])
     return fig
 

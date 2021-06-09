@@ -55,7 +55,10 @@ def plot(net_path=None):
     for goc_label, goc_id in selection.golgi_cells.items():
         goc_pos = ps.positions[ps.identifiers == goc_id][0]
         fig = plot_morphology(m, show=False, color=goc_colors, soma_radius=goc_radius, offset=goc_pos)
-        fig.update_layout(title_text=f"{goc_label} Golgi cell", scene_camera=camera)
+        fig.update_layout(title_text=f"{goc_label} Golgi cell", scene=dict(
+            camera=camera,
+            zaxis_dtick=50
+        ))
         for set in (aa_goc_conn, pf_goc_conn):
             tag_label = labels[set.tag]
             positions = [[] for _ in range(5)]

@@ -49,7 +49,8 @@ def plot(net_path=None, stim_start=6000, stim_end=6020):
         go.Box(
             y=y[x == d] * 1000,
             name=f"{d} active dendrite" + "s" * (d > 1),
-            boxpoints=False
+            boxpoints=False,
+            marker_color="red"
         )
         for d in range(5)
     ])
