@@ -22,7 +22,7 @@ def get_spike_zero(spikes, stimulus):
 
 def plot(path=None, net_path=None, input_device="mossy_fiber_sensory_burst", buffer=200, cutoff=5000, bin_width=5):
     if path is None:
-        path = glob(results_path("sensory_burst", "*"))[0]
+        path = results_path("sensory_gabazine", "sensory_burst_control.hdf5")
     if net_path is None:
         net_path = network_path(selection.network)
     network = from_hdf5(net_path)
@@ -50,8 +50,8 @@ def plot(path=None, net_path=None, input_device="mossy_fiber_sensory_burst", buf
         b_factors = {id: 1 for id in ps_pc.identifiers}
         p_factors = {id: 1 for id in ps_pc.identifiers}
         bp_factors = {id: 1 for id in ps_pc.identifiers}
-        windows = {id: stop + 50 for id in ps_pc.identifiers}
-        p_windows = {id: stop + 50 for id in ps_pc.identifiers}
+        window = 40
+        t_window = start + 40
         for cell_trace in traces:
             id = cell_trace.cell_id
             for trace in cell_trace:
@@ -74,7 +74,6 @@ def plot(path=None, net_path=None, input_device="mossy_fiber_sensory_burst", buf
                 p_factors[id] = 1 / pause
                 bp_factors[id] = BP
                 nb[id] = len(burst_isis)
-                p_windows[id] = pause_end - start
 
         figs["bp"] = go.Figure(go.Scatter(x=list(p_factors.values()), y=list(b_factors.values()), mode="markers"), layout=dict(title_text="B/P relationship"))
 
@@ -99,17 +98,17 @@ def plot(path=None, net_path=None, input_device="mossy_fiber_sensory_burst", buf
             if d.attrs["label"] == "granule_cell":
                 spikes = crop(d[()], start, 15000)
                 for t in  m_pf_pc.getrow(id).nonzero()[1]:
-                    spikes_inc_pf[t].extend(spikes[spikes < windows[t]])
+                    spikes_inc_pf[t].extend(spikes[spikes < t_window])
                 for t in m_aa_pc.getrow(id).nonzero()[1]:
-                    spikes_inc_aa[t].extend(spikes[spikes < windows[t]])
+                    spikes_inc_aa[t].extend(spikes[spikes < t_window])
             elif d.attrs["label"] == "basket_cell":
                 spikes = crop(d[()], start, 15000)
                 for t in  m_bc_pc.getrow(id).nonzero()[1]:
-                    spikes_inc_bc[t].extend(spikes[spikes < windows[t]])
+                    spikes_inc_bc[t].extend(spikes[spikes < t_window])
             elif d.attrs["label"] == "stellate_cell":
                 spikes = crop(d[()], start, 15000)
                 for t in  m_sc_pc.getrow(id).nonzero()[1]:
-                    spikes_inc_sc[t].extend(spikes[spikes < windows[t]])
+                    spikes_inc_sc[t].extend(spikes[spikes < t_window])
 
 
         pf_spikes = [np.bincount(np.ceil((v - start) / bin_width).astype(int)) for v in map(np.array, spikes_inc_pf.values())]
@@ -119,67 +118,21 @@ def plot(path=None, net_path=None, input_device="mossy_fiber_sensory_burst", buf
         mli_spikes = list(map(sum, zip(bc_spikes, sc_spikes)))
         figs["mli_p"] = go.Figure(
             go.Scatter(
-                y=[sum(mli_spikes[i][:int(p_windows[id] // bin_width + 2)]) for i, id in enumerate(ps_pc.identifiers)],
+                # Take
+                y=[sum(mli_spikes[i][:int(window // bin_width + 2)]) for i, id in enumerate(ps_pc.identifiers)],
                 x=list(p_factors.values()),
                 mode="markers",
             ),
             layout=dict(
                 title_text="MLI/P-coeff",
                 xaxis=dict(title="Pause coefficient"),
-                yaxis=dict(title="# of pause-driving MLI spikes"),
-            ),
-        )
-        figs["bc_sc_p"] = go.Figure(
-            go.Scatter3d(
-                x=[sum(sc_spikes[i][:int(p_windows[id] // bin_width + 2)]) for i, id in enumerate(ps_pc.identifiers)],
-                y=[sum(bc_spikes[i][:int(p_windows[id] // bin_width + 2)]) for i, id in enumerate(ps_pc.identifiers)],
-                z=list(p_factors.values()),
-                mode="markers",
-            ),
-            layout=dict(
-                title_text="BC/SC/P-coeff",
-                scene=dict(
-                    xaxis=dict(title="# of pause-driving SC spikes"),
-                    yaxis=dict(title="# of pause-driving BC spikes"),
-                    zaxis=dict(title="Pause coefficient"),
-                )
+                yaxis=dict(title="# MLI spikes"),
             ),
         )
         n_burst_bins = int(40 // bin_width)
         burst_spikes_pf = [np.sum(v[: n_burst_bins + 1], initial=0) for v in pf_spikes]
         burst_spikes_aa = [np.sum(v[: n_burst_bins + 1], initial=0) for v in aa_spikes]
         b = list(b_factors.values())
-        figs["bcoeff_colored"] = go.Figure(
-            [
-                go.Scatter3d(
-                    z=b,
-                    x=burst_spikes_pf,
-                    y=burst_spikes_aa,
-                    marker=dict(
-                        showscale=True,
-                        colorscale="Viridis",
-                        cmin=0,
-                        cmax=max(nb.values()),
-                        color=list(nb.values()),
-                        colorbar=dict(
-                            tickmode="linear",
-                            tick0=1,
-                            dtick=1,
-                        ),
-                    ),
-                    name="by sum",
-                    mode="markers"
-                ),
-            ],
-            layout=dict(
-                title_text="Burst coefficient analysis",
-                scene=dict(
-                    xaxis=dict(title="# of burst-driving PF spikes"),
-                    yaxis=dict(title="# of burst-driving AA spikes"),
-                    zaxis=dict(title="Burst coefficient"),
-                )
-            )
-        )
         figs["bcoeff"] = go.Figure(
             [
                 go.Scatter3d(
@@ -193,8 +146,8 @@ def plot(path=None, net_path=None, input_device="mossy_fiber_sensory_burst", buf
             layout=dict(
                 title_text="Burst coefficient analysis",
                 scene=dict(
-                    xaxis=dict(title="# of burst-driving PF spikes"),
-                    yaxis=dict(title="# of burst-driving AA spikes"),
+                    xaxis=dict(title="# PF spikes"),
+                    yaxis=dict(title="# AA spikes"),
                     zaxis=dict(title="Burst coefficient"),
                 )
             )
