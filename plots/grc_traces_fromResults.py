@@ -28,14 +28,14 @@ def plot():
 
     pattern=[6000.0, 6004.0, 6008.0, 6014.0, 6020.0]
 
-    filename = '/home/claudia/deschepper-etal-2020/networks/balanced.hdf5'
+    filename = network_path('balanced.hdf5')
     f = h5py.File(filename,'r')
 
     #IDs=[5987,  6002,  9272, 17285, 17372, 24861, 3764,  3851,  4075,3083,  3114,  3192,3074, 3076, 3109]
     IDs=[ 6002,  3851,   3114,  3074]
     fig = make_subplots(rows=len(IDs), cols=1,shared_xaxes=True)
 
-    with h5py.File("/home/claudia/deschepper-etal-2020/results/sensory_burst/sensory_burst_gabazine.hdf5", "a") as f:
+    with h5py.File(results_path("sensory_gabazine", "sensory_burst_gabazine.hdf5", "a")) as f:
         # Collect traces from cells across multiple recording groups.
         for n, g in f["/recorders/granules"].items():
             if g.attrs["cell_id"] in IDs:
@@ -56,7 +56,7 @@ def plot():
                         row=order,
                         col=1,
                     )
-    with h5py.File("/home/claudia/deschepper-etal-2020/results/sensory_burst/results_sensory_burst_16172284097089670601430045.hdf5", "a") as f:
+    with h5py.File(results_path("sensory_gabazine", "sensory_burst_control.hdf5", "a"), "a") as f:
         # Collect traces from cells across multiple recording groups.
         for n, g in f["/recorders/granules"].items():
             if g.attrs["cell_id"] in IDs:
