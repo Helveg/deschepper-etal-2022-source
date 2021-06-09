@@ -56,7 +56,7 @@ def plot():
                         row=order,
                         col=1,
                     )
-    with h5py.File(results_path("sensory_gabazine", "sensory_burst_control.hdf5", "a"), "a") as f:
+    with h5py.File(results_path("sensory_gabazine", "sensory_burst_control.hdf5"), "a") as f:
         # Collect traces from cells across multiple recording groups.
         for n, g in f["/recorders/granules"].items():
             if g.attrs["cell_id"] in IDs:
