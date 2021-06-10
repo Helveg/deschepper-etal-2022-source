@@ -17,12 +17,12 @@ from glob import glob
 import math
 
 def plot():
-    fig = plot2(results_path("oscillations", "oscillations_4Hz.hdf5"), color='blue')
-    fig2 = plot2(results_path("oscillations", "oscillations_4Hz_noGap.hdf5"), color='grey')
+    fig = plot2(results_path("oscillations", "oscillations_4Hz.hdf5"), slug="with gap", color='red')
+    fig2 = plot2(results_path("oscillations", "oscillations_4Hz_noGap.hdf5"), slug="without gap", color='grey')
     fig.add_traces(fig2.data)
     return fig
 
-def plot2(path=None, net_path=None, color='red'):
+def plot2(path=None, net_path=None, color='red', slug=None):
     if path is None:
         path = results_path("oscillations", "oscillations_4Hz_noGap.hdf5")
     if net_path is None:
@@ -72,16 +72,15 @@ def plot2(path=None, net_path=None, color='red'):
     figs["fft"] = go.Figure(
         [
             go.Scatter(
-                x=fft_freq, y=fft_wsig, name="golgi cells unfiltered"
-            ),
-            go.Scatter(
-                x=fft_freq, y=fft_wfiltered, name="golgi cells", line={'dash': 'solid','color': color}
+                x=fft_freq, y=fft_wfiltered, name=slug, line={'dash': 'solid','color': color}
             ),
         ],
         layout=dict(
-            title_text="Fourier Transform of golgi cell population",
+            title_text="Granule cell oscillations",
             xaxis_title="Frequency (Hz)",
-            yaxis_title=" power spectrum ",
+            yaxis_title="Power",
+            legend_xanchor="left",
+            legend_x=0.6
         ),
     )
 
