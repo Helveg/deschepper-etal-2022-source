@@ -3,6 +3,7 @@ from scipy.spatial import KDTree
 from plotly import graph_objs as go
 import numpy as np, pickle
 from radialdf import inner_rdf
+from plotly.subplots import make_subplots
 
 frozen = False
 from ._paths import *
@@ -13,9 +14,10 @@ def plot(net_path=None):
     if net_path is None:
         net_path = network_path(selection.network)
     network = from_hdf5(net_path)
-
-    figs = {}
-    for ct in network.get_cell_types(entities=False):
+    select = ["glomerulus", "granule_cell", "golgi_cell", "purkinje_cell", "basket_cell", "stellate_cell"]
+    fig = make_subplots(cols=6, rows=1, x_title="Radial distance [μm]", y_title="Density per average density")
+    fig.update_layout(bargap=0, bargroupgap=0, title_text="Radial distribution function")
+    for i, ct in enumerate(sorted(network.get_cell_types(entities=False), key=lambda c: select.index(c.name))):
         ps = network.get_placement_set(ct)
         dr = 0.5
         if not frozen:
@@ -30,7 +32,9 @@ def plot(net_path=None):
         else:
             with open(f"gr_{ps.tag}.pickle", "rb") as f:
                 gr = pickle.load(f)
-        figs[ps.tag] = go.Figure(go.Scatter(x=np.arange(0, len(gr) * dr, dr), y=gr, mode="lines"), layout=dict(title_text=ps.tag))
-
-
-    return figs
+        fig.add_trace(
+            go.Bar(x=np.arange(0, len(gr) * dr, dr), y=gr, marker_line_width=0, marker_color=ct.plotting.color, name=ct.plotting.label),
+            row=1,
+            col=i + 1,
+        )
+    return fig
