@@ -13,6 +13,9 @@ from ._paths import *
 from glob import glob
 import selection
 
+def meta():
+    return {"width": 1920, "height": 1920 / 2 * 3}
+
 def plot(net_path=None):
     if net_path is None:
         net_path = network_path(selection.network)
@@ -25,6 +28,8 @@ def plot(net_path=None):
             [{"type": "scene"}, {"type": "scene"}],
             [{"type": "scene"}, {"type": "scene"}],
         ],
+        vertical_spacing=0,
+        horizontal_spacing=0,
     )
     multipanel.update_layout(width=1400, height=2100)
     # Generate top left panel with network somas plotted
@@ -50,6 +55,19 @@ def plot(net_path=None):
     for d in fig.data:
         multipanel.add_trace(d, row=3, col=2)
     set_scene_range(multipanel.layout.scene5, [[-100, 200], [0, 300], [-100, 200]])
+
+    multipanel.update_layout(
+        scene_camera=dict(up=dict(x=0,y=0,z=1),center=dict(x=0,y=0,z=0),eye=dict(x=1.122938269810468,y=1.8973013923873927,z=0.9814021874798365)),
+        scene2_camera=dict(up=dict(x=0,y=0,z=1),center=dict(x=0,y=0,z=0),eye=dict(x=1.5723026900414752,y=1.7769885440021995,z=0.5976798486376372)),
+        scene3_camera=dict(up=dict(x=0,y=0,z=1),center=dict(x=0,y=0,z=0),eye=dict(x=2.1579600304225703,y=0.19768028729263973,z=0.22192195469370807)),
+        scene4_camera=dict(up=dict(x=0,y=0,z=1),center=dict(x=0,y=0,z=0),eye=dict(x=0.6073615918293956,y=2.0715957014896134,z=0.16463033180050687)),
+        scene6_camera=dict(up=dict(x=0,y=0,z=1),center=dict(x=0,y=0,z=0),eye=dict(x=1.5772185933076177,y=-2.005271708299513,z=0.3677720952266494)),
+    )
+    for i in range(1, 7):
+        if i == 5:
+            continue
+        kw = {"scene" + str(i if i > 1 else ""): dict(xaxis_title="X", yaxis_title="Z", zaxis_title="Y")}
+        multipanel.update_layout(**kw)
     return multipanel
 
 
