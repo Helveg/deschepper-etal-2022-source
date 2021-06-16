@@ -5,7 +5,7 @@ def plot():
 
 # "networks/300x_200z.hdf5"
 
-network = "balanced.hdf5"
+network = "batch_1/network_8.hdf5"
 
 stimulated_mf_poiss = np.array([213, 214, 222, 223])
 stimulated_mf_sync = np.array([213, 214, 222, 223, 229, 221, 206, 230, 247, 239, 231, 238, 240])
