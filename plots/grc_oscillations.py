@@ -37,7 +37,7 @@ def plot2(path=None, net_path=None, color='red', slug=None):
         cutoff = 4
         duration = 8
         zero_skip = 5
-        population = "golgi_cell"
+        population = "granule_cell"
 
         time = handle["time"][()] / 1000
         x = time[(time >= cutoff) & (time <= duration)]
