@@ -85,3 +85,7 @@ def plot2(path=None, net_path=None, color='red', slug=None):
     )
 
     return figs["fft"]
+
+
+def meta():
+    return {"width": 1920 / 2, "height": 1920 / 2}

@@ -9,15 +9,16 @@ import selection, itertools, pickle
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
 
-frozen = False
+frozen = True
 
 def plot(path=None, net_path=None, bg_start=5700, bg_end=5900, stim_start=6000, stim_end=6040):
     if path is None:
-        paths = glob(results_path("sensory_burst", "*"))
+        paths = glob(results_path("sensory_burst", "*.hdf5"))
     else:
         paths = glob(path)
     if net_path is None:
         net_path = network_path(selection.network)
+    stimulated_mfs = selection.mf_batch_1[8]
     network = from_hdf5(net_path)
     def listgen(list_of_list_len=None):
         while True:
@@ -45,7 +46,7 @@ def plot(path=None, net_path=None, bg_start=5700, bg_end=5900, stim_start=6000, 
                 l = out_map[int(fid)].setdefault(cs.tag, [])
                 l.append(int(tid))
         for i, path in enumerate(paths):
-            print("Processing", i, len(paths))
+            print("Processing", i, len(paths), path)
             with h5py.File(path, "r") as f:
                 for id, ds in f["recorders/soma_spikes"].items():
                     t = ds[:, 1]
@@ -61,7 +62,7 @@ def plot(path=None, net_path=None, bg_start=5700, bg_end=5900, stim_start=6000, 
                     id = int(float(id))
                     t = ds[()]
                     out_spikes = sum((t >= stim_start) & (t <= stim_end))
-                    if id in (213, 214, 222, 223):
+                    if id in stimulated_mfs:
                         out_spikes += 5
                     for glom in out_map[id]["mossy_to_glomerulus"]:
                         if (outgoing := out_map[glom]):

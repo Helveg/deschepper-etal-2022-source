@@ -8,6 +8,9 @@ from glob import glob
 import selection
 
 
+force_run_ids = False
+
+
 class valueify:
     def __init__(self, iter):
         self.iter = iter
@@ -27,14 +30,16 @@ def plot(path=None, net_path=None):
         for run_id, handle in enumerate(handles):
             for ds in handle["/recorders/soma_spikes"].values():
                 if ds.attrs.get("run_id", None) is not None:
-                    break
+                    if not force_run_ids:
+                        break
                 ds.attrs["run_id"] = run_id
             else:
                 continue
             print("Run ids already detected in:", handle.filename)
             print("Skipping run id insertion")
             break
-        fig = hdf5_plot_psth(network, valueify(itertools.chain(*(handle["/recorders/soma_spikes"].values() for handle in handles))), show=False, cutoff=5800, duration=5)
+        fig = hdf5_plot_psth(network, valueify(itertools.chain(*(handle["/recorders/soma_spikes"].values() for handle in handles))), show=False, cutoff=0, duration=5, gaps=False)
+        fig.update_xaxes(range=[5500, 6500], tickmode="array", tickvals=list(i * 200 for i in range(40)), ticktext=list(str(i * 200 - 5500) for i in range(40)))
         # ranges = [[0, 10], [0, 10], [0, 65], [0, 75], [0, 60], [0, 60]]
         return fig
     finally:
@@ -42,4 +47,4 @@ def plot(path=None, net_path=None):
             handle.close()
 
 def meta():
-    return {"width": 1920 / 2}
+    return {"width": 1920 / 4}
