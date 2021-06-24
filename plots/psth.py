@@ -21,7 +21,7 @@ class valueify:
 
 def plot(path=None, net_path=None):
     if path is None:
-        path = results_path("sensory_burst")
+        path = results_path("balanced_sensory")
     if net_path is None:
         net_path = network_path(selection.network)
     network = from_hdf5(net_path)

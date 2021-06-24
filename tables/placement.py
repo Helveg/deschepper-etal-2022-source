@@ -5,12 +5,12 @@ import numpy as np
 import plotly.graph_objects as go
 import h5py, itertools, glob
 from plots._paths import *
+import plots.selection as selection
 
 def table(path=None, net_path=None, cutoff=4000, duration=8000):
     if path is None:
-        path = network_path("batch_1", "*8.hdf5")
+        path = network_path(selection.network)
     for p in glob.glob(path)[:1]:
-        print(p)
         tracker = dict()
         network = from_hdf5(p)
         for k,v in network.statistics.cells_placed.items():

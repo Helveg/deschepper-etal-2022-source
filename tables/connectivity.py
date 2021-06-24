@@ -5,10 +5,11 @@ import numpy as np
 import plotly.graph_objects as go
 import h5py, itertools, glob
 from plots._paths import *
+import plots.selection as selection
 
 def table(path=None, net_path=None, cutoff=4000, duration=8000):
     if path is None:
-        path = network_path("batch_1", "*8.hdf5")
+        path = network_path(selection.network)
     path = glob.glob(path)[0]
     table = list()
     table.append(["conn_name", "conv_mean", "conv_stdev", "div_mean", "div_stdev", "n_syn", "syn_pp_mean", "syn_pp_std"])

@@ -15,12 +15,12 @@ frozen = False
 
 def table(path=None, net_path=None, bg_start=5700, bg_end=5900, stim_start=6000, stim_end=6040):
     if path is None:
-        paths = glob(results_path("sensory_burst", "*.hdf5"))
+        paths = glob(results_path("balanced_sensory", "*.hdf5"))
     else:
         paths = glob(path)
     if net_path is None:
         net_path = network_path(selection.network)
-    stimulated_mfs = selection.mf_batch_1[8]
+    stimulated_mfs = selection.stimulated_mf_poiss
     network = from_hdf5(net_path)
     def listgen(list_of_list_len=None):
         while True:

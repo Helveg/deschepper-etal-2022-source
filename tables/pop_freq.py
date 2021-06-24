@@ -8,9 +8,9 @@ from plots._paths import *
 from bsb.core import from_hdf5
 import plots.selection as selection
 
-def table(path=None, net_path=None, start=7500, end=8000):
+def table(path=None, net_path=None, start=5500, end=6000):
     if path is None:
-        path = glob.glob(results_path("sensory_burst", "*.hdf5"))
+        path = glob.glob(results_path("balanced_sensory", "*.hdf5"))
     if net_path is None:
         net_path = network_path(selection.network)
     network = from_hdf5(net_path)
