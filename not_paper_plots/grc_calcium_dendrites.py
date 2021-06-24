@@ -13,28 +13,29 @@ def latency(data, min):
 
 def plot(net_path=None, stim_start=6000, stim_end=6020):
     if net_path is None:
-        net_path = network_path(selection.network)
-    network = from_hdf5(net_path)
-    ps = network.get_placement_set("granule_cell")
-    pos = ps.positions
-    border = (pos[:, 0] > 290) | (pos[:, 0] < 10) | (pos[:, 2] > 190) | (pos[:, 2] < 10)
-    ids = ps.identifiers[~border]
-    MFs = selection.stimulated_mf_poiss
-    mf_glom = network.get_connectivity_set("mossy_to_glomerulus").get_dataset()
-    glom_grc = network.get_connectivity_set("glomerulus_to_granule").get_dataset()
-    active_glom = mf_glom[np.isin(mf_glom[:, 0], MFs), 1]
-    active_dendrites = glom_grc[np.isin(glom_grc[:, 0], active_glom), 1]
-    d = dict(zip(*np.unique(active_dendrites, return_counts=True)))
-    grc_to_dend = np.vectorize(lambda x: d.get(x, 0))
-    x = grc_to_dend(ids)
+        net_path = network_path("batch_1", "*.hdf5")
+    paths = glob(net_path)
     carry_x = np.empty((0,))
     carry_y = np.empty((0,))
-    for path in glob(results_path("..", "pkl_ca", "calcium_data", "*.pickle")):
-        id = int(path.split(os.sep)[-1].split(".")[0].split("_")[-1])
-        print("Analyzing result", id, path)
-        with open(path, "rb") as f:
+    for path in paths:
+        id = int(path.split("_")[-1].split(".")[0])
+        print("Analyzing net", id)
+        with open(results_path("..", "pkl_ca", "calcium_data", f"calcium_{id}.pickle"), "rb") as f:
             result = pickle.load(f)["calcium"]["_data"]
+        network = from_hdf5(path)
+        MFs = selection.mf_batch_1[id]
+        ps = network.get_placement_set("granule_cell")
+        pos = ps.positions
+        border = (pos[:, 0] > 290) | (pos[:, 0] < 10) | (pos[:, 2] > 190) | (pos[:, 2] < 10)
+        ids = ps.identifiers[~border]
+        mf_glom = network.get_connectivity_set("mossy_to_glomerulus").get_dataset()
+        glom_grc = network.get_connectivity_set("glomerulus_to_granule").get_dataset()
+        active_glom = mf_glom[np.isin(mf_glom[:, 0], MFs), 1]
+        active_dendrites = glom_grc[np.isin(glom_grc[:, 0], active_glom), 1]
+        d = dict(zip(*np.unique(active_dendrites, return_counts=True)))
+        grc_to_dend = np.vectorize(lambda x: d.get(x, 0))
         grc_to_calc = np.vectorize(result.get)
+        x = grc_to_dend(ids)
         y = grc_to_calc(ids)
         carry_x = np.concatenate((carry_x, x))
         carry_y = np.concatenate((carry_y, y))
@@ -60,6 +61,3 @@ def plot(net_path=None, stim_start=6000, stim_end=6020):
         showlegend=False
     )
     return fig
-
-def meta():
-    return {"width": 800, "height": 800}
