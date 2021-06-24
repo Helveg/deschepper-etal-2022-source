@@ -13,7 +13,7 @@ def hash(s):
 
 MFs = selection.stimulated_mf_poiss
 # Re-use previous results?
-frozen = True
+frozen = False
 
 def plot():
     trc_control = plot2(title="Control", path=results_path("sensory_gabazine", "sensory_burst_control.hdf5"), color='red', shift=0)
@@ -37,7 +37,7 @@ def crop(data, min, max, indices=False):
 
 def plot2(path=None, title=None, net_path=None, stim_start=6000, stim_end=6040, color='red', shift=0):
     if path is None:
-        path = glob(results_path("sensory_burst", "*"))[0]
+        path = glob(results_path("balanced_sensory", "*"))[0]
     if net_path is None:
         net_path = network_path(selection.network)
     network = from_hdf5(net_path)

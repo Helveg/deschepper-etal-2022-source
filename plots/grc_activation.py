@@ -18,13 +18,13 @@ def crop(data, min, max, indices=False):
 
 def plot(path=None, net_path=None, stim_start=6000, stim_end=6050):
     if path is None:
-        path = glob(results_path("sensory_burst", "*"))[0]
+        path = glob(results_path("balanced_sensory", "*"))[0]
     if net_path is None:
         net_path = network_path(selection.network)
     network = from_hdf5(net_path)
     ids = network.get_placement_set("granule_cell").identifiers
     sim = next(iter(network.configuration.simulations.values()))
-    MFs = sim.devices["mossy_fiber_sensory_burst"].targets
+    MFs = selection.stimulated_mf_poiss
     if not frozen:
         with h5py.File(path, "r") as f:
             activity = {id: len(crop(f["recorders/soma_spikes/" + str(id)], stim_start, stim_end)) for id in ids}
