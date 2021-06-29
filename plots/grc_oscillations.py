@@ -1,8 +1,6 @@
 import os, sys
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from bsb.core import Scaffold
-from bsb.config import JSONConfig, get_result_config
-from bsb.output import MorphologyRepository
+from bsb.config import get_result_config
 
 import numpy as np
 from bsb.plotting import *
