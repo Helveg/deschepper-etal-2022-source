@@ -9,6 +9,7 @@ import selection
 
 
 force_run_ids = False
+order_datasets = True
 
 
 class valueify:
@@ -26,8 +27,19 @@ def plot(path=None, net_path=None):
         net_path = network_path(selection.network)
     network = from_hdf5(net_path)
     handles = [h5py.File(f, "a") for f in glob(os.path.join(path, "*.hdf5"))]
+    order = dict(
+        glomerulus=0,
+        granule_cell=1,
+        golgi_cell=2,
+        purkinje_cell=3,
+        stellate_cell=4,
+        basket_cell=5,
+    )
     try:
         for run_id, handle in enumerate(handles):
+            if order_datasets:
+                for ds in handle["/recorders/soma_spikes"].values():
+                    ds.attrs["order"] = order.get(ds.attrs["label"], 6)
             for ds in handle["/recorders/soma_spikes"].values():
                 if ds.attrs.get("run_id", None) is not None:
                     if not force_run_ids:
