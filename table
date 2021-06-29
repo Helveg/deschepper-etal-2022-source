@@ -6,7 +6,7 @@ import traceback
 
 sys.path.append(os.path.abspath("tables"))
 path = os.path.abspath(os.path.dirname(__file__))
-formats = ['csv', 'html', 'pkl']
+formats = ['csv', 'html', 'pkl', 'print']
 if len(sys.argv) > 1 and sys.argv[1] in formats:
     format = sys.argv[1]
     tables = sys.argv[2:]
@@ -72,6 +72,11 @@ def write_csv(path, table, meta):
         writer = csv.writer(csvfile)
         for row in table:
             writer.writerow(row)
+
+def write_print(path, table, meta):
+    import csv
+    for row in table:
+        print("\t".join(map(str, row)))
 
 if __name__ == "__main__":
     build()
