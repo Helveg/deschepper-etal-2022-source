@@ -9,7 +9,7 @@ from ._paths import *
 from glob import glob
 import selection
 
-camera = dict(up=dict(x=0,y=0,z=1),center=dict(x=-0.009716506474688111,y=0.06185058580133833,z=-0.23025933249395017),eye=dict(x=1.0836828981355624,y=1.2166861339342228,z=0.14336010736471308))
+camera = dict(up=dict(x=0,y=0,z=1),center=dict(x=-0.006744664498454609,y=0.0009131327109698769,z=-0.02473425322323764),eye=dict(x=-0.6723971512027274,y=0.755599119995846,z=0.4780722796154636))
 
 def plot(net_path=None):
     if net_path is None:
@@ -54,7 +54,7 @@ def plot(net_path=None):
         candidates.append((grc, goc1, goc2))
 
     f_grc, f_aa, f_pf = sample(candidates, 1)[0]
-    # f_grc, f_aa, f_pf = 15972.0, 22.0, 37.0
+    f_grc, f_aa, f_pf = 23211, 13, 54
     print("Picked:", f_grc, f_aa, f_pf)
     intersections_aa = []
     intersections_pf = []
@@ -80,8 +80,9 @@ def plot(net_path=None):
     fig.add_trace(go.Scatter3d(x=to_p_pos[:,0], y=to_p_pos[:,2], z=to_p_pos[:,1],  name="Postsyn. PF location", mode="markers", marker=dict(symbol="diamond-open", size=8,color="violet")))
     plot_morphology(mgc, show=False, fig=fig, offset=gaa_pos, segment_radius=2.5, set_range=False, color=to_type.plotting.color, soma_radius=to_type.placement.soma_radius)
     plot_morphology(mgc, show=False, fig=fig, offset=gpf_pos, segment_radius=2.5, set_range=False, color="#639EEC", soma_radius=to_type.placement.soma_radius)
-    # rng = [[80, 470], [-90, 300], [-50, 200]]
-    # set_scene_range(fig.layout.scene, rng)
-    # set_scene_aspect(fig.layout.scene, rng)
-    # fig.layout.scene.camera = camera
+    rng = [[-100, 170], [-90, 300], [-10, 240]]
+    set_scene_range(fig.layout.scene, rng)
+    set_scene_aspect(fig.layout.scene, rng)
+    fig.layout.scene.camera = camera
+    fig.update_layout(scene=dict(xaxis_visible=False, yaxis_visible=False, zaxis_visible=False))
     return fig
