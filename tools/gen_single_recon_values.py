@@ -45,12 +45,12 @@ def skip_spike_regions(data, threshold=-20, width=100):
 file_time_start = 6000
 file_time_stop = 6520
 
-def analyze_calcium(ids, group, start, stop, soma=True, inv=False):
-    # IMPORTANT: This assumes that you've pre-cropped your datasets to the ROI
-    # and have recorded 1 soma and 1 dendrite per granule cell!!!
-    #lin_time = np.linspace(5500, 6500, len(next(iter(group.values()))["concentration/1"]))
-    lin_time = np.linspace(file_time_start, file_time_stop, len(next(iter(group.values()))["concentration/0"]))
-    mask = (start < lin_time) & (lin_time < stop)
+def analyze_calcium(ids, group, start, stop, soma=True, inv=False, time=None):
+    if time is None:
+        # IMPORTANT: This assumes that you've pre-cropped your datasets to the ROI
+        # and have recorded 1 soma and 1 dendrite per granule cell!!!
+        time = np.linspace(file_time_start, file_time_stop, len(next(iter(group.values()))["concentration/0"]))
+    mask = (start < time) & (time < stop)
     analysed = {id: 0 for id in ids}
     for key in group:
         f = group[key]
@@ -68,10 +68,10 @@ def analyze_calcium(ids, group, start, stop, soma=True, inv=False):
         data = dataset[mask]
         go.Figure(
             [
-                go.Scatter(x=lin_time, y=data)
+                go.Scatter(x=time, y=data)
             ]
         )
-        analysed[id] = np.mean(skip_spike_regions(data))
+        analysed[id] = np.mean(data)
     return analysed
 
 
@@ -82,20 +82,19 @@ def generate(path=None, net_path=None):
         net_path = network_path(selection.network)
     paths = glob(path)
     network = from_hdf5(net_path)
-    #paths = ["/home/claudia/deschepper-etal-2020/results/CaRecording/sensoryBurst_CaRecordingOnGrCdend.hdf5"]
     for id, path in enumerate(paths):
         with h5py.File(path, "r") as f:
             gen_map(id, f, network)
 
 def gen_map(net_id, f, scaffold):
-    stim_start, stim_end = 6000, 6020
+    stim_start, stim_end = 6000, 6000
     after_effects = 500
     print("Loading network", net_id, f.filename)
     ps_grc = scaffold.get_placement_set("granule_cell")
-
+    time = f["time"][()] if "time" in f else None
     surfaces = dict(
         calcium=dict(
-            data=lambda f: analyze_calcium(ps_grc.identifiers, f["recorders/ions/ca/"], stim_start, stim_end + after_effects, soma=False),
+            data=lambda f: analyze_calcium(ps_grc.identifiers, f["recorders/ions/ca/"], stim_start, stim_end + after_effects, soma=False, time=time),
             smoothen=False,
         )
     )
@@ -113,8 +112,8 @@ def gen_map(net_id, f, scaffold):
             del surface["data_subpop"]
         if "bin_reduce" in surface:
             del surface["bin_reduce"]
-    with open(f"pkl_ca/calcium_data/calcium_{net_id}.pickle", "wb") as f:
+    with open(f"pkl_ca/calcium_data/gabazine/calcium_{net_id}.pickle", "wb") as f:
         pickle.dump(surfaces, f)
 
 
-generate()
+generate(*sys.argv[1:])
