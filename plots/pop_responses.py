@@ -80,6 +80,7 @@ def plot(path=None, net_path=None, bg_start=5700, bg_end=5900, stim_start=6000, 
     bg_p = (bg_end - bg_start) / 1000
     stim_p = (stim_end - stim_start) / 1000
     inhibitory = {"basket_to_basket", "stellate_to_stellate", "golgi_to_golgi", "basket_to_purkinje", "stellate_to_purkinje", "golgi_to_granule"}
+    label_map = {"glomerulus_to_granule": "Glom-Grc spikes", "golgi_to_granule": "GoC-GrC spikes"}
     for ct in network.get_cell_types():
         if ct.name == "glomerulus" or ct.name == "mossy_fibers":
             continue
@@ -109,7 +110,10 @@ def plot(path=None, net_path=None, bg_start=5700, bg_end=5900, stim_start=6000, 
             ispikes = ispikes[:, dims]
 
         x_axis = ct_map[ct.name][0]
+        x_axis = label_map.get(x_axis, x_axis)
         y_axis = ct_map[ct.name][1]
+        y_axis = label_map.get(y_axis, y_axis)
+
         x = [0, max(ispikes[:, 0])]
         y = [0, max(ispikes[:, 1])]
         surface = np.linspace((0, 0), (max(ispikes[:, 0]), max(ispikes[:, 1])), 100)
@@ -125,10 +129,24 @@ def plot(path=None, net_path=None, bg_start=5700, bg_end=5900, stim_start=6000, 
             go.Scatter3d(x=ispikes[:, 0], y=ispikes[:, 1], z=istim, mode="markers", marker_color="blue"),
         ]
         if not _is_spoofed:
-            scatters.append(go.Surface(x=x, y=y, z=regressor.predict(z_.reshape(10000, 2)).reshape((100, 100)), surfacecolor=np.zeros((100,100)), opacity=0.4))
+            scatters.append(
+                go.Surface(
+                    x=x,
+                    y=y,
+                    z=regressor.predict(z_.reshape(10000, 2)).reshape((100, 100)),
+                    surfacecolor=np.zeros((100,100)),
+                    opacity=0.4,
+                    showscale=False,
+                )
+            )
         figs[ct.name] = go.Figure(
             scatters,
-            layout_scene=dict(xaxis_title=x_axis, yaxis_title=y_axis)
+            layout_scene=dict(
+                xaxis_title=x_axis,
+                yaxis_title=y_axis,
+                zaxis_title="Response [Hz]",
+                camera=dict(up=dict(x=0,y=0,z=1),center=dict(x=0,y=0,z=0),eye=dict(x=-1.6178192877772763,y=1.420370800120278,z=0.679576755143629))
+            ),
         )
 
     return figs
