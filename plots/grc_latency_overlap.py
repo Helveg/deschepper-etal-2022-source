@@ -7,58 +7,85 @@ from ._paths import *
 from glob import glob
 import selection
 import hashlib
+from ennemi import estimate_mi
 
 def hash(s):
     return hashlib.sha256(str(s).encode()).hexdigest()
 
 MFs = selection.stimulated_mf_poiss
 # Re-use previous results?
-frozen = False
+frozen = True
 
-def plot():
-    trc_control = plot2(title="Control", path=results_path("sensory_gabazine", "sensory_burst_control.hdf5"), color='red', shift=0)
-    trc_gaba = plot2(title="Gabazine", path=results_path("sensory_gabazine", "sensory_burst_gabazine.hdf5"), color='grey', shift=0.2)
+def plot(ret_nmi=False):
+    trc_control = plot2(title="Control", batch_path=results_path("balanced_sensory", "*.hdf5"), color='red', shift=-0.1, ret_nmi=ret_nmi)
+    trc_gaba = plot2(title="Gabazine", batch_path=results_path("balanced_sensory", "gabazine", "*.hdf5"), color='grey', transpose=True, shift=0.1, ret_nmi=ret_nmi)
+    if ret_nmi:
+        # These vars will be the MI values
+        return trc_control, trc_gaba
     fig = go.Figure(trc_control + trc_gaba)
-    fig.update_layout(title_text="Granule cell latency", xaxis_title="Granule cells", yaxis_title="Number of spikes", boxmode="group", xaxis_type="category", xaxis_range=[-0.5, 3.5])
-    fig.update_layout(xaxis_title="Granule cells", yaxis_title="Latency of first spike [ms]")
+    fig.update_layout(title_text="Granule cell latency", xaxis_title="Granule cells", yaxis_title="Number of spikes")
+    fig.update_layout(
+        xaxis_title="Granule cells",
+        yaxis_title="Latency of first spike [ms]",
+        xaxis_tickmode="linear",
+        xaxis_tick0=1,
+        xaxis_dtick=1,
+    )
     return fig
 
-def latency(data, min, max):
+def latency(data, min, max, transpose=False):
+    if transpose:
+        data = data[()].T
     c = data[:, 1]
     return np.min(c[(c > min) & (c < max)], initial=float("+inf"))
 
-def plot2(title=None, path=None, net_path=None, stim_start=6000, stim_end=6020, color='red', shift=0):
-    if path is None:
-        path = glob(results_path("balanced_sensory", "*"))[0]
+def plot2(title=None, batch_path=None, net_path=None, stim_start=6000, stim_end=6020, color='red', transpose=True, shift=0.0, ret_nmi=False):
+    if batch_path is None:
+        batch_path = results_path("balanced_sensory", "*.hdf5")
     if net_path is None:
         net_path = network_path(selection.network)
+    paths = glob(batch_path)
     network = from_hdf5(net_path)
-    ids = network.get_placement_set("granule_cell").identifiers
     if not frozen:
-        with h5py.File(path, "r") as f:
-            latencies = {id: v - stim_start for id in ids if (v := latency(f["recorders/soma_spikes/" + str(id)], stim_start, stim_end)) != float("+inf")}
-        with open(f"grc_lat_{hash(path)}.pickle", "wb") as f:
-            pickle.dump(latencies, f)
-    else:
-        with open(f"grc_lat_{hash(path)}.pickle", "rb") as f:
-            latencies = pickle.load(f)
-
-
-    if not frozen:
+        ps = network.get_placement_set("granule_cell")
+        pos = ps.positions
+        border = (pos[:, 0] > 290) | (pos[:, 0] < 10) | (pos[:, 2] > 190) | (pos[:, 2] < 10)
+        ids = ps.identifiers[~border]
         mf_glom = network.get_connectivity_set("mossy_to_glomerulus").get_dataset()
         glom_grc = network.get_connectivity_set("glomerulus_to_granule").get_dataset()
         active_glom = mf_glom[np.isin(mf_glom[:, 0], MFs), 1]
         active_dendrites = glom_grc[np.isin(glom_grc[:, 0], active_glom), 1]
-        active_grc_ids, active_dend_count = np.unique(active_dendrites, return_counts=True)
-        act_grc_list = list(active_grc_ids)
-        ids = np.array(list(latencies.keys()))
-        x = [active_dend_count[act_grc_list.index(id)] if id in act_grc_list else 0 for id in ids]
-        y = [latencies[id] for id in ids]
-        with open(f"grc_lat2_{hash(path)}.pickle", "wb") as f:
-            pickle.dump((ids, active_glom, active_dendrites, active_grc_ids, active_dend_count, x, y), f)
+        d = dict(zip(*np.unique(active_dendrites, return_counts=True)))
+        grc_to_dend = np.vectorize(lambda x: d.get(x, 0))
+        x, y = [], []
+        for path in paths:
+            with h5py.File(path, "r") as f:
+                print("Analyzing", path)
+                latency_batch = np.fromiter(
+                    (
+                        (
+                            latency(
+                                f["recorders/soma_spikes/" + str(id)],
+                                stim_start,
+                                stim_end,
+                                transpose=transpose
+                            )
+                            - stim_start
+                        )
+                        for id in ids
+                    ),
+                    dtype=float
+                )
+                mask = latency_batch != float("+inf")
+                y.append(latency_batch[mask])
+                x.append(grc_to_dend(ids[mask]))
+        x, y = map(np.concatenate, (x, y))
+        with open(f"grc_lat_{hash(batch_path)}.pickle", "wb") as f:
+            pickle.dump((x, y), f)
     else:
-        with open(f"grc_lat2_{hash(path)}.pickle", "rb") as f:
-            ids, active_glom, active_dendrites, active_grc_ids, active_dend_count, x, y = pickle.load(f)
+        with open(f"grc_lat_{hash(batch_path)}.pickle", "rb") as f:
+            x, y = pickle.load(f)
+
     m = np.column_stack((x, y))
     combos, counts = np.unique(m, return_counts=True, axis=0)
 
@@ -67,20 +94,28 @@ def plot2(title=None, path=None, net_path=None, stim_start=6000, stim_end=6020, 
     y = np.array(y)[x != 0]
     x = x[x != 0]
     print("postfilter", len(x))
+    mi = estimate_mi(y, x, normalize=True)[0, 0]
     print("Tiniest possible value on this machine:", np.finfo(float).tiny)
     r, p = scipy.stats.pearsonr(x, y)
-    print("r=", r, " p=", max(p, np.finfo(float).tiny))
+    print("mi=", mi, "r=", r, " p=", max(p, np.finfo(float).tiny))
+    if ret_nmi:
+        return mi
     return [
-        go.Box(
-            y=y[x == i],
-            name=f"{i} active dendrite" + "s" * (i > 1),
+        go.Scatter(
+            y=list(np.mean(y[x == i]) for i in range(1, 5)),
+            error_y=dict(
+                type='data', # value of error bar given in data coordinates
+                array=list(np.std(y[x == i]) for i in range(1, 5)),
+                visible=True
+            ),
+            x=np.arange(1, 5) + shift,
+            name=title,
             legendgroup=title,
             showlegend=False,
-            boxpoints=False,
+            mode="markers",
             marker_color=color,
         )
-        for i in range(1, 5)
-    ] + [go.Box(y=[1], marker_color=color, name=title, legendgroup=title)]
+    ]
 
 
 def meta():
