@@ -7,7 +7,7 @@ from ._paths import *
 import selection
 
 inset_camera = dict(up=dict(x=0,y=0,z=1),center=dict(x=-0.03919936633492447,y=0.009141280925267406,z=-0.10532701007298666),eye=dict(x=0.05258464298628989,y=3.7406970544611196,z=0.46626663726890044))
-main_camera = dict(up=dict(x=0,y=0,z=1),center=dict(x=0.2611522632004053,y=-0.08918589935156633,z=-0.11138213903939993),eye=dict(x=0.5572186773156746,y=0.34571594537572065,z=0.06494803443249005))
+main_camera = dict(up=dict(x=0,y=0,z=1),center=dict(x=0.2774248385852698,y=-0.04292027273220392,z=-0.4552177352722382),eye=dict(x=0.14544812231944693,y=0.6122189062165164,z=-0.297573572462025))
 
 def plot(net_path=None):
     if net_path is None:
@@ -39,7 +39,7 @@ def plot(net_path=None):
     }
 
     # Create granule cell inset
-    grc_id = selection.granule_cells[6]
+    grc_id = ps_grc.identifiers[36]
     inset = plot_morphology(grm, set_range=False, show=False, soma_radius=grc_radius, color=grc_color, use_last_soma_comp=False)
     inset.layout.scene.xaxis.range = [-5, 5]
     inset.layout.scene.yaxis.range = [-5, 5]
@@ -47,6 +47,7 @@ def plot(net_path=None):
     inset.layout.scene.aspectratio = dict(x=1, y=1, z=2)
     glom_synapses = np.array([i.to_compartment.midpoint for i in cs_glom_grc.intersections if i.to_id == grc_id], dtype=float)
     goc_synapses = np.array([i.to_compartment.midpoint for i in cs_goc_grc.intersections if i.to_id == grc_id], dtype=float)
+    print("syn check:", glom_synapses.shape, goc_synapses.shape)
     text_glom = ["Glom1", "Glom3", "Glom2", "Glom4"]
     text_goc = ["GoC1", "GoC2", "GoC1", "GoC3"]
     inset.add_trace(go.Scatter3d(x=glom_synapses[:,0], y=glom_synapses[:,2], z=glom_synapses[:,1], text=text_glom, marker=dict(color="black"), mode="markers+text", textposition="bottom right", textfont=dict(size=10), showlegend=False, legendgroup="glom"))
@@ -54,7 +55,7 @@ def plot(net_path=None):
     inset.update_layout(scene_camera=inset_camera)
 
     # Create main figure
-    glom_id = [i.from_id for i in cs_glom_grc.intersections if i.to_id == grc_id][3]
+    glom_id = [i.from_id for i in cs_glom_grc.intersections if i.to_id == grc_id][2]
     goc_id = [i.from_id for i in cs_goc_grc.intersections if i.to_id == grc_id][2]
     other_grcs = np.array([i.to_id for i in cs_glom_grc.intersections if i.from_id == glom_id])
     sorted_grcs = np.sort(other_grcs)
@@ -64,6 +65,7 @@ def plot(net_path=None):
     ms = MorphologyScene()
     glom_synapses = []
     active_claws = {}
+    glom_comps = []
     for i in cs_glom_grc.intersections:
         if i.from_id == glom_id and i.to_id in other_grcs:
             glom_synapses.append(i.to_compartment.midpoint + grc_pos[np.nonzero(sorted_grcs == i.to_id)[0][0]])
@@ -79,8 +81,8 @@ def plot(net_path=None):
                 active_goc_synapses.append(pos)
     goc_synapses = np.array(goc_synapses, dtype=float)
     active_goc_synapses = np.array(active_goc_synapses, dtype=float)
-    ms.fig.add_trace(go.Scatter3d(x=goc_synapses[:,0], y=goc_synapses[:,2], z=goc_synapses[:,1], marker=dict(color=goc_color, size=3), opacity=0.5, mode="markers", legendgroup="goc", showlegend=False))
-    ms.fig.add_trace(go.Scatter3d(x=active_goc_synapses[:,0], y=active_goc_synapses[:,2], z=active_goc_synapses[:,1], marker=dict(color=goc_color, size=3), mode="markers", name="GoC-GrC synapse", legendgroup="goc"))
+    ms.fig.add_trace(go.Scatter3d(x=goc_synapses[:,0], y=goc_synapses[:,2], z=goc_synapses[:,1], marker=dict(color="blue", size=3.5), opacity=0.5, mode="markers", legendgroup="goc", showlegend=False))
+    ms.fig.add_trace(go.Scatter3d(x=active_goc_synapses[:,0], y=active_goc_synapses[:,2], z=active_goc_synapses[:,1], marker=dict(color="blue", size=3.5), mode="markers", name="GoC-GrC synapse", legendgroup="goc"))
     ms.fig.add_trace(go.Scatter3d(x=glom_synapses[:,0], y=glom_synapses[:,2], z=glom_synapses[:,1], marker=dict(color="black", size=3), mode="markers", name="Glom-GrC synapse", legendgroup="glom"))
     print("Depicted GrC:", len(grc_pos))
     for pos in grc_pos:
@@ -88,9 +90,9 @@ def plot(net_path=None):
     ms.fig.add_trace(get_soma_trace(goc_radius, offset=goc_pos, color=goc_color, name="Golgi cell", showlegend=True))
     ms.fig.add_trace(get_soma_trace(glom_radius, offset=glom_pos, name="Glomerulus", showlegend=True))
     ms.prepare_plot()
-    ms.fig.layout.scene.xaxis.range = [90, 210]
-    ms.fig.layout.scene.yaxis.range = [80, 200]
-    ms.fig.layout.scene.zaxis.range = [0, 120]
+    ms.fig.layout.scene.xaxis.range = [0, 230]
+    ms.fig.layout.scene.yaxis.range = [20, 250]
+    ms.fig.layout.scene.zaxis.range = [-20, 210]
     ms.fig.update_layout(scene_camera=main_camera)
     return {"grc_inset": inset, "main": ms.fig}
 
