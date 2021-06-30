@@ -126,7 +126,7 @@ def plot(path=None, net_path=None, bg_start=5700, bg_end=5900, stim_start=6000, 
             regressor = LinearRegression().fit(ispikes, istim)
 
         scatters = [
-            go.Scatter3d(x=ispikes[:, 0], y=ispikes[:, 1], z=istim, mode="markers", marker_color="blue"),
+            go.Scatter3d(x=ispikes[:, 0], y=ispikes[:, 1], z=istim, mode="markers", marker_color=ct.plotting.color),
         ]
         if not _is_spoofed:
             scatters.append(
@@ -135,6 +135,10 @@ def plot(path=None, net_path=None, bg_start=5700, bg_end=5900, stim_start=6000, 
                     y=y,
                     z=regressor.predict(z_.reshape(10000, 2)).reshape((100, 100)),
                     surfacecolor=np.zeros((100,100)),
+                    colorscale=[
+                        [0, "#ccc"],
+                        [1, "rgb(0, 0, 0)"],
+                    ],
                     opacity=0.4,
                     showscale=False,
                 )

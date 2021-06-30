@@ -25,7 +25,7 @@ def plot(ret_nmi=False):
     fig = go.Figure(trc_control + trc_gaba)
     fig.update_layout(
         title_text="Granule cell activity",
-        xaxis_title="Granule cells",
+        xaxis_title="Active dendrites",
         yaxis_title="Number of spikes",
         xaxis_tickmode="linear",
         xaxis_tick0=1,

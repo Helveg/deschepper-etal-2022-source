@@ -9,6 +9,7 @@ from ._paths import *
 from glob import glob
 import scipy.stats
 from sklearn.linear_model import LinearRegression
+from ennemi import estimate_mi
 
 camera = dict(up=dict(x=0,y=0,z=1),center=dict(x=0,y=0,z=0),eye=dict(x=-2.0677762887754425,y=1.1277939435309905,z=0.7732784652746101))
 
@@ -24,7 +25,7 @@ def crop(data, min, max, indices=False):
 def get_spike_zero(spikes, stimulus):
     return np.where(spikes > stimulus)[0][0]
 
-def plot(path=None, net_path=None, input_device="mossy_fiber_sensory_burst", buffer=200, cutoff=5000, bin_width=5):
+def plot(path=None, net_path=None, input_device="mossy_fiber_sensory_burst", buffer=200, cutoff=5000, bin_width=5, ret_corr=False):
     if path is None:
         path = results_path("sensory_gabazine", "sensory_burst_control.hdf5")
     if net_path is None:
@@ -79,7 +80,12 @@ def plot(path=None, net_path=None, input_device="mossy_fiber_sensory_burst", buf
                 bp_factors[id] = BP
                 nb[id] = len(burst_isis)
 
-        figs["bp"] = go.Figure(go.Scatter(x=list(p_factors.values()), y=list(b_factors.values()), mode="markers"), layout=dict(title_text="B/P relationship"))
+        p_list = list(p_factors.values())
+        b_list = list(b_factors.values())
+        bp_r, bp_p = scipy.stats.pearsonr(b_list, p_list)
+        if ret_corr:
+            nmi_bp = estimate_mi(p_list, b_list, normalize=True)[0, 0]
+        figs["bp"] = go.Figure(go.Scatter(x=p_list, y=b_list, mode="markers"), layout=dict(title_text="B/P relationship"))
 
         grc_ps = network.get_placement_set("granule_cell")
         pf_pc_cs = network.get_connectivity_set("parallel_fiber_to_purkinje").get_dataset().astype(int)
@@ -120,10 +126,12 @@ def plot(path=None, net_path=None, input_device="mossy_fiber_sensory_burst", buf
         bc_spikes = [np.bincount(np.ceil((v - start) / bin_width).astype(int), minlength=40) for v in map(np.array, spikes_inc_bc.values())]
         sc_spikes = [np.bincount(np.ceil((v - start) / bin_width).astype(int), minlength=40) for v in map(np.array, spikes_inc_sc.values())]
         mli_spikes = list(map(sum, zip(bc_spikes, sc_spikes)))
-        mli_x = list(p_factors.values())
-        mli_y = [sum(mli_spikes[i][:int(window // bin_width + 2)]) for i, id in enumerate(ps_pc.identifiers)]
+        mli_y = list(p_factors.values())
+        mli_x = [sum(mli_spikes[i][:int(window // bin_width + 2)]) for i, id in enumerate(ps_pc.identifiers)]
         mli_r, mli_p = scipy.stats.pearsonr(mli_x, mli_y)
-        print(f"Correlation between pause factor and MLI spikes: r={mli_r}, p={mli_p}")
+        if ret_corr:
+            nmi_mli = estimate_mi(mli_x, mli_y, normalize=True)[0, 0]
+        print(f"Correlation between MLI spikes and pause coefficient: r={mli_r}, p={mli_p}")
         figs["mli_p"] = go.Figure(
             go.Scatter(
                 y=mli_y,
@@ -132,8 +140,8 @@ def plot(path=None, net_path=None, input_device="mossy_fiber_sensory_burst", buf
             ),
             layout=dict(
                 title_text="MLI/P-coeff",
-                xaxis=dict(title="Pause coefficient"),
-                yaxis=dict(title="# MLI spikes"),
+                yaxis=dict(title="Pause coefficient"),
+                xaxis=dict(title="# MLI spikes"),
             ),
         )
         n_burst_bins = int(40 // bin_width)
@@ -143,8 +151,10 @@ def plot(path=None, net_path=None, input_device="mossy_fiber_sensory_burst", buf
         b = list(b_factors.values())
         regressor = LinearRegression().fit(b_x, b)
         print("--- Multiple regression of PF/AA/B")
-        print("score", regressor.score(b_x, b))
-        print("coeff", dict(zip(("AA", "PF"), regressor.coef_)))
+        b_grc_score = regressor.score(b_x, b)
+        print("score", b_grc_score)
+        b_grc_coeff = dict(zip(("AA", "PF"), regressor.coef_))
+        print("coeff", b_grc_coeff)
         print("intercept", regressor.intercept_)
         figs["bcoeff"] = go.Figure(
             [
@@ -167,6 +177,8 @@ def plot(path=None, net_path=None, input_device="mossy_fiber_sensory_burst", buf
             )
         )
 
+    if ret_corr:
+        return b_grc_score, b_grc_coeff, bp_r, bp_p, mli_r, mli_p, nmi_bp, nmi_mli
     return figs
 
 def meta(key):

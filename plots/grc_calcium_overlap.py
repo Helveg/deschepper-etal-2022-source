@@ -93,8 +93,8 @@ def plot(net_path=None, stim_start=6000, stim_end=6020, ret_nmi=False):
     ])
     fig.update_layout(
         title_text="Granule cell calcium concentration",
-        xaxis_title="Granule cells",
-        yaxis_title="Dendritic calcium concentration [μM]",
+        xaxis_title="Active dendrites",
+        yaxis_title="[Ca<sup>2+</sup>]<sub>in</sub> [μM]",
         showlegend=False,
         xaxis_tickmode="linear",
         xaxis_tick0=1,

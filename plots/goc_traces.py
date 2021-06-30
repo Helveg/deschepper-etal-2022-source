@@ -30,8 +30,8 @@ def plot():
     id = selection.golgi_cells["High activity"]
     fig = go.Figure(
         layout=dict(
-            xaxis_title="Time (ms)",
-            yaxis_title="Membrane potential (mV)"
+            xaxis_title="Time [ms]",
+            yaxis_title="Membrane potential [mV]"
         )
     )
 

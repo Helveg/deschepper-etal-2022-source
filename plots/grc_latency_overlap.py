@@ -25,8 +25,8 @@ def plot(ret_nmi=False):
     fig = go.Figure(trc_control + trc_gaba)
     fig.update_layout(title_text="Granule cell latency", xaxis_title="Granule cells", yaxis_title="Number of spikes")
     fig.update_layout(
-        xaxis_title="Granule cells",
-        yaxis_title="Latency of first spike [ms]",
+        xaxis_title="Active dendrites",
+        yaxis_title="First spike latency [ms]",
         xaxis_tickmode="linear",
         xaxis_tick0=1,
         xaxis_dtick=1,
