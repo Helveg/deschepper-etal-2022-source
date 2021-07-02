@@ -123,7 +123,7 @@ def plot(run_mli_path=None, run_nomli_path=None, net_path=None):
         x = X.ravel()
         x_plot = X_plot.ravel()
         fig = go.Figure([
-            go.Scatter(x=x, y=cond1, name="PC response with MLI", mode="markers", marker=dict(color="blue")),
+            go.Scatter(x=x, y=cond1, name="PC response with MLI", mode="markers", text=[str(id) for id in ps_pc.identifiers if id not in cut_off_ids], marker=dict(color="blue")),
             go.Scatter(x=x_plot, y=y_kr, name="KRR of response with MLI", mode="lines", line=dict(color="blue")),
             go.Scatter(x=x, y=cond2, name="PC response without MLI", mode="markers", marker=dict(color="red")),
             go.Scatter(x=x_plot, y=y_kr2, name="KRR of response without MLI", mode="lines", line=dict(color="red")),

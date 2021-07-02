@@ -24,12 +24,12 @@ def plot():
     timeVect=np.linspace(cutoff, duration, int((duration-cutoff)/timeRes))
     displayTime = timeVect - cutoff
 
-    pattern=[500.0, 504.0, 508.0, 514.0, 520.0]
+    pattern = [500.0, 504.0, 508.0, 514.0, 520.0]
 
     filename = network_path('balanced.hdf5')
     f = h5py.File(filename,'r')
 
-    IDs = [3074, 3114, 3851, 6002]
+    IDs = selection.grc_balanced_act_dend
 
     fig = make_subplots(
         rows=len(IDs),

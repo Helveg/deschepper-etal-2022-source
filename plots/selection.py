@@ -25,6 +25,8 @@ stellate_cells = dict(zip(stellate_cell_labels, stellate_cell_ids))
 granule_cells = np.array([4144, 20916, 3096, 17472, 3141, 14424, 3089, 20089, 3068, 31680])
 granule_cell_order = dict(map(lambda t: (t[1], t[0]), enumerate(granule_cells)))
 granule_cells_balanced = np.array([5987, 6002, 9272, 17285, 17372, 24861, 3764, 3851, 4075,3083, 3114, 3192, 3074, 3076, 3109])
+grc_balanced_act_dend = np.array([3074, 3114, 3851, 6002])
+grc_balanced = dict(zip(range(1, 5), grc_balanced_act_dend))
 
 mf_batch_1 = [
     [192, 208, 215, 231],

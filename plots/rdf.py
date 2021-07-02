@@ -38,3 +38,6 @@ def plot(net_path=None):
             col=i + 1,
         )
     return fig
+
+def meta():
+    return {"height": 400, "width": 400 * 6}

@@ -11,6 +11,8 @@ import selection, random
 from plotly.subplots import make_subplots
 
 camera = dict(up=dict(x=0,y=0,z=1),center=dict(x=0.03490834696804547,y=0.0180800609069456,z=0.012772107184562962),eye=dict(x=0.47881935900921174,y=-1.2633362639062184,z=0.26700147496428983))
+start = 5750
+stop = 6250
 
 def make_mf(fig, network, selected_mf):
     cpos = {selection_mf: [] for selection_mf in selected_mf}
@@ -108,7 +110,7 @@ def make_grc_bundle(fig, network, selected_mf):
                 line=dict(
                     color=ps.type.plotting.color,
                 ),
-                opacity=0.03,
+                opacity=0.09,
                 showlegend=False,
             ),
             row=1,
@@ -123,7 +125,7 @@ def make_grc_bundle(fig, network, selected_mf):
                 line=dict(
                     color=ps.type.plotting.color,
                 ),
-                opacity=0.03,
+                opacity=0.09,
                 showlegend=False,
             ),
             row=1,
@@ -139,10 +141,6 @@ def make_others(fig, network):
     ):
         onbeam = not (i % 2)
         ps = network.get_placement_set(type)
-        # opacity = (0.3 + onbeam * 0.7)
-        # rgba = [float.fromhex(ps.type.plotting.color[(i*2+1):((i+1)*2+1)]) for i in range(3)] + [opacity * 255]
-        # print(rgba)
-        # color = "rgb(" + ", ".join(map(str, rgba)) + ")"
         color = ps.type.plotting.color
         soma_radius = ps.type.placement.soma_radius
         m = network.morphology_repository.get_morphology(morpho.get(type))
@@ -150,12 +148,83 @@ def make_others(fig, network):
         for t in mfig.data:
             fig.add_trace(t, row=1, col=2)
 
-def plot(net_path=None):
+def make_traces(fig, network, path, defs, col, xshift=-5500):
+    defs = dict(map(lambda kv: (network.get_cell_type(kv[0]), kv[1]), defs.items()))
+    with h5py.File(path, "r") as f:
+        time = f["time"][()]
+        time_mask = (time >= start) & (time <= stop)
+        for i, (ct, id) in enumerate(defs.items()):
+            if ct.name == "granule_cell":
+                offset = 0
+                if col == 1:
+                    # We didn't record any offbeam grc in our last batch of sims.
+                    # Shift a 1 act dend to plot a background slice.
+                    offset = 40000
+                    # Draw a scale bar
+                    fig.add_scatter(
+                        x = [time[time_mask][20] + xshift] * 2,
+                        y = [0, -20],
+                        mode="lines",
+                        line=dict(
+                            width=2,
+                            color="black"
+                        )
+                    )
+                data = [d for d in f["recorders/granules"].values() if d.attrs["cell_id"] == id][0][()]
+                data = np.concatenate((data[offset:], data[:offset]))
+            else:
+                if ct.name == "purkinje_cell" and col == 1:
+                    # Fetch the offbeam PC data from the lateral inhib experiment
+                    for kk, path in enumerate(glob(results_path("lateral", "mli", "*.hdf5"))):
+                        if kk == 2:
+                            with h5py.File(path, "r") as g:
+                                data = g["recorders/soma_voltages/166"][()]
+                                fig.add_scatter(
+                                    x=time[time_mask] + xshift,
+                                    y=data[time_mask],
+                                    line_color=ct.plotting.color,
+                                    row=i+1,
+                                    col=col
+                                )
+                else:
+                    data = f[f"recorders/soma_voltages/{id}"][()]
+            fig.add_scatter(
+                x=time[time_mask] + xshift,
+                y=data[time_mask],
+                line_color=ct.plotting.color,
+                row=i+1,
+                col=col
+            )
+
+def make_onbeam_traces(fig, network, path):
+    onbeam = {
+        "basket_cell": selection.basket_cells["High activity"],
+        "stellate_cell": selection.stellate_cells["High activity"],
+        "purkinje_cell": selection.purkinje_cells["High activity"],
+        "golgi_cell": selection.golgi_cells["High activity"],
+        "granule_cell": selection.grc_balanced[4],
+    }
+    make_traces(fig, network, path, onbeam, 5)
+
+def make_offbeam_traces(fig, network, path):
+    offbeam = {
+        "basket_cell": selection.basket_cells["Low activity"],
+        "stellate_cell": selection.stellate_cells["Low activity"],
+        "purkinje_cell": selection.purkinje_cells["Low activity"],
+        "golgi_cell": 36,
+        "granule_cell": selection.grc_balanced[2],
+    }
+    make_traces(fig, network, path, offbeam, 1)
+
+
+def plot(path=None, net_path=None):
+    if path is None:
+        path = results_path("sensory_gabazine", "sensory_burst_control.hdf5")
     if net_path is None:
         net_path = network_path(selection.network)
     network = from_hdf5(net_path)
     selected_mf = selection.stimulated_mf_poiss
-    fig = make_subplots(rows=1, cols=3, specs=[[{},{"type": "scene"},{},]], horizontal_spacing=0)
+    fig = make_subplots(rows=5, cols=5, specs=[[{},{"type": "scene", "rowspan": 5, "colspan": 3}, None, None, {}]] + [[{}, None, None, None, {}]] * 4, horizontal_spacing=0.01, shared_xaxes=True)
     scene = dict(
         xaxis_title="X",
         yaxis_title="Z",
@@ -167,7 +236,40 @@ def plot(net_path=None):
     make_mf(fig, network, selected_mf)
     make_grc_bundle(fig, network, selected_mf)
     make_others(fig, network)
+    make_onbeam_traces(fig, network, path)
+    make_offbeam_traces(fig, network, path)
+    for i in range(1, 6):
+        for j in (1, 5):
+            fig.update_yaxes(row=i, col=j, range=[-75, 50], visible=False)
 
-    fig.update_layout(scene=dict(camera=camera, yaxis_visible=False, xaxis_visible=False, zaxis_visible=False))
+    fig.update_layout(
+        scene=dict(camera=camera, yaxis_visible=False, xaxis_visible=False, zaxis_visible=False),
+        showlegend=False
+    )
+    pattern = [500.0, 504.0, 508.0, 514.0, 520.0]
+    sig = go.Figure([])
+    for spike in pattern:
+        sig.add_shape(
+            type="line",
+            x0=spike,
+            x1=spike,
+            y0=0.03,
+            y1=0.9,
+            line=dict(
+                color="black",
+                width=2,
+            ),
+        )
+    sig.update_layout(xaxis=dict(
+        range=[250, 750],
+        tickmode="array",
+        tickvals=[0, 500, 520, 750]
+    ), yaxis_range=[0, 1], yaxis_visible=False)
+    figs = {"main": fig, "sig": sig}
+    return figs
 
-    return fig
+def meta(key):
+    if key == "main":
+        return {"width": 1920, "height": 1920}
+    elif key == "sig":
+        return {"width": 800, "height": 300}

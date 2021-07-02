@@ -5,53 +5,50 @@ import numpy as np, h5py
 from scipy import stats
 import random
 
-# def select_groups(kv):
-#     name, group = kv
-#     cell_id = []
-#     print("attrssssssssssssssssssss    ",group.attrs.get("label", None))
-#     return group.attrs.get("label", None) == "record_sc_spikes" or \
-#     group.attrs.get("label", None) == "record_bc_spikes" or \
-#     group.attrs.get("label", None) == "record_glomerulus_spikes" or \
-#     group.attrs.get("label", None) == "record_pc_spikes" or \
-#     group.attrs.get("label", None) == "record_golgi_spikes" or name == cell_id
-
-ordered_labels = ["record_bc_spikes","record_sc_spikes","record_pc_spikes","record_golgi_spikes", "record_granules_spikes"]
-cell_ids = {
-    "record_granules_spikes": [16011, 3083, 15265, 3075, 11800, 3068, 9623, 3069, 31681, 3070],
-    # Poiss flipped
-    # [17372, 5987, 15288, 3764, 11399, 3083, 9163, 3074, 31681, 3070]
-    # Poiss
-    # [3070, 31681, 3074, 9163, 3083, 11399, 3764, 15288, 5987, 17372]
-    # 4 sync
-    # [3070, 31681, 3069, 9623, 3068, 11800, 3075, 15265, 3083, 16011]
-    # 4 sync flipped
-    # [16011, 3083, 15265, 3075, 11800, 3068, 9623, 3069, 31681, 3070]
-    "record_glomerulus_spikes": random.sample(range(732,2336), int((2336-732)*0.05))
+cell_map = {
+    "record_mossy_spikes": "mossy_fibers",
+    "record_glomerulus_spikes": "glomerulus",
+    "record_grc_spikes": "granule_cell",
+    "record_basket_spikes": "basket_cell",
+    "record_stellate_spikes": "stellate_cell",
+    "record_golgi_spikes": "golgi_cell",
+    "record_pc_spikes": "purkinje_cell",
 }
 
-def cell_type_sorter(x, y):
-    return ordered_labels
+label_map = {
+    "record_mossy_spikes": "MF",
+    "record_glomerulus_spikes": "Glom",
+    "record_grc_spikes": "Grc",
+    "record_basket_spikes": "BC",
+    "record_stellate_spikes": "SC",
+    "record_golgi_spikes": "GoC",
+    "record_pc_spikes": "PC",
+}
 
-def cell_sorter(label, ids):
-    if label in cell_ids:
-        ids = cell_ids[label]
-        return dict(zip(ids, range(len(ids))))
+excluded = set(["record_glomerulus_spikes", "record_mossy_spikes"])
 
-def select_data(kv):
-    # Unpack the `.items()` key value pairs
-    name, group = kv
-    # Create a fake dataset that we can filter and pass on into the raster plot function.
-    group = FakeDataset(group)
-    label = group.attrs.get("label", None)
-    # If a cell id filter exists for this label filter the fake dataset's spikes
-    if label in cell_ids:
-        group.arr = group.arr[np.isin(group.arr[:, 0], cell_ids[label])]
-    return name, group
+subsampler = {
+    "record_grc_spikes": 0.1,
+    "record_glomerulus_spikes": 0.2,
+}
+
+order = list(reversed(["record_mossy_spikes", "record_glomerulus_spikes", "record_grc_spikes", "record_golgi_spikes", "record_pc_spikes", "record_basket_spikes", "record_stellate_spikes"]))
 
 class FakeDataset:
-    def __init__(self, h5set):
-        self.arr = np.array(h5set[()])
+    def __init__(self, network, h5set):
+        sub = subsampler.get(h5set.attrs["label"])
+        if sub is not None:
+            data = h5set[()]
+            ids = data[:,0]
+            subsample = (np.max(ids) - np.min(ids)) * sub + np.min(ids)
+            self.arr = data[ids < subsample,:]
+        else:
+            self.arr = np.array(h5set[()])
+        times = self.arr[:, 1]
+        self.arr = self.arr[(times > 5500) & (times < 6500)] - 5500
         self.attrs = dict(h5set.attrs)
+        self.attrs["color"] = network.configuration.cell_types[cell_map[self.attrs["label"]]].plotting.color
+        self.attrs["label"] = label_map[self.attrs["label"]]
 
     def __getitem__(self, key):
         return self.arr[key]
@@ -64,23 +61,15 @@ from ._paths import *
 from glob import glob
 import selection
 
-def plot(path=None):
-    return go.Figure(layout=dict(title_text="Alice has to provide the NEST result files"))
+def plot(path=None, net_path=None):
     if path is None:
-        path = glob(results_path("sensory_burst", "*"))[0]
-    with h5py.File(results_path("nest_PoissFinal2/results_NEST_stim_on_MFs_PoissFinal2_finetuning0-02.hdf5"), "r") as f:
-        groups = {k: v for k, v in map(select_ids, f["/recorders/soma_spikes"].items(), generate(sel_labels), generate(cell_ids))}
-        fig = hdf5_plot_spike_raster(groups, show=False, cutoff=300, sorted_labels=sel_labels, sorted_ids=cell_ids)
-    with h5py.File(results_path("results_NEST_stim_on_MFs_4syncFinal2_finetuning0-02.hdf5"), "r") as f:
-        print("items ",f["/recorders/soma_spikes"].items())
-        #groups = {k: v for k, v in filter(select_groups, f["/recorders/soma_spikes"].items())}
-        print("groups:", *(f["/recorders/soma_spikes"].items()))
-        groups = {k: v for k, v in map(select_ids, f["/recorders/soma_spikes"].items(), generate(sel_labels), generate(cell_ids))}
-    #    print("groups sel", groups[""])
-        #fig = hdf5_plot_spike_raster(groups, show=False)
-        fig = hdf5_plot_spike_raster(groups, show=False, cutoff=300, \
-        sorted_labels=sel_labels, sorted_ids=cell_ids)
-        #fig.update_yaxes(range=[-5, 30])
+        path = glob(results_path("nest", "*.hdf5"))[0]
+    if net_path is None:
+        net_path = network_path(selection.network)
+    network = from_hdf5(net_path)
+    with h5py.File(path, "r") as f:
+        groups = {k: FakeDataset(network, v) for k, v in sorted(f["/recorders/soma_spikes"].items(),key=lambda kv: order.index(kv[0])) if v.attrs["label"] not in excluded}
+        fig = hdf5_plot_spike_raster(groups, show=False, cell_type_sort=lambda x, y: x)
 
     return fig
 

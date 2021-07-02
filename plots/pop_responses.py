@@ -80,7 +80,17 @@ def plot(path=None, net_path=None, bg_start=5700, bg_end=5900, stim_start=6000, 
     bg_p = (bg_end - bg_start) / 1000
     stim_p = (stim_end - stim_start) / 1000
     inhibitory = {"basket_to_basket", "stellate_to_stellate", "golgi_to_golgi", "basket_to_purkinje", "stellate_to_purkinje", "golgi_to_granule"}
-    label_map = {"glomerulus_to_granule": "Glom-Grc spikes", "golgi_to_granule": "GoC-GrC spikes"}
+    label_map = {
+        "glomerulus_to_granule": "Glom-Grc spikes", "golgi_to_granule": "GoC-GrC spikes",
+        "parallel_fiber_to_basket": "GrC (pf)-BC", "basket_to_basket": "BC-BC",
+        "parallel_fiber_to_stellate": "GrC (pf)-SC", "stellate_to_stellate": "SC-SC",
+    }
+    default_cam = dict(up=dict(x=0,y=0,z=1),center=dict(x=0,y=0,z=0),eye=dict(x=-1.6178192877772763,y=1.420370800120278,z=0.679576755143629))
+    cameras = {
+        "granule_cell": default_cam,
+        "basket_cell": dict(up=dict(x=0,y=0,z=1),center=dict(x=0,y=0,z=0),eye=dict(x=1.9905432220621866,y=1.738269564893918,z=0.3723380871153242)),
+        "stellate_cell": dict(up=dict(x=0,y=0,z=1),center=dict(x=0,y=0,z=0),eye=dict(x=1.720353554421655,y=1.8523332530375434,z=0.5250651742433416)),
+    }
     for ct in network.get_cell_types():
         if ct.name == "glomerulus" or ct.name == "mossy_fibers":
             continue
@@ -149,7 +159,7 @@ def plot(path=None, net_path=None, bg_start=5700, bg_end=5900, stim_start=6000, 
                 xaxis_title=x_axis,
                 yaxis_title=y_axis,
                 zaxis_title="Response [Hz]",
-                camera=dict(up=dict(x=0,y=0,z=1),center=dict(x=0,y=0,z=0),eye=dict(x=-1.6178192877772763,y=1.420370800120278,z=0.679576755143629))
+                camera=cameras.get(ct.name, default_cam),
             ),
         )
 

@@ -15,15 +15,19 @@ def figmod(fig):
 
 def plot():
     # Open the last generated HDF5 file of the `poc` simulation
-    with File(results_path('lateral','mli','results_lateral_impulse_1617207375966632480474846.hdf5'), "r") as f:
+    with File(results_path('sensory_gabazine','sensory_burst_control.hdf5'), "r") as f:
         # Collect traces from cells across multiple recording groups.
         cell_traces = hdf5_gather_voltage_traces(f, "/recorders/", ["soma_voltages"])
 
-        selected = "purkinje_cell"
+        selected = "golgi_cell"
         #IDs=[53]
         representatives = []
+        skipped = 0
         for c in cell_traces:
-            if (c.traces[0].meta["label"] == selected): # and (c.traces[0].meta["cell_id"] in IDs):
+            if (c.traces[0].meta["label"] == selected) and len(representatives) < 10: # and (c.traces[0].meta["cell_id"] in IDs):
+                skipped += 1
+                if skipped < 30:
+                    continue
                 #c.order = IDs.index(c.traces[0].meta["cell_id"])+1
                 c.title = str(c.traces[0].meta["cell_id"])
                 representatives.append(c)
@@ -32,7 +36,7 @@ def plot():
         representatives = CellTraceCollection(representatives)
         representatives.set_legends(["Soma (mV)"])
         representatives.set_colors(["orange"])
-        fig = plot_traces(representatives, x=list(f["time"]), cutoff=5000, show=False) #input_region=[6000, 6100], range=[5800, 6300],
+        fig = plot_traces(representatives, x=list(f["time"]), range=[5500, 6500], show=False) #input_region=[6000, 6100], range=[5800, 6300],
         #fig.write_image("pc.eps")
 
     return fig

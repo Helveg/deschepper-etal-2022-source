@@ -9,7 +9,7 @@ import selection
 
 def plot(path=None, net_path=None):
     if path is None:
-        path = glob(results_path("sensory_burst", "*"))[0]
+        path = glob(results_path("sensory_burst", "*.hdf5"))[1]
     if net_path is None:
         net_path = network_path(selection.network)
     network = from_hdf5(net_path)

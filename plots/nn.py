@@ -27,3 +27,6 @@ def plot(net_path=None):
         fig.update_xaxes(row=1, col=i + 1, range=[0, np.max(matches[:, 1]) + np.min(matches[:, 1])])
     fig.update_yaxes(visible=False)
     return fig
+
+def meta():
+    return {"height": 400, "width": 400 * 6}
