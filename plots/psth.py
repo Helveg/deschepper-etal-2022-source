@@ -52,11 +52,13 @@ def plot(path=None, net_path=None):
             break
         fig = hdf5_plot_psth(network, valueify(itertools.chain(*(handle["/recorders/soma_spikes"].values() for handle in handles))), show=False, cutoff=0, duration=5, gaps=False)
         fig.update_xaxes(range=[5500, 6500], tickmode="array", tickvals=list(i * 200 for i in range(40)), ticktext=list(str(i * 200 - 5500) for i in range(40)))
-        # ranges = [[0, 10], [0, 10], [0, 65], [0, 75], [0, 60], [0, 60]]
+        ranges = [[0, 13], [0, 100], [0, 100], [0, 75], [0, 90]]
+        for i, r in zip(range(1, 6), ranges):
+            fig.update_yaxes(range=r, row=i, col=1)
         return fig
     finally:
         for handle in handles:
             handle.close()
 
 def meta():
-    return {"width": 1920 / 4}
+    return {"width": 1920 / 4 * 0.8702 * 1.0359 * 1.1645, "height": 1080 * 0.6054 * 1.0303 * 1.1509}

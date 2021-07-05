@@ -15,7 +15,7 @@ def plot(path=None, net_path=None, input_device="mossy_fiber_sensory_burst", buf
         net_path = network_path(selection.network)
     network = from_hdf5(net_path)
     for path in paths:
-        id = selection.purkinje_cells["High activity"]
+        id = selection.purkinje_cells["On beam"]
         carry = []
         with h5py.File(path, "r") as f:
             res = f["time"].attrs.get("resolution")

@@ -13,12 +13,10 @@ def hash(s):
     return hashlib.sha256(str(s).encode()).hexdigest()
 
 MFs = selection.stimulated_mf_poiss
-# Re-use previous results?
-frozen = True
 
-def plot(ret_nmi=False):
-    trc_control = plot2(title="Control", batch_path=results_path("balanced_sensory", "*.hdf5"), color='red', shift=-0.1, ret_nmi=ret_nmi)
-    trc_gaba = plot2(title="Gabazine", batch_path=results_path("balanced_sensory", "gabazine", "*.hdf5"), color='grey', transpose=True, shift=0.1, ret_nmi=ret_nmi)
+def plot(ret_nmi=False, metrics=False, frozen=True):
+    trc_control = plot2(title="Control", batch_path=results_path("balanced_sensory", "*.hdf5"), color='red', shift=-0.1, ret_nmi=ret_nmi, frozen=frozen, metrics=metrics)
+    trc_gaba = plot2(title="Gabazine", batch_path=results_path("balanced_sensory", "gabazine", "*.hdf5"), color='grey', transpose=True, shift=0.1, ret_nmi=ret_nmi, frozen=frozen, metrics=metrics)
     if ret_nmi:
         # These vars will hold the MI values
         return trc_control, trc_gaba
@@ -41,7 +39,7 @@ def crop(data, min, max, indices=False, transpose=False):
         return np.where((c > min) & (c < max))[0]
     return c[(c > min) & (c < max)]
 
-def plot2(batch_path=None, title=None, net_path=None, stim_start=6000, stim_end=6040, color='red', transpose=False, shift=0, ret_nmi=False):
+def plot2(batch_path=None, title=None, net_path=None, stim_start=6000, stim_end=6040, color='red', transpose=False, shift=0, ret_nmi=False, metrics=False, frozen=True):
     if batch_path is None:
         batch_path = results_path("balanced_sensory", "*.hdf5")
     if net_path is None:
@@ -103,19 +101,22 @@ def plot2(batch_path=None, title=None, net_path=None, stim_start=6000, stim_end=
     # Add small noise to avoid issues with discrete-discrete MI.
     # https://polsys.github.io/ennemi/potential-issues.html
     y = np.array(y) + np.random.default_rng().normal(0, 1e-6, size=len(y))
-    print("Tiniest possible value on this machine:", np.finfo(float).tiny)
-    r, p = scipy.stats.pearsonr(x[x != 0], y[x != 0])
-    mi = estimate_mi(y, x, normalize=True)[0, 0]
-    if ret_nmi:
-        return mi
-    print("mi=", mi, "r=", r, " p=", max(p, np.finfo(float).tiny))
+    if metrics or ret_nmi:
+        print("Tiniest possible value on this machine:", np.finfo(float).tiny)
+        r, p = scipy.stats.pearsonr(x[x != 0], y[x != 0])
+        mi = estimate_mi(y, x, normalize=True)[0, 0]
+        if ret_nmi:
+            return mi
+        print("mi=", mi, "r=", r, " p=", max(p, np.finfo(float).tiny))
     return [
         go.Scatter(
             y=list(np.mean(y[x == i]) for i in range(1, 5)),
             error_y=dict(
                 type='data', # value of error bar given in data coordinates
                 array=list(np.std(y[x == i]) for i in range(1, 5)),
-                visible=True
+                visible=True,
+                width=6,
+                thickness=2,
             ),
             x=np.arange(1, 5) + shift,
             name=title,
@@ -123,8 +124,9 @@ def plot2(batch_path=None, title=None, net_path=None, stim_start=6000, stim_end=
             showlegend=False,
             mode="markers",
             marker_color=color,
+            marker_size=4,
         )
     ]
 
 def meta():
-    return {"width": 800, "height": 800}
+    return {"width": 350, "height": 350}

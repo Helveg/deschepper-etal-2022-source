@@ -15,6 +15,7 @@ import plotly.express as px
 from scipy import signal
 import collections
 from collections import defaultdict
+import selection
 from ._paths import *
 
 def plot():
@@ -50,7 +51,7 @@ def plot():
         # Collect traces from cells across multiple recording groups.
         for n, g in f["/recorders/granules"].items():
             if g.attrs["cell_id"] in IDs:
-                order = IDs.index(g.attrs["cell_id"]) + 1
+                order = np.nonzero(IDs == g.attrs["cell_id"])[0][0] + 1
                 def scatter():
                     return go.Scatter(
                         x=displayTime,
@@ -61,7 +62,8 @@ def plot():
                         mode='lines',
                         line=dict(
                             dash='solid',
-                            color='grey'
+                            color='grey',
+                            width=3,
                         ),
                         opacity=0.5
                     )
@@ -82,7 +84,7 @@ def plot():
                             y1=max(g[int(displayTime[0]/timeRes):-1]),
                             line=dict(
                                 color="black",
-                                width=1,
+                                width=3,
                                 dash="dot",
                             ),
                             **subplot_kwargs
@@ -98,7 +100,7 @@ def plot():
         # Collect traces from cells across multiple recording groups.
         for n, g in f["/recorders/granules"].items():
             if g.attrs["cell_id"] in IDs:
-                order = IDs.index(g.attrs["cell_id"])+1
+                order = np.nonzero(IDs == g.attrs["cell_id"])[0][0] + 1
                 def scatter():
                     return go.Scatter(
                         x=displayTime,
@@ -123,3 +125,6 @@ def plot():
     inset.update_layout(xaxis_range=[490, 570])
 
     return {"main": fig, "inset": inset}
+
+def meta(key):
+    return {"width": 650, "height": 450}

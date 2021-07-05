@@ -46,12 +46,31 @@ def plot(net_path=None):
     inset.layout.scene.zaxis.range = [-15, 5]
     inset.layout.scene.aspectratio = dict(x=1, y=1, z=2)
     glom_synapses = np.array([i.to_compartment.midpoint for i in cs_glom_grc.intersections if i.to_id == grc_id], dtype=float)
+    print("Glom syns:", [i.to_compartment.midpoint for i in cs_glom_grc.intersections if i.to_id == grc_id])
     goc_synapses = np.array([i.to_compartment.midpoint for i in cs_goc_grc.intersections if i.to_id == grc_id], dtype=float)
+    print("Goc syns:", [i.to_compartment.midpoint for i in cs_goc_grc.intersections if i.to_id == grc_id])
     print("syn check:", glom_synapses.shape, goc_synapses.shape)
     text_glom = ["Glom1", "Glom3", "Glom2", "Glom4"]
     text_goc = ["GoC1", "GoC2", "GoC1", "GoC3"]
-    inset.add_trace(go.Scatter3d(x=glom_synapses[:,0], y=glom_synapses[:,2], z=glom_synapses[:,1], text=text_glom, marker=dict(color="black"), mode="markers+text", textposition="bottom right", textfont=dict(size=10), showlegend=False, legendgroup="glom"))
-    inset.add_trace(go.Scatter3d(x=goc_synapses[:,0], y=goc_synapses[:,2], z=goc_synapses[:,1], text=text_goc, marker=dict(color=goc_color), mode="markers+text", textposition="top right", textfont=dict(size=10), showlegend=False, legendgroup="goc"))
+    inset.add_trace(go.Scatter3d(x=goc_synapses[:,0], y=goc_synapses[:,2], z=goc_synapses[:,1], marker=dict(color=goc_color, size=4), mode="markers", showlegend=False, legendgroup="goc"))
+    inset.update_layout(
+        scene_annotations=[
+            dict(
+                x=p[0] - 1,
+                y=p[2],
+                z=p[1] - ay,
+                text=t,
+                showarrow=False,
+                font=dict(family="Arial", size=10),
+                textangle=90
+            )
+            for t, p, ay in zip(text_goc + text_glom, np.concatenate((goc_synapses, glom_synapses)), [-2.2] * len(goc_synapses) + [1.7] * len(glom_synapses))
+        ],
+        scene_xaxis_visible=False,
+        scene_yaxis_visible=False,
+        scene_zaxis_visible=False,
+    )
+    inset.add_trace(go.Scatter3d(x=glom_synapses[:,0], y=glom_synapses[:,2], z=glom_synapses[:,1], marker=dict(color="black", size=3), mode="markers", showlegend=False, legendgroup="goc"))
     inset.update_layout(scene_camera=inset_camera)
 
     # Create main figure
@@ -95,6 +114,10 @@ def plot(net_path=None):
     ms.fig.layout.scene.zaxis.range = [-20, 210]
     ms.fig.update_layout(scene_camera=main_camera)
     return {"grc_inset": inset, "main": ms.fig}
+
+def meta(key):
+    if key == "grc_inset":
+        return {"width": 300, "height": 500}
 
 if __name__ == "__main__":
     for p in plot().values():

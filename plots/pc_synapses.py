@@ -101,9 +101,13 @@ def plot(net_path=None):
         fig.layout.scene.yaxis.dtick=50
         fig.layout.scene.zaxis.dtick=50
         cfg = selection.btn_config.copy()
-        cfg["filename"] = pc_label[0] + "_purkinje_cell_synapses"
-        figs[pc_label[0]] = fig
+        name = pc_label.split(" ")[0]
+        cfg["filename"] = name + "_purkinje_cell_synapses"
+        figs[name] = fig
     return figs
+
+def meta(key):
+    return {"width": 1100, "height": 600}
 
 if __name__ == "__main__":
     plot()

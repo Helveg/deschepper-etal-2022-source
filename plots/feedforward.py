@@ -21,7 +21,7 @@ def plot(run_path=None, net_path=None):
 
 def plot_average_all(network_path, run_path):
     network = from_hdf5(network_path)
-    cell = selection.purkinje_cells["High activity"]
+    cell = selection.purkinje_cells["On beam"]
     grc_color = network.configuration.cell_types["granule_cell"].plotting.color
     bc_color = network.configuration.cell_types["basket_cell"].plotting.color
     ampa_currents = []

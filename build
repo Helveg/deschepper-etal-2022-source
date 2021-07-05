@@ -67,7 +67,16 @@ def _build_figure(plotting_module, fig, suffix=None, meta=None):
         kwargs = {"width": 1920, "height": 1080}
         if meta is not None:
             kwargs.update(meta)
+        publish_layout(fig)
         fig.write_image(fname, **kwargs)
+
+def publish_layout(fig):
+    fig.update_layout(
+        font_family="Arial",
+        font_size=10,
+        xaxis_title_font=dict(size=10, family="Arial"),
+        yaxis_title_font=dict(size=10, family="Arial"),
+    )
 
 if __name__ == "__main__":
     build()

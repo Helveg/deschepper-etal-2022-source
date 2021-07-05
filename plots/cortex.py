@@ -200,7 +200,7 @@ def make_onbeam_traces(fig, network, path):
     onbeam = {
         "basket_cell": selection.basket_cells["High activity"],
         "stellate_cell": selection.stellate_cells["High activity"],
-        "purkinje_cell": selection.purkinje_cells["High activity"],
+        "purkinje_cell": selection.purkinje_cells["On beam"],
         "golgi_cell": selection.golgi_cells["High activity"],
         "granule_cell": selection.grc_balanced[4],
     }
@@ -210,7 +210,7 @@ def make_offbeam_traces(fig, network, path):
     offbeam = {
         "basket_cell": selection.basket_cells["Low activity"],
         "stellate_cell": selection.stellate_cells["Low activity"],
-        "purkinje_cell": selection.purkinje_cells["Low activity"],
+        "purkinje_cell": selection.purkinje_cells["Off beam"],
         "golgi_cell": 36,
         "granule_cell": selection.grc_balanced[2],
     }

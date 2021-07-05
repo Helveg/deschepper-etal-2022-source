@@ -53,13 +53,13 @@ def plot(net_path=None, stim_start=6000, stim_end=6020, ret_nmi=False):
     x = carry_x
     y = carry_y
     yg = carry_yg
-    mi = estimate_mi(y, x, normalize=True)[0, 0]
-    r, p = scipy.stats.pearsonr(x, y)
-    print("mi=", mi, "r=", r, " p=", max(p, np.finfo(float).tiny))
-    r, p = scipy.stats.pearsonr(x, yg)
-    gmi = estimate_mi(yg, x, normalize=True)[0, 0]
-    print("[GABA] mi=", mi, "r=", r, " p=", max(p, np.finfo(float).tiny))
     if ret_nmi:
+        mi = estimate_mi(y, x, normalize=True)[0, 0]
+        r, p = scipy.stats.pearsonr(x, y)
+        print("mi=", mi, "r=", r, " p=", max(p, np.finfo(float).tiny))
+        r, p = scipy.stats.pearsonr(x, yg)
+        gmi = estimate_mi(yg, x, normalize=True)[0, 0]
+        print("[GABA] mi=", mi, "r=", r, " p=", max(p, np.finfo(float).tiny))
         return mi, gmi
     fig = go.Figure([
         go.Scatter(
@@ -67,7 +67,9 @@ def plot(net_path=None, stim_start=6000, stim_end=6020, ret_nmi=False):
             error_y=dict(
                 type='data', # value of error bar given in data coordinates
                 array=list(np.std(y[x == i]) for i in range(1, 5)),
-                visible=True
+                visible=True,
+                width=6,
+                thickness=2,
             ),
             x=np.arange(1, 5) - 0.1,
             name="Control",
@@ -75,13 +77,16 @@ def plot(net_path=None, stim_start=6000, stim_end=6020, ret_nmi=False):
             showlegend=False,
             mode="markers",
             marker_color="red",
+            marker_size=4,
         ),
         go.Scatter(
             y=list(np.mean(yg[x == i]) for i in range(1, 5)),
             error_y=dict(
                 type='data', # value of error bar given in data coordinates
                 array=list(np.std(yg[x == i]) for i in range(1, 5)),
-                visible=True
+                visible=True,
+                width=6,
+                thickness=2,
             ),
             x=np.arange(1, 5) + 0.1,
             name="Gabazine",
@@ -89,6 +94,7 @@ def plot(net_path=None, stim_start=6000, stim_end=6020, ret_nmi=False):
             showlegend=False,
             mode="markers",
             marker_color="grey",
+            marker_size=4,
         ),
     ])
     fig.update_layout(
@@ -103,4 +109,4 @@ def plot(net_path=None, stim_start=6000, stim_end=6020, ret_nmi=False):
     return fig
 
 def meta():
-    return {"width": 800, "height": 800}
+    return {"width": 350, "height": 350}

@@ -17,4 +17,4 @@ def plot():
     return fig
 
 def meta():
-    return {"width": 1920 / 4, "height": 1920 / 2}
+    return {"width": 1920 / 4 * 0.85, "height": 1920 / 2 * 0.62}

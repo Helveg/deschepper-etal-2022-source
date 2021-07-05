@@ -102,6 +102,9 @@ def plot(net_path=None):
         figs[goc_label[0]] = fig
     return figs
 
+def meta(key):
+    return {"width": 1650, "height": 900}
+
 if __name__ == "__main__":
     for p in plot():
         p.show()

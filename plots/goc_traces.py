@@ -28,11 +28,11 @@ def plot():
 
     #IDs=[5987,  6002,  9272, 17285, 17372, 24861, 3764,  3851,  4075,3083,  3114,  3192,3074, 3076, 3109]
     id = selection.golgi_cells["High activity"]
-    fig = go.Figure(
-        layout=dict(
-            xaxis_title="Time [ms]",
-            yaxis_title="Membrane potential [mV]"
-        )
+    fig = make_subplots(
+        x_title="Time [ms]",
+        y_title="Membrane potential [mV]",
+        rows=2,
+        cols=1,
     )
 
     with h5py.File(results_path("sensory_gabazine", "sensory_burst_gabazine_nogap.hdf5"), "a") as f:
@@ -48,20 +48,9 @@ def plot():
                 dash='solid',
                 color='grey'
             ),
+            row=2,
+            col=1,
         )
-        for j in range(0, len(pattern)):
-            fig.add_shape(
-                type="line",
-                x0=pattern[j],
-                x1=pattern[j],
-                y0=min(g[int(displayTime[0]/timeRes):-1]),
-                y1=max(g[int(displayTime[0]/timeRes):-1]),
-                line=dict(
-                    color="black",
-                    width=1,
-                    dash="dot",
-                )
-            )
     with h5py.File(results_path("sensory_gabazine", "sensory_burst_control.hdf5"), "a") as f:
         # Collect traces from cells across multiple recording groups.
         g = f[f"/recorders/soma_voltages/{id}"][()]
@@ -71,9 +60,29 @@ def plot():
             name="Control",
             legendgroup="control",
             mode='lines',
-            line={'dash': 'solid','color': network.configuration.cell_types["golgi_cell"].plotting.color}
+            line={'dash': 'solid','color': network.configuration.cell_types["golgi_cell"].plotting.color},
+            row=1,
+            col=1
         )
-
-    fig.update_layout(xaxis_range=[0, duration - cutoff], yaxis_range=[-70, 50])
-    fig.update_layout(title_text="Influence of gabazine on granule cell responses")
+    for i in range(1, 3):
+        for j in range(0, len(pattern)):
+            fig.add_shape(
+                type="line",
+                x0=pattern[j],
+                x1=pattern[j],
+                y0=min(g[int(displayTime[0]/timeRes):-1]),
+                y1=max(g[int(displayTime[0]/timeRes):-1]),
+                line=dict(
+                    color="black",
+                    width=2,
+                    dash="dot",
+                ),
+                row=i,
+                col=1,
+            )
+    fig.update_xaxes(range=[0, duration - cutoff])
+    fig.update_yaxes(range=[-70, 50])
     return fig
+
+def meta():
+    return {"width": 550, "height": 350}

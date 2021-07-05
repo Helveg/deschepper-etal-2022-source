@@ -94,11 +94,11 @@ def plot2(title=None, batch_path=None, net_path=None, stim_start=6000, stim_end=
     y = np.array(y)[x != 0]
     x = x[x != 0]
     print("postfilter", len(x))
-    mi = estimate_mi(y, x, normalize=True)[0, 0]
-    print("Tiniest possible value on this machine:", np.finfo(float).tiny)
-    r, p = scipy.stats.pearsonr(x, y)
-    print("mi=", mi, "r=", r, " p=", max(p, np.finfo(float).tiny))
     if ret_nmi:
+        mi = estimate_mi(y, x, normalize=True)[0, 0]
+        print("Tiniest possible value on this machine:", np.finfo(float).tiny)
+        r, p = scipy.stats.pearsonr(x, y)
+        print("mi=", mi, "r=", r, " p=", max(p, np.finfo(float).tiny))
         return mi
     return [
         go.Scatter(
@@ -106,7 +106,9 @@ def plot2(title=None, batch_path=None, net_path=None, stim_start=6000, stim_end=
             error_y=dict(
                 type='data', # value of error bar given in data coordinates
                 array=list(np.std(y[x == i]) for i in range(1, 5)),
-                visible=True
+                visible=True,
+                width=6,
+                thickness=2,
             ),
             x=np.arange(1, 5) + shift,
             name=title,
@@ -114,9 +116,10 @@ def plot2(title=None, batch_path=None, net_path=None, stim_start=6000, stim_end=
             showlegend=False,
             mode="markers",
             marker_color=color,
+            marker_size=4,
         )
     ]
 
 
 def meta():
-    return {"width": 800, "height": 800}
+    return {"width": 350, "height": 350}

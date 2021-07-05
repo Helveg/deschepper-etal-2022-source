@@ -164,3 +164,7 @@ def plot(path=None, net_path=None, bg_start=5700, bg_end=5900, stim_start=6000, 
         )
 
     return figs
+
+def meta(key):
+    if key == "granule_cell":
+        return {"width": 1920 * 0.55, "height": 1080 * 0.55}
