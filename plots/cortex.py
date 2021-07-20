@@ -213,10 +213,11 @@ def make_plasticity_traces(fig, network, path):
         "golgi_cell": selection.golgi_cells["High activity"],
         "granule_cell": [selection.grc_balanced[i] for i in (4, 3, 2, 1)],
     }
-    path = results_path("grc_plasticity", "01", "gcu_01.hdf5")
-    # make_traces(fig, network, path, onbeam, 5)
-    path = results_path("grc_plasticity", "09", "gcu_09.hdf5")
     make_traces(fig, network, path, onbeam, 5)
+    path = results_path("grc_plasticity", "01", "gcu_01.hdf5")
+    make_traces(fig, network, path, onbeam, 4)
+    path = results_path("grc_plasticity", "09", "gcu_09.hdf5")
+    make_traces(fig, network, path, onbeam, 6)
 
 
 def plot(path=None, net_path=None):
@@ -228,23 +229,23 @@ def plot(path=None, net_path=None):
     selected_mf = selection.stimulated_mf_poiss
     fig = make_subplots(
         rows=20,
-        cols=5,
+        cols=6,
         specs=[
-            [{"type": "scene", "rowspan": 20, "colspan": 3}, None, None, {"rowspan": 4}, {"rowspan": 4}],
-            [None] * 5,
-            [None] * 5,
-            [None] * 5,
+            [{"type": "scene", "rowspan": 20, "colspan": 3}, None, None, {"rowspan": 4}, {"rowspan": 4}, {"rowspan": 4}],
+            [None] * 6,
+            [None] * 6,
+            [None] * 6,
         ]
         + [
-            [None, None, None, {"rowspan": 4}, {"rowspan": 4}],
-            [None] * 5,
-            [None] * 5,
-            [None] * 5,
+            [None, None, None, {"rowspan": 4}, {"rowspan": 4}, {"rowspan": 4}],
+            [None] * 6,
+            [None] * 6,
+            [None] * 6,
         ] * 3 + [
-            [None, None, None, {}, {}],
-            [None, None, None, {}, {}],
-            [None, None, None, {}, {}],
-            [None, None, None, {}, {}],
+            [None, None, None, {}, {}, {}],
+            [None, None, None, {}, {}, {}],
+            [None, None, None, {}, {}, {}],
+            [None, None, None, {}, {}, {}],
         ],
         horizontal_spacing=0.01,
         vertical_spacing=0.02,
