@@ -227,14 +227,25 @@ def plot(path=None, net_path=None):
     network = from_hdf5(net_path)
     selected_mf = selection.stimulated_mf_poiss
     fig = make_subplots(
-        rows=5,
+        rows=20,
         cols=5,
         specs=[
-            [{"type": "scene", "rowspan": 20, "colspan": 3}, None, None, {"rowspan": 4}, {"rowspan": 4}]
+            [{"type": "scene", "rowspan": 20, "colspan": 3}, None, None, {"rowspan": 4}, {"rowspan": 4}],
+            [None] * 5,
+            [None] * 5,
+            [None] * 5,
         ]
         + [
-            [None, None, None, {"rowspan": 4}, {"rowspan": 4}]
-        ] * 4,
+            [None, None, None, {"rowspan": 4}, {"rowspan": 4}],
+            [None] * 5,
+            [None] * 5,
+            [None] * 5,
+        ] * 3 + [
+            [None, None, None, {}, {}],
+            [None, None, None, {}, {}],
+            [None, None, None, {}, {}],
+            [None, None, None, {}, {}],
+        ],
         horizontal_spacing=0.01,
         vertical_spacing=0.02,
         shared_xaxes=True,
