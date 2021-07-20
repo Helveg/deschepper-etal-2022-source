@@ -266,9 +266,13 @@ def plot(path=None, net_path=None):
     make_others(fig, network)
     make_onbeam_traces(fig, network, path)
     make_plasticity_traces(fig, network, path)
-    for i in range(1, 6):
-        for j in (4, 5):
-            fig.update_yaxes(row=i, col=j, range=[-75, 50], visible=False)
+    for i in range(0, 5):
+        for j in (4, 5, 6):
+            fig.update_yaxes(row=i*4+1, col=j, range=[-75, 50], visible=False)
+            if i == 4:
+                fig.update_yaxes(row=i*4+2, col=j, range=[-75, 50], visible=False)
+                fig.update_yaxes(row=i*4+3, col=j, range=[-75, 50], visible=False)
+                fig.update_yaxes(row=i*4+4, col=j, range=[-75, 50], visible=False)
 
     pattern = [500.0, 504.0, 508.0, 514.0, 520.0]
     sig = go.Figure([])
