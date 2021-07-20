@@ -193,7 +193,7 @@ def make_onbeam_traces(fig, network, path):
         "golgi_cell": selection.golgi_cells["High activity"],
         "granule_cell": [selection.grc_balanced[i] for i in (4, 3, 2, 1)],
     }
-    make_traces(fig, network, path, onbeam, 4)
+    make_traces(fig, network, path, onbeam, 5)
 
 def make_offbeam_traces(fig, network, path):
     offbeam = {
@@ -213,7 +213,6 @@ def make_plasticity_traces(fig, network, path):
         "golgi_cell": selection.golgi_cells["High activity"],
         "granule_cell": [selection.grc_balanced[i] for i in (4, 3, 2, 1)],
     }
-    make_traces(fig, network, path, onbeam, 5)
     path = results_path("grc_plasticity", "01", "gcu_01.hdf5")
     make_traces(fig, network, path, onbeam, 4)
     path = results_path("grc_plasticity", "09", "gcu_09.hdf5")
