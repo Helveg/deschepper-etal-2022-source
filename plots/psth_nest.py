@@ -45,10 +45,10 @@ def plot(path=None, net_path=None):
                 g.attrs["order"] = order.index(g.attrs["name"])
                 g.attrs["run_id"] = run_id
 
-        ranges = [[0, 15], [0, 15], [0, 10], [0, 65], [0, 120], [0, 155], [0, 172]]
+        ranges = [[0, 13], [0, 100], [0, 100], [0, 75], [0, 90]]
         fig = hdf5_plot_psth(
             network,
-            valueify(itertools.chain(*((FakeDataset(v) for v in handle["/recorders/soma_spikes"].values()) for handle in handles))),
+            valueify(itertools.chain(*((FakeDataset(v) for v in handle["/recorders/soma_spikes"].values() if v.attrs["label"] not in ("glomerulus", "mossy_fibers")) for handle in handles))),
             show=False,
             duration=5,
             gaps=False
@@ -60,6 +60,5 @@ def plot(path=None, net_path=None):
         for handle in handles:
             handle.close()
 
-
 def meta():
-    return {"width": 800, "height": 450}
+    return {"width": 1920 / 4 * 0.8702 * 1.0359 * 1.1645, "height": 1080 * 0.6054 * 1.0303 * 1.1509}
