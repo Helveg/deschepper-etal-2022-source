@@ -50,6 +50,10 @@ def plot(net_path=None):
         "apical_dendrites": goc_scale[1],
         "axon": goc_scale[3]
     }
+    tag_colors = {
+        "ascending_axon_to_golgi": "#EB52B5",
+        "parallel_fiber_to_golgi": grc_color
+    }
 
     figs = {}
     for goc_label, goc_id in selection.golgi_cells.items():
@@ -79,7 +83,7 @@ def plot(net_path=None):
                     marker=dict(
                         size=marker_sizes[count],
                         symbol=markers[set.tag],
-                        color=grc_color,
+                        color=tag_colors[set.tag],
                     ),
                     name=f"Granule cell {tag_label} synapses with {count} active dendrites"
                 )

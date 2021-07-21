@@ -32,8 +32,8 @@ def plot(path=None, net_path=None):
         granule_cell=1,
         golgi_cell=2,
         purkinje_cell=3,
-        stellate_cell=4,
-        basket_cell=5,
+        basket_cell=4,
+        stellate_cell=5,
     )
     try:
         for run_id, handle in enumerate(handles):

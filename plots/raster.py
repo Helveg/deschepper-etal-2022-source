@@ -19,3 +19,6 @@ def plot(path=None):
         fig = hdf5_plot_spike_raster(groups, show=False, cutoff=5500, cell_type_sort=lambda x, y: list(reversed(["granule_cell", "golgi_cell", "purkinje_cell", "basket_cell", "stellate_cell"])))
         fig.update_layout(xaxis_range= [0, 1000]) #, yaxis_range=[0, 40])
     return fig
+
+def meta():
+    return {"width": 800, "height": 450}

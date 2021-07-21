@@ -9,7 +9,7 @@ import selection
 
 def plot(path=None, net_path=None):
     if path is None:
-        path = glob(results_path("sensory_burst", "*.hdf5"))[1]
+        path = results_path("sensory_gabazine", "sensory_burst_control.hdf5")
     if net_path is None:
         net_path = network_path(selection.network)
     network = from_hdf5(net_path)
@@ -25,15 +25,16 @@ def plot(path=None, net_path=None):
                 traces.cells[id].title = label
             traces.set_colors([network.configuration.cell_types[key].plotting.color])
             traces.reorder(order)
-            fig = plot_traces(traces, x=list(f["time"]), input_region=[6000, 6100], range=[5800, 6300], show=False)
+            fig = plot_traces(traces, x=list(f["time"][()] - 5500), input_region=[500, 520], range=[0, 1000], show=False)
             fig.update_yaxes(range=[-70, 25])
+            fig.update_layout(showlegend=False)
             cfg = selection.btn_config.copy()
             cfg["filename"] = key + "_traces"
             figs[tag] = fig
     return figs
 
 def meta(key):
-    return {"width": 1920 / 3 * 2}
+    return {"width": 500, "height": 400}
 
 if __name__ == "__main__":
     plot()

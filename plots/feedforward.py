@@ -66,17 +66,22 @@ def plot_average_all(network_path, run_path):
     norm_gaba = norm_gaba[time_mask]
     span = len(norm_gaba) * dt
     # Then zoom in on the RoI
-    corr_fig = make_subplots(rows=2, cols=1, vertical_spacing=0.05, x_title="Time (ms)")
-    corr_fig = corr_fig.add_trace(go.Scatter(x=corr_x, y=corr_y, name="Cross corr."), row=2, col=1)
+    inset = go.Figure(layout_xaxis_title_text="Lag [ms]")
+    inset = inset.add_trace(go.Scatter(x=corr_x, y=corr_y, name="Cross corr."))
     max_x = np.argmax(corr_y)
     max_y = corr_y[max_x]
-    corr_fig.add_annotation(x=corr_x[max_x], y=max_y, text=round(corr_x[max_x], 2), startstandoff=13, standoff=3, ay=20, ax=70, row=2, col=1)
-    corr_fig.add_trace(go.Scatter(x=time, y=norm_ampa, name="Norm. AMPA", xaxis="x2", line=dict(color=grc_color)), row=1, col=1)
-    corr_fig.add_trace(go.Scatter(x=time, y=norm_gaba, name="Norm. GABA", line=dict(color=bc_color)), row=1, col=1)
-    corr_fig.update_yaxes(visible=False)
-    # corr_fig.update_yaxes(range=[max_y / 1.5, max_y * 1.01], row=2, col=1)
+    inset.add_annotation(x=corr_x[max_x], y=max_y, text=round(corr_x[max_x], 2), startstandoff=13, standoff=3, ay=20, ax=70)
+    inset.update_layout(yaxis_visible=False)
+    main = go.Figure(layout_xaxis_title_text="Time [ms]")
+    display_time = time - 5500
+    main.add_trace(go.Scatter(x=display_time, y=norm_ampa, name="Norm. AMPA", line=dict(color=grc_color)))
+    main.add_trace(go.Scatter(x=display_time, y=norm_gaba, name="Norm. GABA", line=dict(color=bc_color)))
+    main.update_layout(yaxis_visible=False)
 
-    return corr_fig
+    return {"main": main, "inset": inset}
 
-def meta():
-    return {"width": 800, "height": 800}
+def meta(key):
+    if key == "main":
+        return {"width": 400, "height": 400}
+    else:
+        return {"width": 270, "height": 320}

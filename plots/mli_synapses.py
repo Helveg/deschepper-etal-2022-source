@@ -105,10 +105,14 @@ def plot(net_path=None):
                 )
             ))
             fig.layout.scene.yaxis.dtick = 10
+            fig.layout.scene.camera = dict(up=dict(x=0,y=0,z=1),center=dict(x=0,y=0,z=0),eye=dict(x=0.9291328524666997,y=0.9291328524666995,z=0.9291328524666995))
             cfg = selection.btn_config.copy()
             cfg["filename"] = label[0] + "_" + key + "_synapses"
             figs[f"{key[:2]}_{label[0]}"] = fig
     return figs
+
+def meta(key):
+    return {"width": 700, "height": 600}
 
 if __name__ == "__main__":
     plot()

@@ -40,4 +40,4 @@ def plot(net_path=None):
     return fig
 
 def meta():
-    return {"height": 400, "width": 400 * 6}
+    return {"height": 400, "width": 850}

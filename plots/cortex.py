@@ -162,6 +162,7 @@ def make_traces(fig, network, path, defs, col, xshift=-5500):
                         x=time[time_mask] + xshift,
                         y=data[time_mask],
                         line_color=ct.plotting.color,
+                        line_width=1,
                         row=i*4+1+j,
                         col=col
                     )
@@ -181,14 +182,15 @@ def make_traces(fig, network, path, defs, col, xshift=-5500):
                     x=time[time_mask] + xshift,
                     y=data[time_mask],
                     line_color=ct.plotting.color,
+                    line_width=1,
                     row=i*4+1,
                     col=col
                 )
 
 def make_onbeam_traces(fig, network, path):
     onbeam = {
-        "basket_cell": selection.basket_cells["High activity"],
         "stellate_cell": selection.stellate_cells["High activity"],
+        "basket_cell": selection.basket_cells["High activity"],
         "purkinje_cell": selection.purkinje_cells["On beam"],
         "golgi_cell": selection.golgi_cells["High activity"],
         "granule_cell": [selection.grc_balanced[i] for i in (4, 3, 2, 1)],
@@ -197,8 +199,8 @@ def make_onbeam_traces(fig, network, path):
 
 def make_offbeam_traces(fig, network, path):
     offbeam = {
-        "basket_cell": selection.basket_cells["Low activity"],
         "stellate_cell": selection.stellate_cells["Low activity"],
+        "basket_cell": selection.basket_cells["Low activity"],
         "purkinje_cell": selection.purkinje_cells["Off beam"],
         "golgi_cell": 36,
         "granule_cell": selection.grc_balanced[2],
@@ -207,8 +209,8 @@ def make_offbeam_traces(fig, network, path):
 
 def make_plasticity_traces(fig, network, path):
     onbeam = {
-        "basket_cell": selection.basket_cells["High activity"],
         "stellate_cell": selection.stellate_cells["High activity"],
+        "basket_cell": selection.basket_cells["High activity"],
         "purkinje_cell": selection.purkinje_cells["On beam"],
         "golgi_cell": selection.golgi_cells["High activity"],
         "granule_cell": [selection.grc_balanced[i] for i in (4, 3, 2, 1)],
@@ -246,7 +248,7 @@ def plot(path=None, net_path=None):
             [None, None, None, {}, {}, {}],
             [None, None, None, {}, {}, {}],
         ],
-        horizontal_spacing=0.01,
+        horizontal_spacing=0.03,
         vertical_spacing=0.02,
         shared_xaxes=True,
     )

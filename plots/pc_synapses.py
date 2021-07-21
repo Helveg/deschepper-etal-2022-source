@@ -50,6 +50,10 @@ def plot(net_path=None):
         "aa_targets": pc_scale[2],
         "axon": pc_scale[3]
     }
+    tag_colors = {
+        "ascending_axon_to_purkinje": "#F75EC1",
+        "parallel_fiber_to_purkinje": grc_color
+    }
     figs = {}
     for pc_label, pc_id in selection.purkinje_cells.items():
         pc_pos = ps.positions[ps.identifiers==pc_id][0]
@@ -57,6 +61,7 @@ def plot(net_path=None):
         fig.update_layout(title_text=f"{pc_label} purkinje cell")
         for set in (aa_pc_conn, pf_pc_conn):
             tag_label = labels[set.tag]
+            tag_color = tag_colors[set.tag]
             positions = [[] for _ in range(5)]
             for intersection in set.intersections:
                 if intersection.to_id == pc_id:
@@ -75,7 +80,7 @@ def plot(net_path=None):
                     marker=dict(
                         size=marker_sizes[count],
                         symbol=markers[set.tag],
-                        color=grc_color,
+                        color=tag_colors[set.tag],
                     ),
                     name=f"Granule cell {tag_label} synapses with {count} active dendrites"
                 )

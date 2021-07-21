@@ -100,7 +100,7 @@ def plot(net_path=None):
                 active_goc_synapses.append(pos)
     goc_synapses = np.array(goc_synapses, dtype=float)
     active_goc_synapses = np.array(active_goc_synapses, dtype=float)
-    ms.fig.add_trace(go.Scatter3d(x=goc_synapses[:,0], y=goc_synapses[:,2], z=goc_synapses[:,1], marker=dict(color="blue", size=3.5), opacity=0.5, mode="markers", legendgroup="goc", showlegend=False))
+    # ms.fig.add_trace(go.Scatter3d(x=goc_synapses[:,0], y=goc_synapses[:,2], z=goc_synapses[:,1], marker=dict(color="blue", size=3.5), opacity=0.5, mode="markers", legendgroup="goc", showlegend=False))
     ms.fig.add_trace(go.Scatter3d(x=active_goc_synapses[:,0], y=active_goc_synapses[:,2], z=active_goc_synapses[:,1], marker=dict(color="blue", size=3.5), mode="markers", name="GoC-GrC synapse", legendgroup="goc"))
     ms.fig.add_trace(go.Scatter3d(x=glom_synapses[:,0], y=glom_synapses[:,2], z=glom_synapses[:,1], marker=dict(color="black", size=3), mode="markers", name="Glom-GrC synapse", legendgroup="glom"))
     print("Depicted GrC:", len(grc_pos))

@@ -73,6 +73,5 @@ def plot(path=None, net_path=None):
 
     return fig
 
-
 def meta():
-    return {"width": 1920 / 2}
+    return {"width": 800, "height": 450}

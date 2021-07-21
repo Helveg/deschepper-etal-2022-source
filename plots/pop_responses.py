@@ -82,8 +82,8 @@ def plot(path=None, net_path=None, bg_start=5700, bg_end=5900, stim_start=6000, 
     inhibitory = {"basket_to_basket", "stellate_to_stellate", "golgi_to_golgi", "basket_to_purkinje", "stellate_to_purkinje", "golgi_to_granule"}
     label_map = {
         "glomerulus_to_granule": "Glom-Grc spikes", "golgi_to_granule": "GoC-GrC spikes",
-        "parallel_fiber_to_basket": "GrC (pf)-BC", "basket_to_basket": "BC-BC",
-        "parallel_fiber_to_stellate": "GrC (pf)-SC", "stellate_to_stellate": "SC-SC",
+        "parallel_fiber_to_basket": "GrC (pf)-BC spikes", "basket_to_basket": "BC-BC spikes",
+        "parallel_fiber_to_stellate": "GrC (pf)-SC spikes", "stellate_to_stellate": "SC-SC spikes",
     }
     default_cam = dict(up=dict(x=0,y=0,z=1),center=dict(x=0,y=0,z=0),eye=dict(x=-1.6178192877772763,y=1.420370800120278,z=0.679576755143629))
     cameras = {
@@ -136,7 +136,7 @@ def plot(path=None, net_path=None, bg_start=5700, bg_end=5900, stim_start=6000, 
             regressor = LinearRegression().fit(ispikes, istim)
 
         scatters = [
-            go.Scatter3d(x=ispikes[:, 0], y=ispikes[:, 1], z=istim, mode="markers", marker_color=ct.plotting.color),
+            go.Scatter3d(x=ispikes[:, 0], y=ispikes[:, 1], z=istim, mode="markers", marker_size=3, marker_color=ct.plotting.color),
         ]
         if not _is_spoofed:
             scatters.append(
@@ -167,4 +167,6 @@ def plot(path=None, net_path=None, bg_start=5700, bg_end=5900, stim_start=6000, 
 
 def meta(key):
     if key == "granule_cell":
+        return {"width": 1920 * 0.55, "height": 1080 * 0.55}
+    if key == "basket_cell" or "stellate_cell":
         return {"width": 1920 * 0.55, "height": 1080 * 0.55}

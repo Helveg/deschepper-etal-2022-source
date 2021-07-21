@@ -3,9 +3,11 @@ from h5py import File
 from glob import glob
 import os, numpy as np, itertools
 import plotly.graph_objs as go
-import grc_cloud
+import grc_cloud, pickle
 from ._paths import *
 import selection
+
+frozen = True
 
 def find_nearest(array, value):
     array = np.asarray(array)
@@ -92,42 +94,61 @@ def plot(run_mli_path=None, run_nomli_path=None, net_path=None):
         ("rel_isi", rISI_mli, rISI_no_mli),
         # ("rel_freq", rf_mli, rf_no_mli),
     ):
-        print("------------", name, "------------")
-        from sklearn.model_selection import GridSearchCV
-        from sklearn.kernel_ridge import KernelRidge
+        if not frozen:
+            print("------------", name, "------------")
+            from sklearn.model_selection import GridSearchCV
+            from sklearn.kernel_ridge import KernelRidge
 
-        X = ps_pc.positions[incl_mask, 0].reshape(-1, 1)
-        y = np.array(cond1)
-        y2 = np.array(cond2)
-        X_plot = np.linspace(np.min(X), np.max(X), 100000)[:, None]
-        kr = GridSearchCV(KernelRidge(kernel='rbf', gamma=0.1),
-                          param_grid={"alpha": [1e0, 0.1, 1e-2, 1e-3],
-                                      "gamma": np.logspace(-100, 20, 200)})
-        kr.fit(X, y)
-        inhib_score = kr.score(X, y)
-        print("R^2 score inhibited: ", inhib_score)
-        # Standard error of the estimate
-        S = np.sqrt(np.sum((cond1 - kr.predict(X)) ** 2) / len(X))
-        print("S score inhibited:", S)
-        y_kr = kr.predict(X_plot)
-        kr2 = GridSearchCV(KernelRidge(kernel='rbf', gamma=0.1),
-                          param_grid={"alpha": [1e0, 0.1, 1e-2, 1e-3],
-                                      "gamma": np.logspace(-100, 20, 200)})
-        kr2.fit(X, y2)
-        disinhib_score = kr.score(X, y2)
-        print("R^2 score disinhibited: ", disinhib_score)
-        # Standard error of the estimate
-        S = np.sqrt(np.sum((cond2 - kr2.predict(X)) ** 2) / len(X))
-        print("S score disinhibited:", S)
-        y_kr2 = kr2.predict(X_plot)
-        x = X.ravel()
-        x_plot = X_plot.ravel()
+            X = ps_pc.positions[incl_mask, 0].reshape(-1, 1)
+            y = np.array(cond1)
+            y2 = np.array(cond2)
+            X_plot = np.linspace(np.min(X), np.max(X), 100000)[:, None]
+            kr = GridSearchCV(KernelRidge(kernel='rbf', gamma=0.1),
+                              param_grid={"alpha": [1e0, 0.1, 1e-2, 1e-3],
+                                          "gamma": np.logspace(-100, 20, 200)})
+            kr.fit(X, y)
+            inhib_score = kr.score(X, y)
+            print("R^2 score inhibited: ", inhib_score)
+            # Standard error of the estimate
+            S = np.sqrt(np.sum((cond1 - kr.predict(X)) ** 2) / len(X))
+            print("S score inhibited:", S)
+            y_kr = kr.predict(X_plot)
+            kr2 = GridSearchCV(KernelRidge(kernel='rbf', gamma=0.1),
+                              param_grid={"alpha": [1e0, 0.1, 1e-2, 1e-3],
+                                          "gamma": np.logspace(-100, 20, 200)})
+            kr2.fit(X, y2)
+            disinhib_score = kr.score(X, y2)
+            print("R^2 score disinhibited: ", disinhib_score)
+            # Standard error of the estimate
+            S = np.sqrt(np.sum((cond2 - kr2.predict(X)) ** 2) / len(X))
+            print("S score disinhibited:", S)
+            y_kr2 = kr2.predict(X_plot)
+            x = X.ravel()
+            x_plot = X_plot.ravel()
+            mi = np.argmax(y_kr)
+            nmi = np.argmax(y_kr2)
+            m = y_kr[mi]
+            nm = y_kr2[nmi]
+            print("Max red. with MLI:", round(m, 2), "at", round(x_plot[mi], 2))
+            print("Max red. without MLI:", round(nm, 2), "at", round(x_plot[nmi], 2))
+            hmi = find_nearest(y_kr, m / 2)
+            hnmi = find_nearest(y_kr2, nm / 2)
+            slope_m = np.diff(y_kr)[hmi] / np.diff(x_plot)[hmi]
+            slope_nm = np.diff(y_kr2)[hnmi] / np.diff(x_plot)[hnmi]
+            print("MLI Slope at half:", round(slope_m, 5))
+            print("No MLI Slope at half:", round(slope_nm, 5))
+            beam = grc_cloud.granule_beam(net_path, mli_files[0], base_start=base_start, base_end=base_end, stim_start=stim_start, stim_end=stim_end)
+            with open(f"lateral_{name}.pkl", "wb") as f:
+                pickle.dump((x, cond1, x_plot, y_kr, cond2, y_kr2, beam), f)
+        else:
+            with open(f"lateral_{name}.pkl", "rb") as f:
+                x, cond1, x_plot, y_kr, cond2, y_kr2, beam = pickle.load(f)
         fig = go.Figure([
-            go.Scatter(x=x, y=cond1, name="PC response with MLI", mode="markers", text=[str(id) for id in ps_pc.identifiers if id not in cut_off_ids], marker=dict(color="blue")),
-            go.Scatter(x=x_plot, y=y_kr, name="KRR of response with MLI", mode="lines", line=dict(color="blue")),
-            go.Scatter(x=x, y=cond2, name="PC response without MLI", mode="markers", marker=dict(color="red")),
-            go.Scatter(x=x_plot, y=y_kr2, name="KRR of response without MLI", mode="lines", line=dict(color="red")),
-            go.Scatter(x=[0], y=[0], mode="markers", name="Activated GrC", marker=dict(
+            go.Scatter(x=x, y=cond1, name="Control", mode="markers", marker_size=3, text=[str(id) for id in ps_pc.identifiers if id not in cut_off_ids], marker=dict(color=ps_pc.type.plotting.color)),
+            go.Scatter(x=x_plot, y=y_kr, name="Control fit", showlegend=False, mode="lines", line=dict(color=ps_pc.type.plotting.color, width=1)),
+            go.Scatter(x=x, y=cond2, name="No MLI-PC", mode="markers", marker_size=3,  marker=dict(color="grey")),
+            go.Scatter(x=x_plot, y=y_kr2, name="No MLI-PC fit", showlegend=False, mode="lines", line=dict(color="grey", width=1)),
+            go.Scatter(x=[0], y=[0], mode="markers", name="GrC activation", marker=dict(
                 colorscale=grc_cloud.colorbar_grc, cmin=0, cmax=1,
                 size=9,
                 symbol="square",
@@ -143,7 +164,7 @@ def plot(run_mli_path=None, run_nomli_path=None, net_path=None):
                 )
             ))
         ])
-        fig.layout.shapes = grc_cloud.granule_beam(net_path, mli_files[0], base_start=base_start, base_end=base_end, stim_start=stim_start, stim_end=stim_end)
+        fig.layout.shapes = beam
         fig.update_layout(
             title_text=f"Lateral response of PC to activated GrC bundle",
             yaxis_title="Relative elongation of ISI",
@@ -153,21 +174,12 @@ def plot(run_mli_path=None, run_nomli_path=None, net_path=None):
             xaxis_tickvals=[i * 50 for i in range(7)],
             xaxis_ticktext=[300 - i * 50 for i in range(7)]
         )
-        fig.add_annotation(x=x_plot[10], y=y_kr[10], text=f"R\u00B2 = {round(inhib_score, 2)}", showarrow=True, arrowhead=False, ay=30, ax=-20, standoff=3)
-        fig.add_annotation(x=x_plot[10], y=y_kr2[10], text=f"R\u00B2 = {round(disinhib_score, 2)}", showarrow=True, arrowhead=False, ay=-30, ax=-20, standoff=3)
+        # fig.add_annotation(x=x_plot[10], y=y_kr[10], text=f"R\u00B2 = {round(inhib_score, 2)}", showarrow=True, arrowhead=False, ay=30, ax=-20, standoff=3)
+        # fig.add_annotation(x=x_plot[10], y=y_kr2[10], text=f"R\u00B2 = {round(disinhib_score, 2)}", showarrow=True, arrowhead=False, ay=-30, ax=-20, standoff=3)
 
-        mi = np.argmax(y_kr)
-        nmi = np.argmax(y_kr2)
-        m = y_kr[mi]
-        nm = y_kr2[nmi]
-        print("Max red. with MLI:", round(m, 2), "at", round(x_plot[mi], 2))
-        print("Max red. without MLI:", round(nm, 2), "at", round(x_plot[nmi], 2))
-        hmi = find_nearest(y_kr, m / 2)
-        hnmi = find_nearest(y_kr2, nm / 2)
-        slope_m = np.diff(y_kr)[hmi] / np.diff(x_plot)[hmi]
-        slope_nm = np.diff(y_kr2)[hnmi] / np.diff(x_plot)[hnmi]
-        print("MLI Slope at half:", round(slope_m, 5))
-        print("No MLI Slope at half:", round(slope_nm, 5))
         figs[name] = fig
 
     return figs
+
+def meta(key):
+    return {"width": 550, "height": 400}
