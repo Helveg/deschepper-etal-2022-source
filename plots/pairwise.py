@@ -7,6 +7,7 @@ from glob import glob
 from plotly.subplots import make_subplots
 import selection
 import scipy.spatial.distance
+from scipy import stats
 
 def plot(net_path=None):
     if net_path is None:
@@ -14,19 +15,20 @@ def plot(net_path=None):
     network = from_hdf5(net_path)
     select = ["glomerulus", "granule_cell", "golgi_cell", "purkinje_cell", "basket_cell", "stellate_cell"]
     fig = make_subplots(cols=6, rows=1, x_title="Distance [μm]")
-    fig.update_layout(bargap=0, bargroupgap=0, title_text="Pairwise distance")
+    fig.update_layout(title_text="Pairwise distance")
     for i, ct in enumerate(sorted(network.get_cell_types(entities=False), key=lambda c: select.index(c.name))):
         ps = network.get_placement_set(ct)
         print("Looking into", ps.tag)
         dists = scipy.spatial.distance.pdist(ps.positions)
-        y, x = np.histogram(dists, bins="fd")
+        kde = stats.gaussian_kde(np.random.choice(dists, size=np.min([10000, len(dists)])))
+        m = np.max(dists) + np.min(dists)
+        x = np.linspace(0, m, 1000)
+        y = np.where(x < np.min(dists), 0, kde(x))
         fig.add_trace(
-            go.Bar(y=y, x=x, marker_line_width=0, marker_color=ct.plotting.color, name=ct.plotting.label),
+            go.Scatter(x=x, y=y, line_color=ct.plotting.color, name=ct.plotting.label),
             row=1,
             col=i + 1,
         )
-        fig.update_xaxes(row=1, col=i + 1, range=[0, np.max(dists)])
-    fig.update_yaxes(visible=False)
 
     return fig
 
