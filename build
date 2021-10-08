@@ -48,7 +48,7 @@ def build_figure(plotting_module, args):
     else:
         def meta(*args):
             return None
-    if isinstance(fig, list):
+    if isinstance(fig, list) or isinstance(fig, tuple):
         for i, f in enumerate(fig):
             _build_figure(plotting_module, f, i, meta(i))
     elif isinstance(fig, dict):
