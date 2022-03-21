@@ -3,6 +3,7 @@ from bsb.core import from_hdf5
 from scipy.sparse import coo_matrix
 import numpy as np
 import itertools
+import collections
 import plotly.graph_objs as go
 
 def goc_graph(netw):
@@ -13,7 +14,7 @@ def goc_graph(netw):
     conn_m = coo_matrix((np.ones(l), (gap_goc.from_identifiers, gap_goc.to_identifiers)), shape=(l, l))
     conn_m.eliminate_zeros()
     G.add_nodes_from(goc.identifiers)
-    itertools.consume(G.add_edges_from(zip(itertools.repeat(from_), row.indices, map(lambda a: dict([a]), map(tuple, zip(itertools.repeat("weight"), row.data))))) for from_, row in enumerate(map(conn_m.getrow, range(len(goc)))))
+    collections.deque((G.add_edges_from(zip(itertools.repeat(from_), row.indices, map(lambda a: dict([a]), map(tuple, zip(itertools.repeat("weight"), row.data))))) for from_, row in enumerate(map(conn_m.getrow, range(len(goc))))), maxlen=0)
     return G
 
 def graph_traces(G, pos):
@@ -84,4 +85,4 @@ def plot():
                 yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)
             )
         ),
-    ]
+    }
