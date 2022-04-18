@@ -60,8 +60,6 @@ def plot():
     y = np.linspace(-300, 300, 50)
     surf_coupled = gaussian_kde(np.vstack((relation[::3], relation[2::3])), weights=coupling[::2])
     surf_total = gaussian_kde(np.vstack((relation[::3], relation[2::3])), weights=coupling[1::2])
-    print(np.nonzero(coupling[1::2] == 0))
-    print(np.nonzero(coupling[::2] == 0))
     nonz_mask = coupling[1::2] != 0
     nonz_x = relation[::3][nonz_mask]
     nonz_y = relation[2::3][nonz_mask]
@@ -69,7 +67,6 @@ def plot():
 
     raster = np.meshgrid(x, y)
     coords = np.vstack((raster[0].ravel(), raster[1].ravel()))
-    print(coords.shape)
 
     total = go.Figure(
         [
