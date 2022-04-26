@@ -1,4 +1,5 @@
 from scipy.spatial import distance_matrix
+from plotly.subplots import make_subplots
 import numpy as np
 import plotly.graph_objs as go
 import h5py
@@ -41,12 +42,15 @@ def overlap_bins(a, b, binsize=0.5):
     bincount = int(max(np.max(a), np.max(b)) // binsize + 2)
     a_binned = np.bincount((a / binsize).astype(int), minlength=bincount)
     b_binned = np.bincount((b / binsize).astype(int), minlength=bincount)
-    return sum(a_binned + b_binned > np.maximum(a_binned, b_binned))
+    return sum(a_binned + b_binned - np.maximum(a_binned, b_binned))
 
 def crosscor(a, b, step=0.1, binsize=0.5, slide=100):
     b = b + slide
     corr_spikes = [overlap_bins(a + plus_a, b, binsize=binsize) for plus_a in np.arange(0, slide * 2, step)]
     return corr_spikes
+
+def z_title(t1, t2, samples):
+    return f"t1: {len(t1)}, t2: {len(t2)}; N: {len(samples)}; mean: {np.mean(samples)}; std: {np.std(samples)}"
 
 if not os.path.exists("golgi_tracks.pkl"):
     with h5py.File("results/golgi_spike_example.hdf5", "r") as f:
@@ -67,31 +71,35 @@ def plot():
     prelim_vars = (step, binsize, slide)
     step = 0.5
     binsize = 5
+    binsteps = int(binsize / 2 // step)
     slide = 100
+    lag0 = int(slide // step)
     t0, t1, t2, bin = make_mutex_tracks()
     tracks = [make_sync(t1, t2, sync=(1 - i), jitter=bin/2) for i in range(2)]
     art_hit = crosscor(t1, tracks[0], step=step, binsize=binsize, slide=slide)
     art_miss = crosscor(t1, tracks[-1], step=step, binsize=binsize, slide=slide)
-    z = crosscor(golgi_tracks[59], golgi_tracks[65], step=step, binsize=binsize, slide=slide)
-    z_long = crosscor(golgi_tracks[29], golgi_tracks[26], step=step, binsize=binsize, slide=slide)
+    cross_dir = crosscor(golgi_tracks[59], golgi_tracks[65], step=step, binsize=binsize, slide=slide)
+    cross_long = crosscor(golgi_tracks[29], golgi_tracks[26], step=step, binsize=binsize, slide=slide)
     netw = from_hdf5("networks/balanced.hdf5")
     G = goc_graph(netw)
     id_map = dict(zip(G.nodes(), itertools.count()))
     L = len(G.nodes())
     if not os.path.exists("goc_netw_crosscorr.pkl"):
         netw_dist = np.empty((L, L))
-        crosscor_m = np.empty((L, L))
+        zscore_m = np.empty((L, L))
         for node, paths in nx.shortest_path_length(G, weight="weight"):
             print("It", node)
             for k, d in paths.items():
                 netw_dist[node, k] = d
                 me, other = golgi_tracks[id_map[node]], golgi_tracks[id_map[k]]
-                crosscor_m[node, k] = max(crosscor(me, other, binsize=binsize, step=step, slide=5))
+                cross = crosscor(me, other, binsize=binsize, step=step, slide=slide)
+                z = zscore(cross)
+                zscore_m[node, k] = max(z[(lag0 - binsteps):(lag0 + binsteps)])
         with open("goc_netw_crosscorr.pkl", "wb") as f:
-            pickle.dump((netw_dist, crosscor_m), f)
+            pickle.dump((netw_dist, zscore_m), f)
     else:
         with open("goc_netw_crosscorr.pkl", "rb") as g:
-            netw_dist, crosscor_m = pickle.load(g)
+            netw_dist, zscore_m = pickle.load(g)
 
     dmax = np.max(netw_dist)
     x = np.linspace(0, dmax, 100)
@@ -99,7 +107,7 @@ def plot():
     avg = []
     sd = []
     for p in x:
-        p_select = crosscor_m[(netw_dist >= p - w) & (netw_dist < p + w)]
+        p_select = zscore_m[(netw_dist >= p - w) & (netw_dist < p + w)]
         avg.append(np.mean(p_select))
         sd.append(np.std(p_select))
 
@@ -110,20 +118,32 @@ def plot():
             steps[node, P] = len(path)
     R = [*range(1, int(np.max(steps) + 1))]
     bar_groups = [
-        crosscor_m[steps == i]
+        zscore_m[steps == i]
         for i in R
     ]
     bar_y = [np.mean(group) for group in bar_groups]
     bar_err = [np.std(group) for group in bar_groups]
+    direct_fig = make_subplots(rows=2, cols=1)
+    direct_fig.update_layout(title_text=z_title(golgi_tracks[59], golgi_tracks[65], cross_dir))
+    direct_fig.add_trace(go.Scatter(x=golgi_tracks[59], y=np.ones(len(golgi_tracks[59])), mode="markers", marker_symbol="square"), row=1, col=1)
+    direct_fig.add_trace(go.Scatter(x=golgi_tracks[65], y=np.ones(len(golgi_tracks[65])) * 0.9, mode="markers", marker_symbol="square"), row=1, col=1)
+    direct_fig.add_trace(go.Scatter(x=np.arange(-slide, slide, step), y=zscore(cross_dir)), row=2, col=1)
+    indirect_fig = make_subplots(rows=3, cols=1)
+    direct_fig.update_layout(title_text=z_title(golgi_tracks[29], golgi_tracks[26], cross_long))
+    indirect_fig.add_trace(go.Scatter(x=golgi_tracks[29], y=np.ones(len(golgi_tracks[29])), mode="markers", marker_symbol="square"), row=1, col=1)
+    indirect_fig.add_trace(go.Scatter(x=golgi_tracks[26], y=np.ones(len(golgi_tracks[26])) * 0.9, mode="markers", marker_symbol="square"), row=1, col=1)
+    indirect_fig.add_trace(go.Scatter(x=np.arange(-slide, slide, step), y=zscore(cross_long)), row=2, col=1)
+
+
 
     return {
         "like_figure": go.Figure(go.Scatter(x=np.arange(-prelim_vars[2], prelim_vars[2], prelim_vars[0]), y=zscore(like_fig))),
-        "art_hit": go.Figure(go.Scatter(x=np.arange(-slide, slide, step), y=zscore(art_hit))),
-        "art_miss": go.Figure(go.Scatter(x=np.arange(-slide, slide, step), y=zscore(art_miss))),
-        "direct": go.Figure(go.Scatter(x=np.arange(-slide, slide, step), y=z)),
-        "indirect": go.Figure(go.Scatter(x=np.arange(-slide, slide, step), y=z_long)),
+        "art_hit": go.Figure(go.Scatter(x=np.arange(-slide, slide, step), y=zscore(art_hit)), layout_title_text=z_title(t1, tracks[0], art_hit)),
+        "art_miss": go.Figure(go.Scatter(x=np.arange(-slide, slide, step), y=zscore(art_miss)), layout_title_text=z_title(t1, tracks[-1], art_miss)),
+        "direct": direct_fig,
+        "indirect": indirect_fig,
         "relation": go.Figure([
-            go.Scatter(x=netw_dist.ravel(), y=crosscor_m.ravel(), mode="markers"),
+            go.Scatter(x=netw_dist.ravel(), y=zscore_m.ravel(), mode="markers"),
             go.Scatter(x=x, y=avg),
         ]),
         "steps": go.Figure(
