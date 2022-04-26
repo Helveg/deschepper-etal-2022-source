@@ -32,7 +32,7 @@ def coincidence_matrix(tracks, diff, skip_self=True):
             if skip_self and gid == ogid:
                 # Skip diagonal (self)
                 continue
-            co[gid, ogid, :] = (sum(coincident(track, otrack, diff)), len(track))
+            co[gid, ogid, :] = (sum(coincident(track[track > 5200], otrack[otrack > 5200], diff)), len(track))
 
     return co
 

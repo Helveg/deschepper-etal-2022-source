@@ -39,6 +39,8 @@ def make_sync(t1, t2, sync=0.9, jitter=0.3):
     )) + random.random(l1 + l2) * jitter - jitter / 2
 
 def overlap_bins(a, b, binsize=0.5):
+    if not (len(a) and len(b)):
+        return 0
     bincount = int(max(np.max(a), np.max(b)) // binsize + 2)
     a_binned = np.bincount((a / binsize).astype(int), minlength=bincount)
     b_binned = np.bincount((b / binsize).astype(int), minlength=bincount)
@@ -75,10 +77,14 @@ def plot():
     slide = 100
     lag0 = int(slide // step)
     t0, t1, t2, bin = make_mutex_tracks()
+    direct_a = golgi_tracks[59][golgi_tracks[59] > 5200]
+    direct_b = golgi_tracks[65][golgi_tracks[65] > 5200]
+    indirect_a = golgi_tracks[29][golgi_tracks[29] > 5200]
+    indirect_b = golgi_tracks[26][golgi_tracks[26] > 5200]
     tracks = [make_sync(t1, t2, sync=(1 - i), jitter=bin/2) for i in range(2)]
     art_hit = crosscor(t1, tracks[0], step=step, binsize=binsize, slide=slide)
     art_miss = crosscor(t1, tracks[-1], step=step, binsize=binsize, slide=slide)
-    cross_dir = crosscor(golgi_tracks[59], golgi_tracks[65], step=step, binsize=binsize, slide=slide)
+    cross_dir = crosscor(direct_a, direct_b, step=step, binsize=binsize, slide=slide)
     cross_long = crosscor(golgi_tracks[29], golgi_tracks[26], step=step, binsize=binsize, slide=slide)
     netw = from_hdf5("networks/balanced.hdf5")
     G = goc_graph(netw)
@@ -92,7 +98,7 @@ def plot():
             for k, d in paths.items():
                 netw_dist[node, k] = d
                 me, other = golgi_tracks[id_map[node]], golgi_tracks[id_map[k]]
-                cross = crosscor(me, other, binsize=binsize, step=step, slide=slide)
+                cross = crosscor(me[me > 5200], other[other > 5200], binsize=binsize, step=step, slide=slide)
                 z = zscore(cross)
                 zscore_m[node, k] = max(z[(lag0 - binsteps):(lag0 + binsteps)])
         with open("goc_netw_crosscorr.pkl", "wb") as f:
@@ -108,8 +114,8 @@ def plot():
     sd = []
     for p in x:
         p_select = zscore_m[(netw_dist >= p - w) & (netw_dist < p + w)]
-        avg.append(np.mean(p_select))
-        sd.append(np.std(p_select))
+        avg.append(np.nanmean(p_select))
+        sd.append(np.nanstd(p_select))
 
     pathss = nx.shortest_path(G)
     steps = np.empty((L, L))
@@ -121,17 +127,18 @@ def plot():
         zscore_m[steps == i]
         for i in R
     ]
-    bar_y = [np.mean(group) for group in bar_groups]
-    bar_err = [np.std(group) for group in bar_groups]
+    bar_y = [np.nanmean(group) for group in bar_groups]
+    bar_err = [np.nanstd(group) for group in bar_groups]
     direct_fig = make_subplots(rows=2, cols=1)
-    direct_fig.update_layout(title_text=z_title(golgi_tracks[59], golgi_tracks[65], cross_dir))
-    direct_fig.add_trace(go.Scatter(x=golgi_tracks[59], y=np.ones(len(golgi_tracks[59])), mode="markers", marker_symbol="square"), row=1, col=1)
-    direct_fig.add_trace(go.Scatter(x=golgi_tracks[65], y=np.ones(len(golgi_tracks[65])) * 0.9, mode="markers", marker_symbol="square"), row=1, col=1)
+    direct_fig.update_layout(title_text="Direct: " + z_title(direct_a, direct_b, cross_dir))
+    direct_fig.add_trace(go.Scatter(x=direct_a, y=np.ones(len(direct_a)), mode="markers", marker_symbol="square"), row=1, col=1)
+    direct_fig.add_trace(go.Scatter(x=direct_b, y=np.ones(len(direct_b)) * 0.9, mode="markers", marker_symbol="square"), row=1, col=1)
     direct_fig.add_trace(go.Scatter(x=np.arange(-slide, slide, step), y=zscore(cross_dir)), row=2, col=1)
+    direct_fig.update_layout(title_text="Direct connection")
     indirect_fig = make_subplots(rows=3, cols=1)
-    direct_fig.update_layout(title_text=z_title(golgi_tracks[29], golgi_tracks[26], cross_long))
-    indirect_fig.add_trace(go.Scatter(x=golgi_tracks[29], y=np.ones(len(golgi_tracks[29])), mode="markers", marker_symbol="square"), row=1, col=1)
-    indirect_fig.add_trace(go.Scatter(x=golgi_tracks[26], y=np.ones(len(golgi_tracks[26])) * 0.9, mode="markers", marker_symbol="square"), row=1, col=1)
+    indirect_fig.update_layout(title_text="Indirect: " + z_title(indirect_a, indirect_b, cross_long))
+    indirect_fig.add_trace(go.Scatter(x=indirect_a, y=np.ones(len(indirect_a)), mode="markers", marker_symbol="square"), row=1, col=1)
+    indirect_fig.add_trace(go.Scatter(x=indirect_b, y=np.ones(len(indirect_b)) * 0.9, mode="markers", marker_symbol="square"), row=1, col=1)
     indirect_fig.add_trace(go.Scatter(x=np.arange(-slide, slide, step), y=zscore(cross_long)), row=2, col=1)
 
 
@@ -142,15 +149,19 @@ def plot():
         "art_miss": go.Figure(go.Scatter(x=np.arange(-slide, slide, step), y=zscore(art_miss)), layout_title_text=z_title(t1, tracks[-1], art_miss)),
         "direct": direct_fig,
         "indirect": indirect_fig,
-        "relation": go.Figure([
-            go.Scatter(x=netw_dist.ravel(), y=zscore_m.ravel(), mode="markers"),
-            go.Scatter(x=x, y=avg),
-        ]),
+        "relation": go.Figure(
+            [
+                go.Scatter(x=netw_dist.ravel(), y=zscore_m.ravel(), mode="markers"),
+                go.Scatter(x=x, y=avg)
+            ],
+            layout_title_text="Relationship"
+        ),
         "steps": go.Figure(
             go.Scatter(
                 x=[r - 1 for r in R],
                 y=bar_y,
                 error_y=dict(type="data", array=bar_err, visible=True),
-            )
+            ),
+            layout_title_text="Stepped network distance"
         ),
     }
