@@ -11,6 +11,7 @@ from bsb.core import from_hdf5
 from scipy.sparse import coo_matrix
 import itertools
 import collections
+import pymannkendall as mk
 
 random = np.random.default_rng()
 
@@ -77,10 +78,10 @@ def plot():
     slide = 100
     lag0 = int(slide // step)
     t0, t1, t2, bin = make_mutex_tracks()
-    direct_a = golgi_tracks[59][golgi_tracks[59] > 5200]
-    direct_b = golgi_tracks[65][golgi_tracks[65] > 5200]
-    indirect_a = golgi_tracks[29][golgi_tracks[29] > 5200]
-    indirect_b = golgi_tracks[26][golgi_tracks[26] > 5200]
+    direct_a = golgi_tracks[59]
+    direct_b = golgi_tracks[65]
+    indirect_a = golgi_tracks[29]
+    indirect_b = golgi_tracks[26]
     tracks = [make_sync(t1, t2, sync=(1 - i), jitter=bin/2) for i in range(2)]
     art_hit = crosscor(t1, tracks[0], step=step, binsize=binsize, slide=slide)
     art_miss = crosscor(t1, tracks[-1], step=step, binsize=binsize, slide=slide)
@@ -141,7 +142,10 @@ def plot():
     indirect_fig.add_trace(go.Scatter(x=indirect_b, y=np.ones(len(indirect_b)) * 0.9, mode="markers", marker_symbol="square"), row=1, col=1)
     indirect_fig.add_trace(go.Scatter(x=np.arange(-slide, slide, step), y=zscore(cross_long)), row=2, col=1)
 
-
+    mk_medians = [np.median(zscore_m[netw_dist == d]) for d in np.sort(np.unique(netw_dist))]
+    print("MK test of relationship:", mk.original_test(mk_medians))
+    bar_y = [np.nanmedian(group) for group in bar_groups[1:-1]]
+    print("MK test of steps:", mk.original_test(bar_y))
 
     return {
         "like_figure": go.Figure(go.Scatter(x=np.arange(-prelim_vars[2], prelim_vars[2], prelim_vars[0]), y=zscore(like_fig))),
@@ -149,19 +153,20 @@ def plot():
         "art_miss": go.Figure(go.Scatter(x=np.arange(-slide, slide, step), y=zscore(art_miss)), layout_title_text=z_title(t1, tracks[-1], art_miss)),
         "direct": direct_fig,
         "indirect": indirect_fig,
-        "relation": go.Figure(
+        "gj_dist": go.Figure(
             [
                 go.Scatter(x=netw_dist.ravel(), y=zscore_m.ravel(), mode="markers"),
                 go.Scatter(x=x, y=avg)
             ],
-            layout_title_text="Relationship"
+            layout_title_text="Effect of gap junction coupling on Golgi cell synchrony"
         ),
         "steps": go.Figure(
             go.Scatter(
-                x=[r - 1 for r in R],
+                x=[r - 1 for r in R[1:-1]],
                 y=bar_y,
                 error_y=dict(type="data", array=bar_err, visible=True),
             ),
-            layout_title_text="Stepped network distance"
+            layout_title_text="Effect of gap junction shortest-path on Golgi cell synchrony".
+            layout_yaxis_title="Median of the Z-scores"
         ),
     }
