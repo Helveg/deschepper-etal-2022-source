@@ -25,24 +25,42 @@ else:
     with open("golgi_tracks.pkl", "rb") as g:
         golgi_tracks = pickle.load(g)
 
-def coincidence_matrix(tracks, diff, skip_self=True):
+def coincidence_matrix(tracks, diff, selected):
     co = np.zeros((len(tracks), len(tracks), 2))
     for gid, track in enumerate(tracks.values()):
         for ogid, otrack in enumerate(tracks.values()):
-            if skip_self and gid == ogid:
+            if not selected[gid, ogid]:
                 # Skip diagonal (self)
                 continue
             co[gid, ogid, :] = (sum(coincident(track, otrack, diff)), len(track))
 
     return co
 
+def skip_self(m):
+    m = m.copy()
+    for i in range(len(m)):
+        m[i, i] = False
+    return m
+
+def include_self(m):
+    m = m.copy()
+    for i in range(len(m)):
+        m[i, i] = True
+    return m
+
 def plot():
     if not os.path.exists("golgi_nsync.pkl"):
-        dists = np.arange(0, 5.5, 0.5)
-        fake_tracks = {gid: random.random(len(track)) * 2800 for gid, track in golgi_tracks.items()}
-        co = {d: coincidence_matrix(golgi_tracks, d) for d in dists}
-        nsco = {d: coincidence_matrix(golgi_tracks, d, skip_self=False) for d in dists}
-        fco = {d: coincidence_matrix(fake_tracks, d) for d in dists}
+        dist = 100
+        bin_widths = np.arange(0, 5.5, 0.5)
+        ps = from_hdf5("networks/balanced.hdf5").get_placement_set("golgi_cell")
+        ps_pos = ps.positions
+        selected = distance_matrix(ps_pos, ps_pos) < dist
+        # Spoof data for reference to uniformly random baseline
+        fake_tracks = {gid: random.random(len(track)) * 2500 for gid, track in golgi_tracks.items()}
+        pos = {id: p for id, p in zip(ps.identifiers, ps_pos)}
+        co = {(bw, dist): coincidence_matrix(golgi_tracks, bw, skip_self(selected)) for bw in bin_widths}
+        nsco = {(bw, dist): coincidence_matrix(golgi_tracks, bw, include_self(selected)) for bw in bin_widths}
+        fco = {(bw, dist): coincidence_matrix(fake_tracks, bw, skip_self(selected)) for bw in bin_widths}
         with open("golgi_nsync.pkl", "wb") as g:
             pickle.dump((co, nsco, fco), g)
     else:
@@ -52,17 +70,17 @@ def plot():
     total = go.Figure(
         [
             go.Scatter(
-                x=list(co.keys()),
+                x=list(ck[0] for ck in co.keys()),
                 y=[np.sum(c[:, :, 0]) / np.sum(c[:, :, 1]) for c in co.values()],
                 name="Results"
             ),
             go.Scatter(
-                x=list(nsco.keys()),
+                x=list(ck[0] for ck in nsco.keys()),
                 y=[np.sum(c[:, :, 0]) / np.sum(c[:, :, 1]) for c in nsco.values()],
                 name="Noskip"
             ),
             go.Scatter(
-                x=list(fco.keys()),
+                x=list(ck[0] for ck in fco.keys()),
                 y=[np.sum(c[:, :, 0]) / np.sum(c[:, :, 1]) for c in fco.values()],
                 name="Random"
             )
