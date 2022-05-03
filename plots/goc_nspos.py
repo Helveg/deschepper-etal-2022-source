@@ -19,7 +19,7 @@ def coincident(a, b, diff=5):
 
 if not os.path.exists("golgi_tracks.pkl"):
     with h5py.File("results/golgi_spike_example.hdf5", "r") as f:
-        golgi_tracks = {g.attrs["cell_id"]: g[()][:, 1] for g in f["recorders/soma_spikes"].values() if g.attrs["label"] == "golgi_cell"}
+        golgi_tracks = {g.attrs["cell_id"]: (x := g[()][:, 1])[x > 5500] for g in f["recorders/soma_spikes"].values() if g.attrs["label"] == "golgi_cell"}
         with open("golgi_tracks.pkl", "wb") as g:
             pickle.dump(golgi_tracks, g)
 else:
@@ -40,7 +40,7 @@ def coincidence_matrix(tracks, diff, skip_self=True):
 def plot():
     if not os.path.exists("golgi_nsync.pkl"):
         dists = np.arange(0, 5.5, 0.5)
-        fake_tracks = {gid: random.random(len(track)) * 8000 for gid, track in golgi_tracks.items()}
+        fake_tracks = {gid: random.random(len(track)) * 2500 for gid, track in golgi_tracks.items()}
         co = {d: coincidence_matrix(golgi_tracks, d) for d in dists}
         nsco = {d: coincidence_matrix(golgi_tracks, d, skip_self=False) for d in dists}
         fco = {d: coincidence_matrix(fake_tracks, d) for d in dists}

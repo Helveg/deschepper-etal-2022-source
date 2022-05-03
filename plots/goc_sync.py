@@ -56,7 +56,7 @@ def z_title(t1, t2, samples):
 
 if not os.path.exists("golgi_tracks.pkl"):
     with h5py.File("results/golgi_spike_example.hdf5", "r") as f:
-        golgi_tracks = {g.attrs["cell_id"]: g[()][:, 1] for g in f["recorders/soma_spikes"].values() if g.attrs["label"] == "golgi_cell"}
+        golgi_tracks = {g.attrs["cell_id"]: (x := g[()][:, 1])[x > 5500] for g in f["recorders/soma_spikes"].values() if g.attrs["label"] == "golgi_cell"}
         with open("golgi_tracks.pkl", "wb") as g:
             pickle.dump(golgi_tracks, g)
 else:
@@ -98,7 +98,7 @@ def plot():
             for k, d in paths.items():
                 netw_dist[node, k] = d
                 me, other = golgi_tracks[id_map[node]], golgi_tracks[id_map[k]]
-                cross = crosscor(me[me > 5200], other[other > 5200], binsize=binsize, step=step, slide=slide)
+                cross = crosscor(me, other, binsize=binsize, step=step, slide=slide)
                 z = zscore(cross)
                 zscore_m[node, k] = max(z[(lag0 - binsteps):(lag0 + binsteps)])
         with open("goc_netw_crosscorr.pkl", "wb") as f:

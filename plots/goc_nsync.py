@@ -18,7 +18,7 @@ def coincident(a, b, diff=5):
 
 if not os.path.exists("golgi_tracks.pkl"):
     with h5py.File("results/golgi_spike_example.hdf5", "r") as f:
-        golgi_tracks = {g.attrs["cell_id"]: (x := g[()][:, 1])[x > 5200] for g in f["recorders/soma_spikes"].values() if g.attrs["label"] == "golgi_cell"}
+        golgi_tracks = {g.attrs["cell_id"]: (x := g[()][:, 1])[x > 5500] for g in f["recorders/soma_spikes"].values() if g.attrs["label"] == "golgi_cell"}
         with open("golgi_tracks.pkl", "wb") as g:
             pickle.dump(golgi_tracks, g)
 else:
@@ -32,7 +32,7 @@ def coincidence_matrix(tracks, diff, skip_self=True):
             if skip_self and gid == ogid:
                 # Skip diagonal (self)
                 continue
-            co[gid, ogid, :] = (sum(coincident(track[track > 5200], otrack[otrack > 5200], diff)), len(track))
+            co[gid, ogid, :] = (sum(coincident(track, otrack, diff)), len(track))
 
     return co
 

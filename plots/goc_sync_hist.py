@@ -14,7 +14,7 @@ import collections
 
 if not os.path.exists("golgi_tracks.pkl"):
     with h5py.File("results/golgi_spike_example.hdf5", "r") as f:
-        golgi_tracks = {g.attrs["cell_id"]: g[()][:, 1] for g in f["recorders/soma_spikes"].values() if g.attrs["label"] == "golgi_cell"}
+        golgi_tracks = {g.attrs["cell_id"]: (x := g[()][:, 1])[x > 5500] for g in f["recorders/soma_spikes"].values() if g.attrs["label"] == "golgi_cell"}
         with open("golgi_tracks.pkl", "wb") as g:
             pickle.dump(golgi_tracks, g)
 else:
@@ -33,7 +33,7 @@ def plot():
         for oid, otrack in golgi_tracks.items():
             if mid == oid:
                 continue
-            diffs.append(close_diffs(mtrack[mtrack > 5200], otrack[otrack > 5200]))
+            diffs.append(close_diffs(mtrack, otrack))
     diffs = np.concatenate(diffs)
 
 
