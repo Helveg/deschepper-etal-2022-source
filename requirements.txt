@@ -5,3 +5,4 @@ h5py>=3.0.0
 ennemi>=1.0.0
 graphviz>=0.19
 networkx>=2.7
+pymannkendall
