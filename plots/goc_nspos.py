@@ -38,21 +38,21 @@ def coincidence_matrix(tracks, diff, skip_self=True):
     return co
 
 def plot():
-    if not os.path.exists("golgi_nsync.pkl"):
+    if not os.path.exists("golgi_npos.pkl"):
         dists = np.arange(0, 5.5, 0.5)
         fake_tracks = {gid: random.random(len(track)) * 2500 for gid, track in golgi_tracks.items()}
         co = {d: coincidence_matrix(golgi_tracks, d) for d in dists}
         nsco = {d: coincidence_matrix(golgi_tracks, d, skip_self=False) for d in dists}
         fco = {d: coincidence_matrix(fake_tracks, d) for d in dists}
-        with open("golgi_nsync.pkl", "wb") as g:
+        with open("golgi_npos.pkl", "wb") as g:
             pickle.dump((co, nsco, fco), g)
     else:
-        with open("golgi_nsync.pkl", "rb") as g:
+        with open("golgi_npos.pkl", "rb") as g:
             co, nsco, fco = pickle.load(g)
 
     netw = from_hdf5("networks/balanced.hdf5")
     gpos = netw.get_placement_set("golgi_cell").positions
-    subtractor = gpos.reshape(70, 1, 3)
+    subtractor = gpos.reshape(-1, 1, 3)
     gdist = np.tile(gpos, (len(gpos), 1, 1)) - subtractor
     relation = gdist.ravel()
     coupling = co[5.].ravel()
@@ -73,7 +73,7 @@ def plot():
             go.Surface(
                 x=x,
                 y=y,
-                z=(surf_div(coords)).reshape((50,50)) * 100,
+                z=(surf_div(coords)).reshape((50,50)),
             ),
         ]
     )

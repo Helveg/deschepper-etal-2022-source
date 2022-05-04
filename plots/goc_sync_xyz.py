@@ -117,11 +117,19 @@ def plot():
     bar_err = [np.nanstd(group) for group in bar_groups]
 
     mask = netw_dist != 0
-    pos = netw.get_placement_set("golgi_cell").positions
-    pdist = distance_matrix(pos, pos)
-    pdr = pdist[mask].ravel()
     zsmr = zscore_m[mask].ravel()
-    print("MK test of distance:", mk.original_test(zsmr[np.argsort(pdr)]))
+    xpos = netw.get_placement_set("golgi_cell").positions[:, 0].reshape(-1, 1)
+    ypos = netw.get_placement_set("golgi_cell").positions[:, 1].reshape(-1, 1)
+    zpos = netw.get_placement_set("golgi_cell").positions[:, 2].reshape(-1, 1)
+    xdist = distance_matrix(xpos, xpos)
+    xdr = xdist[mask].ravel()
+    ydist = distance_matrix(ypos, ypos)
+    ydr = ydist[mask].ravel()
+    zdist = distance_matrix(zpos, zpos)
+    zdr = zdist[mask].ravel()
+    print("MK test of distance X:", mk.original_test(zsmr[np.argsort(xdr)]))
+    print("MK test of distance Y:", mk.original_test(zsmr[np.argsort(ydr)]))
+    print("MK test of distance Z:", mk.original_test(zsmr[np.argsort(zdr)]))
 
     mk_medians = [np.median(zscore_m[netw_dist == d]) for d in np.sort(np.unique(netw_dist))]
     print("MK test of relationship:", mk.original_test(mk_medians))
@@ -129,17 +137,19 @@ def plot():
     print("MK test of steps:", mk.original_test(bar_y))
 
     tnd_x, tnd_y, tnd_err = trend(netw_dist[mask], zscore_m[mask])
-    ted_x, ted_y, ted_err = trend(pdist[mask], zscore_m[mask], w=10, tw=10)
+    tedx_x, tedx_y, tedx_err = trend(xdist[mask], zscore_m[mask], w=10, tw=10)
+    tedy_x, tedy_y, tedy_err = trend(ydist[mask], zscore_m[mask], w=10, tw=10)
+    tedz_x, tedz_y, tedz_err = trend(zdist[mask], zscore_m[mask], w=10, tw=10)
 
-    fig = make_subplots(cols=3, rows=1)
+    fig = make_subplots(cols=3, rows=3, specs=[[{}, {"rowspan": 3}, {"rowspan": 3}], [{}, None, None], [{}, None, None]])
     fig.update_layout(title_text="Effect of gap junction coupling on Golgi cell synchrony")
     for p, traces in enumerate(
         (
             [
-                go.Scatter(x=pdr, y=zsmr, mode="markers"),
-                go.Scatter(x=ted_x, y=ted_y + ted_err, line_width=0),
-                go.Scatter(x=ted_x, y=ted_y, fill="tonexty", fillcolor="rgba(52, 235, 177, 0.3)"),
-                go.Scatter(x=ted_x, y=ted_y - ted_err, fill="tonexty", line_width=0, fillcolor="rgba(52, 235, 177, 0.3)"),
+                go.Scatter(x=xdr, y=zsmr, mode="markers"),
+                go.Scatter(x=tedx_x, y=tedx_y + tedx_err, line_width=0),
+                go.Scatter(x=tedx_x, y=tedx_y, fill="tonexty", fillcolor="rgba(52, 235, 177, 0.3)"),
+                go.Scatter(x=tedx_x, y=tedx_y - tedx_err, fill="tonexty", line_width=0, fillcolor="rgba(52, 235, 177, 0.3)"),
             ],
             [
                 go.Scatter(x=netw_dist[mask].ravel(), y=zsmr, mode="markers"),
@@ -158,6 +168,22 @@ def plot():
     ):
         for t in traces:
             fig.add_trace(t, row=1, col=p+1)
+
+    for trace in [
+        go.Scatter(x=ydr, y=zsmr, mode="markers"),
+        go.Scatter(x=tedy_x, y=tedy_y + tedy_err, line_width=0),
+        go.Scatter(x=tedy_x, y=tedy_y, fill="tonexty", fillcolor="rgba(52, 235, 177, 0.3)"),
+        go.Scatter(x=tedy_x, y=tedy_y - tedy_err, fill="tonexty", line_width=0, fillcolor="rgba(52, 235, 177, 0.3)"),
+    ]:
+        fig.add_trace(trace, row=2, col=1)
+
+    for trace in [
+        go.Scatter(x=zdr, y=zsmr, mode="markers"),
+        go.Scatter(x=tedz_x, y=tedz_y + tedz_err, line_width=0),
+        go.Scatter(x=tedz_x, y=tedz_y, fill="tonexty", fillcolor="rgba(52, 235, 177, 0.3)"),
+        go.Scatter(x=tedz_x, y=tedz_y - tedz_err, fill="tonexty", line_width=0, fillcolor="rgba(52, 235, 177, 0.3)"),
+    ]:
+        fig.add_trace(trace, row=3, col=1)
 
     for p, (xaxis_title, yaxis_title) in enumerate(
         (

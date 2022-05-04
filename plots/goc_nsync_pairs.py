@@ -18,21 +18,12 @@ def coincident(a, b, diff=5):
 
 if not os.path.exists("golgi_tracks.pkl"):
     with h5py.File("results/golgi_spike_example.hdf5", "r") as f:
-        golgi_tracks = {g.attrs["cell_id"]: (x := g[()][:, 1])[(x > 5500) & (x < 6000) | (x > 6050)] for g in f["recorders/soma_spikes"].values() if g.attrs["label"] == "golgi_cell"}
+        golgi_tracks = {g.attrs["cell_id"]: (x := g[()][:, 1])[x > 5500] for g in f["recorders/soma_spikes"].values() if g.attrs["label"] == "golgi_cell"}
         with open("golgi_tracks.pkl", "wb") as g:
             pickle.dump(golgi_tracks, g)
 else:
     with open("golgi_tracks.pkl", "rb") as g:
         golgi_tracks = pickle.load(g)
-
-if not os.path.exists("golgi_gko_tracks.pkl"):
-    with h5py.File("results/results_gap_knockout.hdf5", "r") as f:
-        golgi_gko_tracks = {g.attrs["cell_id"]: (x := g[()][:, 1])[(x > 5500) & (x < 6000) | (x > 6050)] for g in f["recorders/soma_spikes"].values() if g.attrs["label"] == "golgi_cell"}
-        with open("golgi_gko_tracks.pkl", "wb") as g:
-            pickle.dump(golgi_gko_tracks, g)
-else:
-    with open("golgi_gko_tracks.pkl", "rb") as g:
-        golgi_gko_tracks = pickle.load(g)
 
 def coincidence_matrix(tracks, diff, selected):
     co = np.zeros((len(tracks), len(tracks), 2))
@@ -58,14 +49,14 @@ def include_self(m):
     return m
 
 def plot():
-    dist = 100
-    bin_widths = np.arange(0, 5.5, 0.5)
-    ps = from_hdf5("networks/balanced.hdf5").get_placement_set("golgi_cell")
-    ps_pos = ps.positions
-    selected = skip_self(distance_matrix(ps_pos, ps_pos) < dist)
     if not os.path.exists("golgi_nsync.pkl"):
+        dist = 100
+        bin_widths = np.arange(0, 5.5, 0.5)
+        ps = from_hdf5("networks/balanced.hdf5").get_placement_set("golgi_cell")
+        ps_pos = ps.positions
+        selected = distance_matrix(ps_pos, ps_pos) < dist
         # Spoof data for reference to uniformly random baseline
-        fake_tracks = {gid: random.random(len(track)) * 2450 for gid, track in golgi_tracks.items()}
+        fake_tracks = {gid: random.random(len(track)) * 2500 for gid, track in golgi_tracks.items()}
         pos = {id: p for id, p in zip(ps.identifiers, ps_pos)}
         co = {(bw, dist): coincidence_matrix(golgi_tracks, bw, skip_self(selected)) for bw in bin_widths}
         nsco = {(bw, dist): coincidence_matrix(golgi_tracks, bw, include_self(selected)) for bw in bin_widths}
@@ -76,23 +67,26 @@ def plot():
         with open("golgi_nsync.pkl", "rb") as g:
             co, nsco, fco = pickle.load(g)
 
-    koco = {(bw, dist): coincidence_matrix(golgi_gko_tracks, bw, selected) for bw in bin_widths}
-
     return go.Figure(
         [
             go.Scatter(
                 x=list(ck[0] for ck in co.keys()),
-                y=[np.sum(c[:, :, 0]) / np.sum(c[:, :, 1]) for c in co.values()],
+                y=[np.mean((c[:, :, 0] / c[:, :, 1])[c[:, :, 1] != 0]) for c in co.values()],
+                error_y=dict(
+                    type="data",
+                    array=[np.std((c[:, :, 0] / c[:, :, 1])[c[:, :, 1] != 0]) for c in co.values()],
+                    visible=True
+                ),
                 name="Results"
             ),
             go.Scatter(
-                x=list(ck[0] for ck in koco.keys()),
-                y=[np.sum(c[:, :, 0]) / np.sum(c[:, :, 1]) for c in koco.values()],
-                name="Knockout"
-            ),
-            go.Scatter(
                 x=list(ck[0] for ck in fco.keys()),
-                y=[np.sum(c[:, :, 0]) / np.sum(c[:, :, 1]) for c in fco.values()],
+                y=[np.mean((c[:, :, 0] / c[:, :, 1])[c[:, :, 1] != 0]) for c in fco.values()],
+                error_y=dict(
+                    type="data",
+                    array=[np.std((c[:, :, 0] / c[:, :, 1])[c[:, :, 1] != 0]) for c in fco.values()],
+                    visible=True
+                ),
                 name="Random"
             )
         ],
