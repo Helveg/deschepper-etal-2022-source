@@ -13,17 +13,19 @@ import collections
 
 random = np.random.default_rng()
 
+def goc_graph(netw):
+    G = nx.DiGraph()
+    goc = netw.get_placement_set("golgi_cell")
+    gap_goc = netw.get_connectivity_set("gap_goc")
+    l = len(gap_goc)
+    conn_m = coo_matrix((np.ones(l), (gap_goc.from_identifiers, gap_goc.to_identifiers)), shape=(l, l))
+    conn_m.eliminate_zeros()
+    G.add_nodes_from(goc.identifiers)
+    collections.deque((G.add_edges_from(zip(itertools.repeat(from_), row.indices, map(lambda a: dict([a]), map(tuple, zip(itertools.repeat("weight"), 1 / row.data))))) for from_, row in enumerate(map(conn_m.getrow, range(len(goc))))), maxlen=0)
+    return G
+
 def coincident(a, b, diff=5):
     return np.any(np.abs(np.tile(b, (len(a), 1)) - a.reshape(-1, 1)) <= diff, axis=1)
-
-if not os.path.exists("golgi_tracks.pkl"):
-    with h5py.File("results/golgi_spike_example.hdf5", "r") as f:
-        golgi_tracks = {g.attrs["cell_id"]: (x := g[()][:, 1])[x > 5500] for g in f["recorders/soma_spikes"].values() if g.attrs["label"] == "golgi_cell"}
-        with open("golgi_tracks.pkl", "wb") as g:
-            pickle.dump(golgi_tracks, g)
-else:
-    with open("golgi_tracks.pkl", "rb") as g:
-        golgi_tracks = pickle.load(g)
 
 def coincidence_matrix(tracks, diff, selected):
     co = np.zeros((len(tracks), len(tracks), 2))
@@ -48,9 +50,13 @@ def include_self(m):
         m[i, i] = True
     return m
 
-def plot():
-    if not os.path.exists("golgi_nsync.pkl"):
-        dist = 100
+def rem_unselected(d, sel):
+    r = {}
+    for k, v in d.items():
+        x = v.copy()
+        x[~sel, 1] = 0
+        r[k] = x
+    return r
         bin_widths = np.arange(0, 5.5, 0.5)
         ps = from_hdf5("networks/balanced.hdf5").get_placement_set("golgi_cell")
         ps_pos = ps.positions
