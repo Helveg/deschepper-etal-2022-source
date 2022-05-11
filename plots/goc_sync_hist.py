@@ -26,19 +26,6 @@ def goc_graph(netw):
     collections.deque((G.add_edges_from(zip(itertools.repeat(from_), row.indices, map(lambda a: dict([a]), map(tuple, zip(itertools.repeat("weight"), 1 / row.data))))) for from_, row in enumerate(map(conn_m.getrow, range(len(goc))))), maxlen=0)
     return G
 
-def make_mutex_tracks(n=50, t=8000, bin_pow=1.5):
-    space, step = np.linspace(0, t, int(n  ** bin_pow), retstep=True)
-    track = random.choice(space, n * 2, replace=False)
-    t1, t2 = track[:n], track[n:]
-    return track, t1, t2, step / 2
-
-def make_sync(t1, t2, sync=0.9, jitter=0.3):
-    l1, l2 = int(len(t1) * sync), int(len(t2) * (1 - sync))
-    return np.concatenate((
-        random.choice(t1, l1),
-        random.choice(t2, l2)
-    )) + random.random(l1 + l2) * jitter - jitter / 2
-
 def overlap_bins(a, b, binsize=0.5):
     if not (len(a) and len(b)):
         return 0
@@ -55,16 +42,25 @@ def crosscor(a, b, step=0.1, binsize=0.5, slide=100):
 def z_title(t1, t2, samples):
     return f"t1: {len(t1)}, t2: {len(t2)}; N: {len(samples)}; mean: {np.mean(samples)}; std: {np.std(samples)}"
 
-if not os.path.exists("golgi_tracks.pkl"):
-    with h5py.File("results/golgi_spike_example.hdf5", "r") as f:
-        golgi_tracks = {g.attrs["cell_id"]: (x := g[()][:, 1])[(x > 5500) & (x < 6000) | (x > 6050)] for g in f["recorders/soma_spikes"].values() if g.attrs["label"] == "golgi_cell"}
-        with open("golgi_tracks.pkl", "wb") as g:
+def plot(pkl="goc_histcorr.pkl", track_pkl="golgi_tracks.pkl", track_file="results/golgi_spike_example.hdf5", track_ko_pkl="golgi_gko_tracks.pkl", track_ko_file="results/results_gap_knockout.hdf5"):
+    if not os.path.exists(track_pkl):
+        with h5py.File(track_file, "r") as f:
+            golgi_tracks = {g.attrs["cell_id"]: (x := g[()][:, 1])[(x > 5500) & (x < 6000) | (x > 6500)] for g in f["recorders/soma_spikes"].values() if g.attrs["label"] == "golgi_cell"}
+        with open(track_pkl, "wb") as g:
             pickle.dump(golgi_tracks, g)
-else:
-    with open("golgi_tracks.pkl", "rb") as g:
-        golgi_tracks = pickle.load(g)
+    else:
+        with open(track_pkl, "rb") as g:
+            golgi_tracks = pickle.load(g)
 
-def plot():
+    if not os.path.exists(track_ko_pkl):
+        with h5py.File(track_ko_file, "r") as f:
+            golgi_gko_tracks = {g.attrs["cell_id"]: (x := g[()][:, 1])[(x > 5500) & (x < 6000) | (x > 6500)] for g in f["recorders/soma_spikes"].values() if g.attrs["label"] == "golgi_cell"}
+        with open(track_ko_pkl, "wb") as g:
+            pickle.dump(golgi_gko_tracks, g)
+    else:
+        with open(track_ko_pkl, "rb") as g:
+            golgi_gko_tracks = pickle.load(g)
+
     step = 0.1
     binsize = 0.5
     binsteps = int(binsize / 2 // step)
@@ -76,9 +72,10 @@ def plot():
     pos = netw.get_placement_set("golgi_cell").positions
     pdist = distance_matrix(pos, pos)
     L = len(G.nodes())
-    if not os.path.exists("goc_histcorr.pkl"):
+    if not os.path.exists(pkl):
         netw_dist = np.empty((L, L))
         zscore_m = np.empty((L, L, lag0 * 2 + 2))
+        zscore_mko = np.empty((L, L, lag0 * 2 + 2))
         for node, paths in nx.shortest_path_length(G, weight="weight"):
             print("It", node)
             for k, d in paths.items():
@@ -86,11 +83,14 @@ def plot():
                 me, other = golgi_tracks[id_map[node]], golgi_tracks[id_map[k]]
                 cross = crosscor(me, other, binsize=binsize, step=step, slide=slide)
                 zscore_m[node, k, :] = zscore(cross)
-        with open("goc_histcorr.pkl", "wb") as f:
-            pickle.dump((netw_dist, zscore_m), f)
+                meko, otherko = golgi_gko_tracks[id_map[node]], golgi_gko_tracks[id_map[k]]
+                crossko = crosscor(meko, otherko, binsize=binsize, step=step, slide=slide)
+                zscore_mko[node, k, :] = zscore(crossko)
+        with open(pkl, "wb") as f:
+            pickle.dump((netw_dist, zscore_m, zscore_mko), f)
     else:
-        with open("goc_histcorr.pkl", "rb") as g:
-            netw_dist, zscore_m = pickle.load(g)
+        with open(pkl, "rb") as g:
+            netw_dist, zscore_m, zscore_mko = pickle.load(g)
 
     pathss = nx.shortest_path(G)
     steps = np.empty((L, L))
@@ -108,13 +108,17 @@ def plot():
         ]
         +
         [
-            go.Scatter(name=f"mean", x=np.linspace(-5, 5, 100), y=np.nanmean(zscore_m[selected & (steps > 1), :], axis=0))
-        ]
+            go.Scatter(name=f"mean", x=np.linspace(-5, 5, 100), y=np.nanmean(zscore_m[selected & (steps > 1), :], axis=0)),
+            go.Scatter(name=f"mean KO", x=np.linspace(-5, 5, 100), y=np.nanmean(zscore_mko[selected & (steps > 1), :], axis=0)),
+        ],
         # +
         # [
         #     go.Scatter(x=np.linspace(-5, 5, 100), y=z)
         #     for z in zscore_m[selected, :]
         # ]
+        layout_title_text="Golgi crosscorrelation z-scores",
+        layout_xaxis_title="Time lag (ms)",
+        layout_yaxis_title="Z-score"
     )
 
     return fig

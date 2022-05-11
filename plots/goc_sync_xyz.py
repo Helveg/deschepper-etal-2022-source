@@ -26,19 +26,6 @@ def goc_graph(netw):
     collections.deque((G.add_edges_from(zip(itertools.repeat(from_), row.indices, map(lambda a: dict([a]), map(tuple, zip(itertools.repeat("weight"), 1 / row.data))))) for from_, row in enumerate(map(conn_m.getrow, range(len(goc))))), maxlen=0)
     return G
 
-def make_mutex_tracks(n=50, t=8000, bin_pow=1.5):
-    space, step = np.linspace(0, t, int(n  ** bin_pow), retstep=True)
-    track = random.choice(space, n * 2, replace=False)
-    t1, t2 = track[:n], track[n:]
-    return track, t1, t2, step / 2
-
-def make_sync(t1, t2, sync=0.9, jitter=0.3):
-    l1, l2 = int(len(t1) * sync), int(len(t2) * (1 - sync))
-    return np.concatenate((
-        random.choice(t1, l1),
-        random.choice(t2, l2)
-    )) + random.random(l1 + l2) * jitter - jitter / 2
-
 def overlap_bins(a, b, binsize=0.5):
     if not (len(a) and len(b)):
         return 0
@@ -57,7 +44,7 @@ def z_title(t1, t2, samples):
 
 if not os.path.exists("golgi_tracks.pkl"):
     with h5py.File("results/golgi_spike_example.hdf5", "r") as f:
-        golgi_tracks = {g.attrs["cell_id"]: (x := g[()][:, 1])[x > 5500] for g in f["recorders/soma_spikes"].values() if g.attrs["label"] == "golgi_cell"}
+        golgi_tracks = {g.attrs["cell_id"]: (x := g[()][:, 1])[(x > 5500) & (x < 6000) | (x > 6500)] for g in f["recorders/soma_spikes"].values() if g.attrs["label"] == "golgi_cell"}
         with open("golgi_tracks.pkl", "wb") as g:
             pickle.dump(golgi_tracks, g)
 else:
