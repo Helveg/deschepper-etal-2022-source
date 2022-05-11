@@ -55,16 +55,26 @@ def crosscor(a, b, step=0.1, binsize=0.5, slide=100):
 def z_title(t1, t2, samples):
     return f"t1: {len(t1)}, t2: {len(t2)}; N: {len(samples)}; mean: {np.mean(samples)}; std: {np.std(samples)}"
 
-if not os.path.exists("golgi_tracks.pkl"):
-    with h5py.File("results/golgi_spike_example.hdf5", "r") as f:
-        golgi_tracks = {g.attrs["cell_id"]: (x := g[()][:, 1])[x > 5500] for g in f["recorders/soma_spikes"].values() if g.attrs["label"] == "golgi_cell"}
-        with open("golgi_tracks.pkl", "wb") as g:
+def plot(pkl="goc_sync_", track_result="results/golgi_spike_example.hdf5", track_pkl="golgi_tracks.pkl", track_ko_result="results/results_gap_knockout.hdf5", track_ko_pkl="golgi_gko_tracks.pkl"):
+    if not os.path.exists(track_pkl):
+        with h5py.File(track_result, "r") as f:
+            golgi_tracks = {g.attrs["cell_id"]: (x := g[()][:, 1])[(x > 5500) & (x < 6000) | (x > 6500)] for g in f["recorders/soma_spikes"].values() if g.attrs["label"] == "golgi_cell"}
+        with open(track_pkl, "wb") as g:
             pickle.dump(golgi_tracks, g)
-else:
-    with open("golgi_tracks.pkl", "rb") as g:
-        golgi_tracks = pickle.load(g)
+    else:
+        with open(track_pkl, "rb") as g:
+            golgi_tracks = pickle.load(g)
 
-def plot():
+    if not os.path.exists(track_ko_pkl):
+        with h5py.File(track_ko_result, "r") as f:
+            golgi_gko_tracks = {g.attrs["cell_id"]: (x := g[()][:, 1])[(x > 5500) & (x < 6000) | (x > 6500)] for g in f["recorders/soma_spikes"].values() if g.attrs["label"] == "golgi_cell"}
+        with open(track_ko_pkl, "wb") as g:
+            pickle.dump(golgi_gko_tracks, g)
+    else:
+        with open(track_ko_pkl, "rb") as g:
+            golgi_gko_tracks = pickle.load(g)
+    zpkl = pkl + "zscore.pkl"
+    ccpkl = pkl + "cross.pkl"
     step = 0.5
     binsize = 5
     binsteps = int(binsize / 2 // step)
@@ -74,9 +84,11 @@ def plot():
     G = goc_graph(netw)
     id_map = dict(zip(G.nodes(), itertools.count()))
     L = len(G.nodes())
-    if not os.path.exists("goc_netw_crosscorr.pkl"):
+    if not os.path.exists(zpkl):
         netw_dist = np.empty((L, L))
         zscore_m = np.empty((L, L))
+        zscore_mko = np.empty((L, L))
+        cc_m = None
         for node, paths in nx.shortest_path_length(G, weight="weight"):
             print("It", node)
             for k, d in paths.items():
@@ -85,11 +97,20 @@ def plot():
                 cross = crosscor(me, other, binsize=binsize, step=step, slide=slide)
                 z = zscore(cross)
                 zscore_m[node, k] = max(z[(lag0 - binsteps):(lag0 + binsteps)])
-        with open("goc_netw_crosscorr.pkl", "wb") as f:
-            pickle.dump((netw_dist, zscore_m), f)
+                meko, otherko = golgi_gko_tracks[id_map[node]], golgi_gko_tracks[id_map[k]]
+                crossko = crosscor(meko, otherko, binsize=binsize, step=step, slide=slide)
+                if cc_m is None:
+                    cc_m = np.empty((L, L, len(crossko)))
+                cc_m[node, k, :] = crossko
+                zko = zscore(crossko)
+                zscore_mko[node, k] = max(zko[(lag0 - binsteps):(lag0 + binsteps)])
+        with open(zpkl, "wb") as f:
+            pickle.dump((netw_dist, zscore_m, zscore_mko), f)
+        with open(ccpkl, "wb") as f:
+            pickle.dump((netw_dist, cc_m), f)
     else:
-        with open("goc_netw_crosscorr.pkl", "rb") as g:
-            netw_dist, zscore_m = pickle.load(g)
+        with open(zpkl, "rb") as g:
+            netw_dist, zscore_m, zscore_mko = pickle.load(g)
 
     def trend(x, y, w=0.2, tw=0.03):
         xmax = np.max(x)
@@ -113,6 +134,10 @@ def plot():
         zscore_m[steps == i]
         for i in R
     ]
+    bar_groupsko = [
+        zscore_mko[steps == i]
+        for i in R
+    ]
     bar_y = [np.nanmean(group) for group in bar_groups]
     bar_err = [np.nanstd(group) for group in bar_groups]
 
@@ -131,6 +156,20 @@ def plot():
     tnd_x, tnd_y, tnd_err = trend(netw_dist[mask], zscore_m[mask])
     ted_x, ted_y, ted_err = trend(pdist[mask], zscore_m[mask], w=10, tw=10)
 
+    #KO
+
+    zsmrko = zscore_mko[mask].ravel()
+    print("MK test of distance:", mk.original_test(zsmrko[np.argsort(pdr)]))
+
+    mk_medians = [np.median(zscore_mko[netw_dist == d]) for d in np.sort(np.unique(netw_dist))]
+    print("MK test of relationship:", mk.original_test(mk_medians))
+    bar_yko = [np.nanmedian(group) for group in bar_groupsko[1:-1]]
+    print("MK test of steps:", mk.original_test(bar_yko))
+    bar_errko = [np.nanstd(group) for group in bar_groupsko]
+
+    tndko_x, tndko_y, tndko_err = trend(netw_dist[mask], zscore_mko[mask])
+    tedko_x, tedko_y, tedko_err = trend(pdist[mask], zscore_mko[mask], w=10, tw=10)
+
     fig = make_subplots(cols=3, rows=1)
     fig.update_layout(title_text="Effect of gap junction coupling on Golgi cell synchrony")
     for p, traces in enumerate(
@@ -138,20 +177,31 @@ def plot():
             [
                 go.Scatter(x=pdr, y=zsmr, mode="markers"),
                 go.Scatter(x=ted_x, y=ted_y + ted_err, line_width=0),
-                go.Scatter(x=ted_x, y=ted_y, fill="tonexty", fillcolor="rgba(52, 235, 177, 0.3)"),
-                go.Scatter(x=ted_x, y=ted_y - ted_err, fill="tonexty", line_width=0, fillcolor="rgba(52, 235, 177, 0.3)"),
+                go.Scatter(x=ted_x, y=ted_y, fillcolor="rgba(52, 235, 177, 0.3)", name="Trend euclid dist"),
+                go.Scatter(x=ted_x, y=ted_y - ted_err, line_width=0, fillcolor="rgba(52, 235, 177, 0.3)"),
+                go.Scatter(x=tedko_x, y=tedko_y + tedko_err, line_width=0),
+                go.Scatter(x=tedko_x, y=tedko_y, fillcolor="rgba(52, 235, 177, 0.3)", name="Trend euclid dist KO"),
+                go.Scatter(x=tedko_x, y=tedko_y - tedko_err, line_width=0, fillcolor="rgba(52, 235, 177, 0.3)"),
             ],
             [
                 go.Scatter(x=netw_dist[mask].ravel(), y=zsmr, mode="markers"),
                 go.Scatter(x=tnd_x, y=tnd_y + tnd_err, line_width=0),
-                go.Scatter(x=tnd_x, y=tnd_y, fill="tonexty", fillcolor="rgba(52, 235, 177, 0.3)"),
-                go.Scatter(x=tnd_x, y=tnd_y - tnd_err, fill="tonexty", line_width=0, fillcolor="rgba(52, 235, 177, 0.3)"),
+                go.Scatter(x=tnd_x, y=tnd_y, fillcolor="rgba(52, 235, 177, 0.3)", name="Trend net dist"),
+                go.Scatter(x=tnd_x, y=tnd_y - tnd_err, line_width=0, fillcolor="rgba(52, 235, 177, 0.3)"),
+                go.Scatter(x=tndko_x, y=tndko_y + tndko_err, line_width=0),
+                go.Scatter(x=tndko_x, y=tndko_y, fillcolor="rgba(52, 235, 177, 0.3)", name="Trend net dist KO"),
+                go.Scatter(x=tndko_x, y=tndko_y - tndko_err, line_width=0, fillcolor="rgba(52, 235, 177, 0.3)"),
             ],
             [
                 go.Scatter(
                     x=[r - 1 for r in R[1:-1]],
                     y=bar_y,
                     error_y=dict(type="data", array=bar_err[1:-1], visible=True),
+                ),
+                go.Scatter(
+                    x=[r - 1 for r in R[1:-1]],
+                    y=bar_yko,
+                    error_y=dict(type="data", array=bar_errko[1:-1], visible=True),
                 )
             ]
         )
