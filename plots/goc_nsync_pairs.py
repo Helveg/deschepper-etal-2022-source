@@ -57,33 +57,77 @@ def rem_unselected(d, sel):
         x[~sel, 1] = 0
         r[k] = x
     return r
+
+def plot(result="results/golgi_spike_example.hdf5", result_ko="results/results_gap_knockout.hdf5", pkl="golgi_nsync.pkl", pkl_goc="golgi_tracks.pkl", pkl_goc_ko="golgi_gko_tracks.pkl"):
+    netw = from_hdf5("networks/balanced.hdf5")
+    ps = netw.get_placement_set("golgi_cell")
+    ps_pos = ps.positions
+    dist = 100
+    selected = distance_matrix(ps_pos, ps_pos) < dist
+
+    if not os.path.exists(pkl_goc):
+        print("Reading", result)
+        with h5py.File(result, "r") as f:
+            golgi_tracks = {g.attrs["cell_id"]: (x := g[()][:, 1])[(x > 5500) & (x < 6000) | (x > 6500)] for g in f["recorders/soma_spikes"].values() if g.attrs["label"] == "golgi_cell"}
+            with open(pkl_goc, "wb") as g:
+                pickle.dump(golgi_tracks, g)
+    else:
+        with open(pkl_goc, "rb") as g:
+            golgi_tracks = pickle.load(g)
+
+    if not os.path.exists(pkl_goc_ko):
+        with h5py.File(result_ko, "r") as f:
+            golgi_gko_tracks = {g.attrs["cell_id"]: (x := g[()][:, 1])[(x > 5500) & (x < 6000) | (x > 6500)] for g in f["recorders/soma_spikes"].values() if g.attrs["label"] == "golgi_cell"}
+            with open(pkl_goc_ko, "wb") as g:
+                pickle.dump(golgi_gko_tracks, g)
+    else:
+        with open(pkl_goc_ko, "rb") as g:
+            golgi_gko_tracks = pickle.load(g)
+    if not os.path.exists(pkl):
         bin_widths = np.arange(0, 5.5, 0.5)
-        ps = from_hdf5("networks/balanced.hdf5").get_placement_set("golgi_cell")
-        ps_pos = ps.positions
-        selected = distance_matrix(ps_pos, ps_pos) < dist
         # Spoof data for reference to uniformly random baseline
-        fake_tracks = {gid: random.random(len(track)) * 2500 for gid, track in golgi_tracks.items()}
+        fake_tracks = {gid: random.random(len(track)) * 2000 for gid, track in golgi_tracks.items()}
         pos = {id: p for id, p in zip(ps.identifiers, ps_pos)}
         co = {(bw, dist): coincidence_matrix(golgi_tracks, bw, skip_self(selected)) for bw in bin_widths}
-        nsco = {(bw, dist): coincidence_matrix(golgi_tracks, bw, include_self(selected)) for bw in bin_widths}
+        koco = {(bw, dist): coincidence_matrix(golgi_gko_tracks, bw, skip_self(selected)) for bw in bin_widths}
         fco = {(bw, dist): coincidence_matrix(fake_tracks, bw, skip_self(selected)) for bw in bin_widths}
-        with open("golgi_nsync.pkl", "wb") as g:
-            pickle.dump((co, nsco, fco), g)
+        with open(pkl, "wb") as g:
+            pickle.dump((co, koco, fco), g)
     else:
-        with open("golgi_nsync.pkl", "rb") as g:
-            co, nsco, fco = pickle.load(g)
+        with open(pkl, "rb") as g:
+            co, koco, fco = pickle.load(g)
+
+    G = goc_graph(netw)
+    pathss = nx.shortest_path(G)
+    for node, paths in pathss.items():
+        for P, path in paths.items():
+            selected[node, P] = selected[node, P] and len(path) == 2
+
+    co = rem_unselected(co, selected)
+    fco = rem_unselected(fco, selected)
+    # koco = rem_unselected(koco, selected)
 
     return go.Figure(
         [
             go.Scatter(
                 x=list(ck[0] for ck in co.keys()),
-                y=[np.mean((c[:, :, 0] / c[:, :, 1])[c[:, :, 1] != 0]) for c in co.values()],
+                y=[print(np.sum(c[:, :, 1] != 0)) or np.mean((c[:, :, 0] / c[:, :, 1])[c[:, :, 1] != 0]) for c in co.values()],
                 error_y=dict(
                     type="data",
                     array=[np.std((c[:, :, 0] / c[:, :, 1])[c[:, :, 1] != 0]) for c in co.values()],
                     visible=True
                 ),
                 name="Results"
+            ),
+            go.Scatter(
+                x=list(ck[0] for ck in co.keys()),
+                y=[print(np.sum(c[:, :, 1] != 0)) or np.mean((c[:, :, 0] / c[:, :, 1])[c[:, :, 1] != 0]) for c in koco.values()],
+                error_y=dict(
+                    type="data",
+                    array=[np.std((c[:, :, 0] / c[:, :, 1])[c[:, :, 1] != 0]) for c in koco.values()],
+                    visible=True
+                ),
+                name="Knockout"
             ),
             go.Scatter(
                 x=list(ck[0] for ck in fco.keys()),
