@@ -42,7 +42,7 @@ def crosscor(a, b, step=0.1, binsize=0.5, slide=100):
 def z_title(t1, t2, samples):
     return f"t1: {len(t1)}, t2: {len(t2)}; N: {len(samples)}; mean: {np.mean(samples)}; std: {np.std(samples)}"
 
-def plot(pkl="goc_histcorr.pkl", track_pkl="golgi_tracks.pkl", track_file="results/golgi_spike_example.hdf5", track_ko_pkl="golgi_gko_tracks.pkl", track_ko_file="results/results_gap_knockout.hdf5"):
+def plot(pkl="goc_sync_hist.pkl", track_pkl="golgi_tracks_25.pkl", track_file="results/results_gapx2.5.hdf5", track_ko_pkl="golgi_gko_tracks.pkl", track_ko_file="results/results_gap_knockout.hdf5"):
     if not os.path.exists(track_pkl):
         with h5py.File(track_file, "r") as f:
             golgi_tracks = {g.attrs["cell_id"]: (x := g[()][:, 1])[(x > 5500) & (x < 6000) | (x > 6500)] for g in f["recorders/soma_spikes"].values() if g.attrs["label"] == "golgi_cell"}
@@ -103,20 +103,11 @@ def plot(pkl="goc_histcorr.pkl", track_pkl="golgi_tracks.pkl", track_file="resul
 
     fig = go.Figure(
         [
-            go.Scatter(name=f"{s-1} steps away", x=np.linspace(-5, 5, 100), y=np.nanmean(zscore_m[selected & (steps == s), :], axis=0))
-            for s in range(2, 5)
-        ]
-        +
-        [
-            go.Scatter(name=f"mean", x=np.linspace(-5, 5, 100), y=np.nanmean(zscore_m[selected & (steps > 1), :], axis=0)),
-            go.Scatter(name=f"mean KO", x=np.linspace(-5, 5, 100), y=np.nanmean(zscore_mko[selected & (steps > 1), :], axis=0)),
+            go.Scatter(name=f"Direct pairs", x=np.linspace(-5, 5, 100), y=np.nanmean(zscore_m[selected & (steps == 2), :], axis=0)),
+            go.Scatter(name=f"Indirect pairs", x=np.linspace(-5, 5, 100), y=np.nanmean(zscore_m[selected & (steps > 2), :], axis=0)),
+            go.Scatter(name=f"Knockout", x=np.linspace(-5, 5, 100), y=np.nanmean(zscore_mko[selected & (steps > 1), :], axis=0)),
         ],
-        # +
-        # [
-        #     go.Scatter(x=np.linspace(-5, 5, 100), y=z)
-        #     for z in zscore_m[selected, :]
-        # ]
-        layout_title_text="Golgi crosscorrelation z-scores",
+        layout_title_text="Golgi millisecond precision",
         layout_xaxis_title="Time lag (ms)",
         layout_yaxis_title="Z-score"
     )
