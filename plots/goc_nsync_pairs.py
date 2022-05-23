@@ -116,7 +116,7 @@ def plot(result="results/golgi_spike_example.hdf5", result_ko="results/results_g
                 y=[print(np.sum(c[:, :, 1] != 0)) or np.mean((c[:, :, 0] / c[:, :, 1])[c[:, :, 1] != 0]) for c in co.values()],
                 error_y=dict(
                     type="data",
-                    array=[np.std((c[:, :, 0] / c[:, :, 1])[c[:, :, 1] != 0]) for c in co.values()],
+                    array=[np.std((c[:, :, 0] / c[:, :, 1])[c[:, :, 1] != 0]) / np.sqrt(len(c[:, :, 1] != 0)) for c in co.values()],
                     visible=True
                 ),
                 name="Results"
@@ -126,7 +126,7 @@ def plot(result="results/golgi_spike_example.hdf5", result_ko="results/results_g
                 y=[print(np.sum(c[:, :, 1] != 0)) or np.mean((c[:, :, 0] / c[:, :, 1])[c[:, :, 1] != 0]) for c in koco.values()],
                 error_y=dict(
                     type="data",
-                    array=[np.std((c[:, :, 0] / c[:, :, 1])[c[:, :, 1] != 0]) for c in koco.values()],
+                    array=[np.std((c[:, :, 0] / c[:, :, 1])[c[:, :, 1] != 0]) / np.sqrt(len(c[:, :, 1] != 0)) for c in koco.values()],
                     visible=True
                 ),
                 name="Knockout"
@@ -136,7 +136,7 @@ def plot(result="results/golgi_spike_example.hdf5", result_ko="results/results_g
                 y=[np.mean((c[:, :, 0] / c[:, :, 1])[c[:, :, 1] != 0]) for c in fco.values()],
                 error_y=dict(
                     type="data",
-                    array=[np.std((c[:, :, 0] / c[:, :, 1])[c[:, :, 1] != 0]) for c in fco.values()],
+                    array=[np.std((c[:, :, 0] / c[:, :, 1])[c[:, :, 1] != 0]) / np.sqrt(len(c[:, :, 1] != 0)) for c in fco.values()],
                     visible=True
                 ),
                 name="Random"
