@@ -444,9 +444,9 @@
         "initial_mf": {
           "io": "input",
           "device": "spike_generator",
-          "targetting": "by_id",
-          "targets": [229,213, 221, 228, 197, 270, 193, 273],
+          "targetting": "cell_type",
           "cell_types": ["mossy_fibers"],
+          "cell_fraction": 0.4,
           "synapses": [],
           "parameters": {
             "noise": true,
@@ -472,10 +472,9 @@
         "mossy_fiber_sensory_burst": {
           "io": "input",
           "device": "spike_generator",
-          "targetting": "by_id",
-          "targets": [240, 241, 274, 186],
-          "cell_types": ["mossy_fibers"],
-          "synapses": [],
+          "targetting": "by_label",
+          "labels": ["central_mossy_fibers"],
+          "synapses": ["AMPA", "NMDA"],
           "spike_times": [6000.0, 6004.0, 6008.0, 6014.0, 6020.0]
         }
       }
@@ -604,9 +603,9 @@
         "initial_mf": {
           "io": "input",
           "device": "spike_generator",
-          "targetting": "by_id",
-          "targets": [229,213, 221, 228, 197, 270, 193, 273],
+          "targetting": "cell_type",
           "cell_types": ["mossy_fibers"],
+          "cell_fraction": 0.4,
           "synapses": [],
           "parameters": {
             "noise": true,
@@ -632,10 +631,9 @@
         "mossy_fiber_sensory_burst": {
           "io": "input",
           "device": "spike_generator",
-          "targetting": "by_id",
-          "targets": [240, 241, 274, 186],
-          "cell_types": ["mossy_fibers"],
-          "synapses": [],
+          "targetting": "by_label",
+          "labels": ["central_mossy_fibers"],
+          "synapses": ["AMPA", "NMDA"],
           "parameters": {
             "interval": 100,
             "number": 5,
@@ -768,9 +766,9 @@
         "initial_mf": {
           "io": "input",
           "device": "spike_generator",
-          "targetting": "by_id",
-          "targets": [229,213, 221, 228, 197, 270, 193, 273],
+          "targetting": "cell_type",
           "cell_types": ["mossy_fibers"],
+          "cell_fraction": 0.4,
           "synapses": [],
           "parameters": {
             "noise": true,
@@ -796,10 +794,9 @@
         "mossy_fiber_sensory_burst": {
           "io": "input",
           "device": "spike_generator",
-          "targetting": "by_id",
-          "targets": [240, 241, 274, 186],
-          "cell_types": ["mossy_fibers"],
-          "synapses": [],
+          "targetting": "by_label",
+          "labels": ["central_mossy_fibers"],
+          "synapses": ["AMPA", "NMDA"],
           "parameters": {
             "interval": 50,
             "number": 5,
@@ -932,9 +929,9 @@
         "initial_mf": {
           "io": "input",
           "device": "spike_generator",
-          "targetting": "by_id",
-          "targets": [229,213, 221, 228, 197, 270, 193, 273],
+          "targetting": "cell_type",
           "cell_types": ["mossy_fibers"],
+          "cell_fraction": 0.4,
           "synapses": [],
           "parameters": {
             "noise": true,
@@ -960,10 +957,9 @@
         "mossy_fiber_sensory_burst": {
           "io": "input",
           "device": "spike_generator",
-          "targetting": "by_id",
-          "targets": [240, 241, 274, 186],
-          "cell_types": ["mossy_fibers"],
-          "synapses": [],
+          "targetting": "by_label",
+          "labels": ["central_mossy_fibers"],
+          "synapses": ["AMPA", "NMDA"],
           "parameters": {
             "interval": 20,
             "number": 5,
@@ -1096,9 +1092,9 @@
         "initial_mf": {
           "io": "input",
           "device": "spike_generator",
-          "targetting": "by_id",
-          "targets": [229,213, 221, 228, 197, 270, 193, 273],
+          "targetting": "cell_type",
           "cell_types": ["mossy_fibers"],
+          "cell_fraction": 0.4,
           "synapses": [],
           "parameters": {
             "noise": true,
@@ -1124,10 +1120,9 @@
         "mossy_fiber_sensory_burst": {
           "io": "input",
           "device": "spike_generator",
-          "targetting": "by_id",
-          "targets": [240, 241, 274, 186],
-          "cell_types": ["mossy_fibers"],
-          "synapses": [],
+          "targetting": "by_label",
+          "labels": ["central_mossy_fibers"],
+          "synapses": ["AMPA", "NMDA"],
           "parameters": {
             "interval": 10,
             "number": 5,
@@ -1260,9 +1255,9 @@
         "initial_mf": {
           "io": "input",
           "device": "spike_generator",
-          "targetting": "by_id",
-          "targets": [229,213, 221, 228, 197, 270, 193, 273],
+          "targetting": "cell_type",
           "cell_types": ["mossy_fibers"],
+          "cell_fraction": 0.4,
           "synapses": [],
           "parameters": {
             "noise": true,
@@ -1288,10 +1283,9 @@
         "mossy_fiber_sensory_burst": {
           "io": "input",
           "device": "spike_generator",
-          "targetting": "by_id",
-          "targets": [240, 241, 274, 186],
-          "cell_types": ["mossy_fibers"],
-          "synapses": [],
+          "targetting": "by_label",
+          "labels": ["central_mossy_fibers"],
+          "synapses": ["AMPA", "NMDA"],
           "parameters": {
             "interval": 5,
             "number": 5,
@@ -1424,9 +1418,9 @@
         "initial_mf": {
           "io": "input",
           "device": "spike_generator",
-          "targetting": "by_id",
-          "targets": [229,213, 221, 228, 197, 270, 193, 273],
+          "targetting": "cell_type",
           "cell_types": ["mossy_fibers"],
+          "cell_fraction": 0.4,
           "synapses": [],
           "parameters": {
             "noise": true,
@@ -1452,10 +1446,9 @@
         "mossy_fiber_sensory_burst": {
           "io": "input",
           "device": "spike_generator",
-          "targetting": "by_id",
-          "targets": [240, 241, 274, 186],
-          "cell_types": ["mossy_fibers"],
-          "synapses": [],
+          "targetting": "by_label",
+          "labels": ["central_mossy_fibers"],
+          "synapses": ["AMPA", "NMDA"],
           "parameters": {
             "interval": 2,
             "number": 5,
