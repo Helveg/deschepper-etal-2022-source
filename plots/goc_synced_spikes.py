@@ -99,10 +99,12 @@ def plot(result="results/results_gapx2.5.hdf5", result_ko="results/results_gap_k
 
     G = goc_graph(netw)
     pathss = nx.shortest_path(G)
+    pdist = np.empty(selected.shape)
     for node, paths in pathss.items():
         for P, path in paths.items():
+            pdist[node, P] = len(path)
             selected[node, P] = selected[node, P] and len(path) == 2
-
+    print("npairs", np.unique(pdist[distance_matrix(ps_pos, ps_pos) < dist], return_counts=True))
     co = rem_unselected(co, selected)
     fco = rem_unselected(fco, selected)
     koco = rem_unselected(koco, selected)
