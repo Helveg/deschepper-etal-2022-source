@@ -58,7 +58,7 @@ def rem_unselected(d, sel):
         r[k] = x
     return r
 
-def plot(result="results/golgi_spike_example.hdf5", result_ko="results/results_gap_knockout.hdf5", pkl="golgi_nsync.pkl", pkl_goc="golgi_tracks.pkl", pkl_goc_ko="golgi_gko_tracks.pkl"):
+def plot(result="results/results_gapx2.5.hdf5", result_ko="results/results_gap_knockout.hdf5", pkl="golgi_spike_sync.pkl", pkl_goc="golgi_tracks_25.pkl", pkl_goc_ko="golgi_gko_tracks.pkl"):
     netw = from_hdf5("networks/balanced.hdf5")
     ps = netw.get_placement_set("golgi_cell")
     ps_pos = ps.positions
@@ -107,7 +107,7 @@ def plot(result="results/golgi_spike_example.hdf5", result_ko="results/results_g
     print("npairs", np.unique(pdist[distance_matrix(ps_pos, ps_pos) < dist], return_counts=True))
     co = rem_unselected(co, selected)
     fco = rem_unselected(fco, selected)
-    # koco = rem_unselected(koco, selected)
+    koco = rem_unselected(koco, selected)
 
     return go.Figure(
         [
@@ -116,7 +116,7 @@ def plot(result="results/golgi_spike_example.hdf5", result_ko="results/results_g
                 y=[print(np.sum(c[:, :, 1] != 0)) or np.mean((c[:, :, 0] / c[:, :, 1])[c[:, :, 1] != 0]) for c in co.values()],
                 error_y=dict(
                     type="data",
-                    array=[np.std((c[:, :, 0] / c[:, :, 1])[c[:, :, 1] != 0]) / np.sqrt(len(c[:, :, 1] != 0)) for c in co.values()],
+                    array=[np.std((c[:, :, 0] / c[:, :, 1])[c[:, :, 1] != 0]) / np.sqrt(np.sum(c[:, :, 1] != 0)) for c in co.values()],
                     visible=True
                 ),
                 name="Results"
@@ -126,7 +126,7 @@ def plot(result="results/golgi_spike_example.hdf5", result_ko="results/results_g
                 y=[print(np.sum(c[:, :, 1] != 0)) or np.mean((c[:, :, 0] / c[:, :, 1])[c[:, :, 1] != 0]) for c in koco.values()],
                 error_y=dict(
                     type="data",
-                    array=[np.std((c[:, :, 0] / c[:, :, 1])[c[:, :, 1] != 0]) / np.sqrt(len(c[:, :, 1] != 0)) for c in koco.values()],
+                    array=[np.std((c[:, :, 0] / c[:, :, 1])[c[:, :, 1] != 0]) / np.sqrt(np.sum(c[:, :, 1] != 0)) for c in koco.values()],
                     visible=True
                 ),
                 name="Knockout"
@@ -136,7 +136,7 @@ def plot(result="results/golgi_spike_example.hdf5", result_ko="results/results_g
                 y=[np.mean((c[:, :, 0] / c[:, :, 1])[c[:, :, 1] != 0]) for c in fco.values()],
                 error_y=dict(
                     type="data",
-                    array=[np.std((c[:, :, 0] / c[:, :, 1])[c[:, :, 1] != 0]) / np.sqrt(len(c[:, :, 1] != 0)) for c in fco.values()],
+                    array=[np.std((c[:, :, 0] / c[:, :, 1])[c[:, :, 1] != 0]) / np.sqrt(np.sum(c[:, :, 1] != 0)) for c in fco.values()],
                     visible=True
                 ),
                 name="Random"

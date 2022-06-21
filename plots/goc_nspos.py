@@ -17,13 +17,13 @@ random = np.random.default_rng()
 def coincident(a, b, diff=5):
     return np.any(np.abs(np.tile(b, (len(a), 1)) - a.reshape(-1, 1)) <= diff, axis=1)
 
-if not os.path.exists("golgi_tracks.pkl"):
-    with h5py.File("results/golgi_spike_example.hdf5", "r") as f:
+if not os.path.exists("golgi_tracks_25.pkl"):
+    with h5py.File("results/results_gapx2.5.hdf5", "r") as f:
         golgi_tracks = {g.attrs["cell_id"]: (x := g[()][:, 1])[(x > 5500) & (x < 6000) | (x > 6500)] for g in f["recorders/soma_spikes"].values() if g.attrs["label"] == "golgi_cell"}
-        with open("golgi_tracks.pkl", "wb") as g:
+        with open("golgi_tracks_25.pkl", "wb") as g:
             pickle.dump(golgi_tracks, g)
 else:
-    with open("golgi_tracks.pkl", "rb") as g:
+    with open("golgi_tracks_25.pkl", "rb") as g:
         golgi_tracks = pickle.load(g)
 
 def coincidence_matrix(tracks, diff, skip_self=True):
@@ -38,16 +38,16 @@ def coincidence_matrix(tracks, diff, skip_self=True):
     return co
 
 def plot():
-    if not os.path.exists("golgi_npos.pkl"):
+    if not os.path.exists("golgi_npos_25.pkl"):
         dists = np.arange(0, 5.5, 0.5)
         fake_tracks = {gid: random.random(len(track)) * 2000 for gid, track in golgi_tracks.items()}
         co = {d: coincidence_matrix(golgi_tracks, d) for d in dists}
         nsco = {d: coincidence_matrix(golgi_tracks, d, skip_self=False) for d in dists}
         fco = {d: coincidence_matrix(fake_tracks, d) for d in dists}
-        with open("golgi_npos.pkl", "wb") as g:
+        with open("golgi_npos_25.pkl", "wb") as g:
             pickle.dump((co, nsco, fco), g)
     else:
-        with open("golgi_npos.pkl", "rb") as g:
+        with open("golgi_npos_25.pkl", "rb") as g:
             co, nsco, fco = pickle.load(g)
 
     netw = from_hdf5("networks/balanced.hdf5")
@@ -75,7 +75,13 @@ def plot():
                 y=y,
                 z=(surf_div(coords)).reshape((50,50)),
             ),
-        ]
+        ],
+        layout=dict(
+            scene_zaxis_title="Coincident spike probability density",
+            scene_xaxis_title="X",
+            scene_yaxis_title="Z",
+            title_text="Coincident spiking probability"
+        )
     )
     scattered = go.Figure(
         [
@@ -90,7 +96,7 @@ def plot():
         ],
         layout=dict(
             scene_zaxis_tickformat = '.0%',
-            scene_zaxis_title="% Coincident spikes with center",
+            scene_zaxis_title="% Coincident spikes",
             scene_xaxis_title="X",
             scene_yaxis_title="Z",
             title_text="Positional spike coupling"

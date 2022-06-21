@@ -55,7 +55,7 @@ def crosscor(a, b, step=0.1, binsize=0.5, slide=100):
 def z_title(t1, t2, samples):
     return f"t1: {len(t1)}, t2: {len(t2)}; N: {len(samples)}; mean: {np.mean(samples)}; std: {np.std(samples)}"
 
-def plot(pkl="goc_sync_", track_result="results/golgi_spike_example.hdf5", track_pkl="golgi_tracks.pkl", track_ko_result="results/results_gap_knockout.hdf5", track_ko_pkl="golgi_gko_tracks.pkl"):
+def plot(pkl="goc_sync25_", track_result="results/results_gapx2.5.hdf5", track_pkl="golgi_tracks_25.pkl", track_ko_result="results/results_gap_knockout.hdf5", track_ko_pkl="golgi_gko_tracks.pkl"):
     if not os.path.exists(track_pkl):
         with h5py.File(track_result, "r") as f:
             golgi_tracks = {g.attrs["cell_id"]: (x := g[()][:, 1])[(x > 5500) & (x < 6000) | (x > 6500)] for g in f["recorders/soma_spikes"].values() if g.attrs["label"] == "golgi_cell"}
