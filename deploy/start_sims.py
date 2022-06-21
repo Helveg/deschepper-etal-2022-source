@@ -1,8 +1,8 @@
 import subprocess
 
 takes = {
-    "{{pc}}": ("pfPC_{}",),
-    "{{mli}}": ("pfMLI_{}",),
+    "{{pc}}": "pfPC_{}",
+    "{{mli}}": "pfMLI_{}",
 }
 procs = []
 for i in range(11):
@@ -10,7 +10,8 @@ for i in range(11):
         # setup plast_{name.format(i)} balanced.hdf5 plast_{name.format(i)}.json 30 13:00:00
         procs.append(
             subprocess.Popen(
-                f"setup plast_{name.format(i)} balanced.hdf5 plast_{name.format(i)}.json"
+                "/store/hbp/ich027/devops/setup_simulation"
+                + f" plast_{name.format(i)} balanced.hdf5 plast_{name.format(i)}.json"
                 + " 30 13:00:00",
                 shell=True
             )
