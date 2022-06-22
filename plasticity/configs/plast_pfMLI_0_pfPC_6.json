@@ -473,7 +473,7 @@
           "io": "input",
           "device": "spike_generator",
           "targetting": "by_id",
-          "targets": [240, 241, 274, 186],
+          "targets": [213, 214, 222, 223],
           "cell_types": ["mossy_fibers"],
           "synapses": [],
           "parameters": {
