@@ -55,6 +55,7 @@ sync = {
 onbeam = {
     "stellate_cell": [639],
     "basket_cell": [314],
+    "purkinje_cell": [108, 111, 113, 115, 116, 118, 120, 122, 124, 126, 129, 132, 135, 137],
 }
 
 btn_config = {
