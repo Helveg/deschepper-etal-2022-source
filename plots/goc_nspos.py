@@ -70,7 +70,7 @@ def plot():
 
     total = go.Figure(
         [
-            go.Surface(
+            go.Contour(
                 x=x,
                 y=y,
                 z=(surf_div(coords)).reshape((50,50)),
