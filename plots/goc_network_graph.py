@@ -29,6 +29,7 @@ def graph_traces(G, pos):
             x=[x0, x1], y=[y0, y1],
             line=dict(width=G.edges[edge[0], edge[1]]["weight"] / 5, color='#888'),
             hoverinfo='none',
+            showlegend=False,
             mode='lines'
         ))
 
@@ -44,6 +45,7 @@ def graph_traces(G, pos):
         hoverinfo="skip",
         text=list(G.nodes()),
         textposition="middle center",
+        showlegend=False,
         marker=dict(
             color="blue",
             size=20,
@@ -68,7 +70,6 @@ def plot():
             layout=go.Layout(
                 title='Golgi gap network - positions',
                 titlefont_size=16,
-                showlegend=False,
                 margin=dict(b=20,l=5,r=5,t=40),
                 xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
                 yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)
