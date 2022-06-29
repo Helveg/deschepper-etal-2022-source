@@ -41,7 +41,7 @@ def graph_traces(G, pos):
         node_y.append(y)
     node_trace = go.Scatter(
         x=node_x, y=node_y,
-        mode='markers+text',
+        mode='markers',
         hoverinfo="skip",
         text=list(G.nodes()),
         textposition="middle center",
