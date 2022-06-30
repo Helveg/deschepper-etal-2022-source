@@ -81,17 +81,35 @@ def plot():
             go.Scatter(
                 x=list(ck[0] for ck in co.keys()),
                 y=[np.sum(c[:, :, 0]) / np.sum(c[:, :, 1]) for c in co.values()],
-                name="Results"
+                error_y=dict(
+                    type="data",
+                    array=[np.nanstd(c[:, :, 0] / c[:, :, 1]) / np.sqrt(len(np.nonzero(c[:, :, 1])[0])) for c in co.values()],
+                ),
+                name="Coupled",
+                legendgroup="coupled",
+                line_color="#332EBC",
             ),
             go.Scatter(
                 x=list(ck[0] for ck in koco.keys()),
                 y=[np.sum(c[:, :, 0]) / np.sum(c[:, :, 1]) for c in koco.values()],
-                name="Knockout"
+                error_y=dict(
+                    type="data",
+                    array=[np.nanstd(c[:, :, 0] / c[:, :, 1]) / np.sqrt(len(np.nonzero(c[:, :, 1])[0])) for c in koco.values()],
+                ),
+                name="Knockout",
+                legendgroup="ko",
+                line_color="#DC143C",
             ),
             go.Scatter(
                 x=list(ck[0] for ck in fco.keys()),
                 y=[np.sum(c[:, :, 0]) / np.sum(c[:, :, 1]) for c in fco.values()],
-                name="Random"
+                error_y=dict(
+                    type="data",
+                    array=[np.nanstd(c[:, :, 0] / c[:, :, 1]) / np.sqrt(len(np.nonzero(c[:, :, 1])[0])) for c in fco.values()],
+                ),
+                name="Random",
+                legendgroup="rand",
+                line_color="black",
             )
         ],
         layout=dict(

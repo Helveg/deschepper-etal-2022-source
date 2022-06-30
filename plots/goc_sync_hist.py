@@ -103,9 +103,9 @@ def plot(pkl="goc_sync_hist.pkl", track_pkl="golgi_tracks_25.pkl", track_file="r
 
     fig = go.Figure(
         [
-            go.Scatter(name=f"Direct pairs", x=np.linspace(-5, 5, 100), y=np.nanmean(zscore_m[selected & (steps == 2), :], axis=0)),
-            go.Scatter(name=f"Indirect pairs", x=np.linspace(-5, 5, 100), y=np.nanmean(zscore_m[selected & (steps > 2), :], axis=0)),
-            go.Scatter(name=f"Knockout", x=np.linspace(-5, 5, 100), y=np.nanmean(zscore_mko[selected & (steps > 1), :], axis=0)),
+            go.Scatter(name=f"Direct pairs", line_color="#332EBC", x=np.linspace(-5, 5, 100), y=np.nanmean(zscore_m[selected & (steps == 2), :], axis=0)),
+            go.Scatter(name=f"Indirect pairs", line_color="#9c99ff", x=np.linspace(-5, 5, 100), y=np.nanmean(zscore_m[selected & (steps > 2), :], axis=0)),
+            go.Scatter(name=f"Knockout", line_color="#DC143C", x=np.linspace(-5, 5, 100), y=np.nanmean(zscore_mko[selected & (steps > 1), :], axis=0)),
         ],
         layout_title_text="Golgi millisecond precision",
         layout_xaxis_title="Time lag (ms)",

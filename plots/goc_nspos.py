@@ -67,13 +67,15 @@ def plot():
 
     raster = np.meshgrid(x, y)
     coords = np.vstack((raster[0].ravel(), raster[1].ravel()))
-
+    print("Integral of CSPD:", np.sum((surf_div(coords)).reshape((50,50))) * 300 / 50 * 300 / 50)
     total = go.Figure(
         [
             go.Contour(
                 x=x,
                 y=y,
                 z=(surf_div(coords)).reshape((50,50)),
+                # r.i.p. monochromatic colorscale :')
+                # colorscale=[[0.0, "#332EBC"],[1.0, "rgb(171,217,233)"]],
             ),
         ],
         layout=dict(

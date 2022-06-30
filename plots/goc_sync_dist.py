@@ -88,15 +88,18 @@ def plot(pkl="goc_sync25_", track_result="results/results_gapx2.5.hdf5", track_p
         netw_dist = np.empty((L, L))
         zscore_m = np.empty((L, L))
         zscore_mko = np.empty((L, L))
+        zscore_mr = np.empty((L, L))
         cc_m = None
         for node, paths in nx.shortest_path_length(G, weight="weight"):
             print("It", node)
             for k, d in paths.items():
                 netw_dist[node, k] = d
+                # WT crosscorr
                 me, other = golgi_tracks[id_map[node]], golgi_tracks[id_map[k]]
                 cross = crosscor(me, other, binsize=binsize, step=step, slide=slide)
                 z = zscore(cross)
                 zscore_m[node, k] = max(z[(lag0 - binsteps):(lag0 + binsteps)])
+                # KO crosscorr
                 meko, otherko = golgi_gko_tracks[id_map[node]], golgi_gko_tracks[id_map[k]]
                 crossko = crosscor(meko, otherko, binsize=binsize, step=step, slide=slide)
                 if cc_m is None:
@@ -104,13 +107,18 @@ def plot(pkl="goc_sync25_", track_result="results/results_gapx2.5.hdf5", track_p
                 cc_m[node, k, :] = crossko
                 zko = zscore(crossko)
                 zscore_mko[node, k] = max(zko[(lag0 - binsteps):(lag0 + binsteps)])
+                # Random crosscorr
+                me, other = np.random.random(len(golgi_tracks[id_map[node]])) * 2000, np.random.random(len(golgi_tracks[id_map[k]])) * 2000
+                cross = crosscor(me, other, binsize=binsize, step=step, slide=slide)
+                z = zscore(cross)
+                zscore_mr[node, k] = max(z[(lag0 - binsteps):(lag0 + binsteps)])
         with open(zpkl, "wb") as f:
-            pickle.dump((netw_dist, zscore_m, zscore_mko), f)
+            pickle.dump((netw_dist, zscore_m, zscore_mko, zscore_mr), f)
         with open(ccpkl, "wb") as f:
             pickle.dump((netw_dist, cc_m), f)
     else:
         with open(zpkl, "rb") as g:
-            netw_dist, zscore_m, zscore_mko = pickle.load(g)
+            netw_dist, zscore_m, zscore_mko, zscore_mr = pickle.load(g)
 
     def trend(x, y, w=0.2, tw=0.03):
         xmax = np.max(x)
@@ -154,7 +162,9 @@ def plot(pkl="goc_sync25_", track_result="results/results_gapx2.5.hdf5", track_p
     print("MK test of steps:", mk.original_test(bar_y))
 
     tnd_x, tnd_y, tnd_err = trend(netw_dist[mask], zscore_m[mask])
+    tr_x, tr_y, tr_err = trend(netw_dist[mask], zscore_mr[mask])
     ted_x, ted_y, ted_err = trend(pdist[mask], zscore_m[mask], w=10, tw=10)
+    ter_x, ter_y, ter_err = trend(pdist[mask], zscore_mr[mask], w=10, tw=10)
 
     #KO
 
@@ -175,32 +185,36 @@ def plot(pkl="goc_sync25_", track_result="results/results_gapx2.5.hdf5", track_p
     for p, traces in enumerate(
         (
             [
-                go.Scatter(x=pdr, y=zsmr, mode="markers"),
-                go.Scatter(x=ted_x, y=ted_y + ted_err, line_width=0),
-                go.Scatter(x=ted_x, y=ted_y, fillcolor="rgba(52, 235, 177, 0.3)", name="Trend euclid dist"),
-                go.Scatter(x=ted_x, y=ted_y - ted_err, line_width=0, fillcolor="rgba(52, 235, 177, 0.3)"),
-                go.Scatter(x=tedko_x, y=tedko_y + tedko_err, line_width=0),
-                go.Scatter(x=tedko_x, y=tedko_y, fillcolor="rgba(52, 235, 177, 0.3)", name="Trend euclid dist KO"),
-                go.Scatter(x=tedko_x, y=tedko_y - tedko_err, line_width=0, fillcolor="rgba(52, 235, 177, 0.3)"),
+                # go.Scatter(x=pdr, y=zsmr, mode="markers", name="Golgi pair coupling"),
+                go.Scatter(x=ted_x, y=ted_y + ted_err, line_width=0, legendgroup="coupled", showlegend=False),
+                go.Scatter(x=ted_x, y=ted_y, line_color="#332EBC", fillcolor="rgba(51, 46, 188, 0.3)", name="Coupled", fill="tonexty", legendgroup="coupled", showlegend=False),
+                go.Scatter(x=ted_x, y=ted_y - ted_err, line_width=0, fillcolor="rgba(51, 46, 188, 0.3)", fill="tonexty", legendgroup="coupled", showlegend=False),
+                go.Scatter(x=tedko_x, y=tedko_y, line_color="#DC143C", name="Knockout", legendgroup="ko", showlegend=False),
+                go.Scatter(x=ter_x, y=ter_y, line_color="black", name="Random", legendgroup="rand", showlegend=False),
             ],
             [
-                go.Scatter(x=netw_dist[mask].ravel(), y=zsmr, mode="markers"),
-                go.Scatter(x=tnd_x, y=tnd_y + tnd_err, line_width=0),
-                go.Scatter(x=tnd_x, y=tnd_y, fillcolor="rgba(52, 235, 177, 0.3)", name="Trend net dist"),
-                go.Scatter(x=tnd_x, y=tnd_y - tnd_err, line_width=0, fillcolor="rgba(52, 235, 177, 0.3)"),
-                go.Scatter(x=tndko_x, y=tndko_y + tndko_err, line_width=0),
-                go.Scatter(x=tndko_x, y=tndko_y, fillcolor="rgba(52, 235, 177, 0.3)", name="Trend net dist KO"),
-                go.Scatter(x=tndko_x, y=tndko_y - tndko_err, line_width=0, fillcolor="rgba(52, 235, 177, 0.3)"),
+                # go.Scatter(x=netw_dist[mask].ravel(), y=zsmr, mode="markers"),
+                go.Scatter(x=tnd_x, y=tnd_y + tnd_err, line_width=0, legendgroup="coupled", showlegend=False),
+                go.Scatter(x=tnd_x, y=tnd_y, line_color="#332EBC", fillcolor="rgba(51, 46, 188, 0.3)", fill="tonexty", name="Coupled", legendgroup="coupled"),
+                go.Scatter(x=tnd_x, y=tnd_y - tnd_err, line_width=0, fillcolor="rgba(51, 46, 188, 0.3)", fill="tonexty", legendgroup="coupled", showlegend=False),
+                go.Scatter(x=tndko_x, y=tndko_y, line_color="#DC143C", name="Knockout", legendgroup="ko"),
+                go.Scatter(x=tr_x, y=tr_y, line_color="black", name="Random", legendgroup="rand"),
             ],
             [
                 go.Scatter(
                     x=[r - 1 for r in R[1:-1]],
                     y=bar_y,
+                    line_color="#332EBC",
+                    legendgroup="coupled",
+                    showlegend=False,
                     error_y=dict(type="data", array=bar_err[1:-1], visible=True),
                 ),
                 go.Scatter(
                     x=[r - 1 for r in R[1:-1]],
                     y=bar_yko,
+                    line_color="#DC143C",
+                    legendgroup="ko",
+                    showlegend=False,
                     error_y=dict(type="data", array=bar_errko[1:-1], visible=True),
                 )
             ]
@@ -221,5 +235,7 @@ def plot(pkl="goc_sync25_", track_result="results/results_gapx2.5.hdf5", track_p
         if yaxis_title is not None:
             fig.update_yaxes(title=yaxis_title, row=1, col=p+1)
     fig.update_xaxes(dtick=1, row=1, col=3)
+    fig.update_xaxes(dtick=50, row=1, col=1)
+    fig.update_xaxes(dtick=0.2, row=1, col=2)
 
     return fig
