@@ -34,11 +34,13 @@ def cell_freq(path, cells):
     with h5py.File(path, "r") as h:
         for c in cells:
             t = h[f"recorders/soma_spikes/{c}"][:, 1]
-            freq.append(np.sum((t > 6000) & (t < (6000 + 160))) * (1000 / 160))
+            freq_during = np.sum((t > 6000) & (t < (6000 + 160))) * (1000 / 160)
+            freq_before = np.sum((t > 6000 - 160 * 2) & (t < 6000)) * (1000 / 320)
+            freq.append(freq_during - freq_before)
     return (np.mean(freq), np.std(freq))
 
 def plot():
-    paths = glob.glob(results_path("plast", "*.hdf5"))
+    paths = glob.glob(results_path("plast", "75percent", "*.hdf5"))
     base_path = next(path for path in paths if "base" in path)
     paths.remove(base_path)
     net = from_hdf5(f"networks/{selection.network}")
