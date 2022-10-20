@@ -45,7 +45,7 @@ def plot(net_path=None, wt_path=None, ko_path=None):
                     id = int(k)
                     if v.attrs["label"] == "purkinje_cell":
                         spikes = v[:, 1]
-                        spikes = spikes[(spikes > 6000) & (spikes < 6050)]
+                        spikes = spikes[(spikes > 5950) & (spikes < 6050)]
                         pop_spikes[lbl][id] = spikes
         with open("ffj.pkl", "wb") as f:
             pickle.dump(pop_spikes, f)
@@ -55,21 +55,21 @@ def plot(net_path=None, wt_path=None, ko_path=None):
     ko_spikes = np.concatenate(list(pop_spikes["ko"].values()))
     stimulus = wt_spikes[(wt_spikes > 6003) & (wt_spikes < 6006)]
     mu, sd = norm.fit(stimulus)
-    p = norm.pdf(x, mu, sd) * 0.85
+    p = norm.pdf(x, mu, sd)
     kstimulus = ko_spikes[(ko_spikes > 6004) & (ko_spikes < 6008)]
     kmu, ksd = norm.fit(kstimulus)
-    kp = norm.pdf(x, kmu, ksd) * 0.8
+    kp = norm.pdf(x, kmu, ksd)
     pval = round(ttest_ind(stimulus, kstimulus).pvalue, 2)
     print(f"p={pval}" if pval else "p<0.01")
     print("jitter:", sd, ksd)
-    sfig = make_subplots(rows=2, cols=2, subplot_titles=("Wildtype", "", "Knockout"), specs=[[{}, {"rowspan": 2}], [{}, None]])
+    sfig = make_subplots(rows=2, cols=2, subplot_titles=("Wildtype", "", "Knockout"), specs=[[{}, {"rowspan": 2, "secondary_y": True}], [{}, None]])
     sfig.add_trace(
         go.Scatter(
             x=wt_spikes,
             y=np.concatenate([[int(k)] * len(v) for k,
             v in pop_spikes["wt"].items()]),
             mode="markers",
-            marker_size=2,
+            marker_size=4,
             showlegend=False
         ),
         row=1,
@@ -81,7 +81,7 @@ def plot(net_path=None, wt_path=None, ko_path=None):
             y=np.concatenate([[int(k)] * len(v) for k,
             v in pop_spikes["ko"].items()]),
             mode="markers",
-            marker_size=2,
+            marker_size=4,
             showlegend=False
         ),
         row=2,
@@ -89,36 +89,42 @@ def plot(net_path=None, wt_path=None, ko_path=None):
     )
     sfig.add_trace(
         go.Histogram(
-            x=wt_spikes[wt_spikes < 6010],
+            x=wt_spikes[(wt_spikes < 6010) & (wt_spikes > 6000)],
             name="Wildtype",
             nbinsx=50,
             marker_line_width=0,
-            histnorm="probability density",
-            marker_color="gray"
+            # histnorm="probability density",
+            marker_color="gray",
         ),
+        secondary_y=False,
         row=1, col=2,
     )
     sfig.add_trace(
         go.Histogram(
-            x=ko_spikes[ko_spikes < 6010],
+            x=ko_spikes[(ko_spikes < 6010) & (ko_spikes > 6000)],
             name="Knockout",
             nbinsx=50,
             marker_line_width=0,
-            histnorm="probability density",
-            marker_color="darkred"
+            # histnorm="probability density",
+            marker_color="darkred",
         ),
+        secondary_y=False,
         row=1, col=2,
     )
     sfig.update_layout(barmode="overlay", bargap=0, bargroupgap=0)
     sfig.update_traces(opacity=0.75)
     sfig.add_trace(
         go.Scatter(x=x, y=p, name="Wildtype PDF", mode="lines", line_color="black"),
+        secondary_y=True,
         row=1, col=2,
     )
     sfig.add_trace(
         go.Scatter(x=x, y=kp, name="KO PDF", mode="lines", line_color="red"),
+        secondary_y=True,
         row=1, col=2,
     )
-    sfig.update_yaxes(title="Probability density", row=1, col=2)
+    sfig.update_yaxes(title="Spikes per bin", row=1, col=2)
+    sfig.update_yaxes(title="Probability density", row=1, col=2, secondary_y=True, range=[0, 1])
     sfig.update_xaxes(title="Time (ms)")
+    sfig.update_xaxes(range=[5990, 6050], col=1)
     return sfig
