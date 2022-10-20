@@ -28,7 +28,7 @@ The default format is EPS.
 
 ## Obtaining the data
 
-To replicate the figures, you require certain files in exact locations inside of a `results` folder. These files are available as datasets on Zenodo, here is a list of URLs for each plot:
+To replicate the figures, you require certain result files in exact locations inside of a `results` folder. These files are available as datasets on Zenodo, here is a list of URLs for each plot:
 
 <placeholder>
 
