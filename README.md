@@ -1,7 +1,6 @@
-# deschepper-etal-2020
-Documents in preparation of the very first paper De Schepper et al. 2020
+# Reconstruction and simulation of an entire column of the cerebellar cortex
 
-Hi Claudia >:) Yes yes, a repo for the paper ;)
+Required steps to reproduce De Schepper et al. 2022
 
 ## Usage
 
