@@ -28,6 +28,12 @@ The default format is EPS.
 
 ## Obtaining the data
 
+You can obtain an already reconstructed version of the network model at https://doi.org/10.5281/zenodo.7230288 and save it as `/networks/balanced.hdf5`. Otherwise you can reconstruct it yourself by running:
+
+```
+bsb -v=4 -c=configs/balanced.json compile
+```
+
 To replicate the figures, you require certain result files in exact locations inside of a `results` folder. These files are available as datasets on Zenodo, here is a list of URLs for each plot:
 
 * `feedforward_jitter`: https://doi.org/10.5281/zenodo.7230239 (place in: `results/single_impulse/sensory_burst`)
