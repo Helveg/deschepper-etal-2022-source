@@ -30,7 +30,7 @@ The default format is EPS.
 
 To replicate the figures, you require certain result files in exact locations inside of a `results` folder. These files are available as datasets on Zenodo, here is a list of URLs for each plot:
 
-<placeholder>
+* `feedforward_jitter`: https://doi.org/10.5281/zenodo.7230239 (place in: `results/single_impulse/sensory_burst`)
 
 ## Reproduce the results
 
