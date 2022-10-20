@@ -28,7 +28,7 @@ The default format is EPS.
 
 ## Obtaining the data
 
-You can obtain an already reconstructed version of the network model at https://doi.org/10.5281/zenodo.7230288 and save it as `/networks/balanced.hdf5`. Otherwise you can reconstruct it yourself by running:
+You can obtain an already reconstructed version of the network model at https://doi.org/10.5281/zenodo.7230288 and save it as `/networks/balanced.hdf5`. Otherwise you can reconstruct it yourself by downloading the [morphologies](https://doi.org/10.5281/zenodo.7230455) as `morphologies.hdf5` running:
 
 ```
 bsb -v=4 -c=configs/balanced.json compile
