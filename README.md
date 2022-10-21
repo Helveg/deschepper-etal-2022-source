@@ -34,9 +34,14 @@ You can obtain an already reconstructed version of the network model at https://
 bsb -v=4 -c=configs/balanced.json compile
 ```
 
-To replicate the figures, you require certain result files in exact locations inside of a `results` folder. These files are available as datasets on Zenodo, here is a list of URLs for each plot:
+To replicate the figures, you require certain result files in exact locations inside of the `results` folder. These files are available as datasets on Zenodo, here is a list of URLs for each plot:
 
 * `feedforward_jitter`: https://doi.org/10.5281/zenodo.7230239 (place in: `results/single_impulse/sensory_burst`)
+* `feedforward`: https://doi.org/10.5281/zenodo.7230798, https://doi.org/10.5281/zenodo.7230830, https://doi.org/10.5281/zenodo.7230836 (place in: `results/clamp`)
+* `goc_nspos`, `goc_sync*`: https://doi.org/10.5281/zenodo.7231068 (place in: `results`)
+* `goc_nsync`, `goc_sync*`: https://doi.org/10.5281/zenodo.7231161 (place in: `results`)
+* `goc_oscillations`: https://doi.org/10.5281/zenodo.7231187 (place in: `results/oscillations`)
+* `grc_activation_overlap`: Calcium signal datasets too large to be uploaded (1.44TB). Please reproduce using `sensory_burst_calcium_dense.json`.
 
 ## Reproduce the results
 
