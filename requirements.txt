@@ -1,8 +1,8 @@
-bsb>=3.6.5
-plotly>=4.14.0
-numpy>=1.20.0
-h5py>=3.0.0
-ennemi>=1.0.0
-graphviz>=0.19
-networkx>=2.7
+bsb==3.6.5
+plotly==4.14.0
+numpy==1.20.0
+h5py==3.0.0
+ennemi==1.0.0
+graphviz==0.19
+networkx==2.7
 pymannkendall
