@@ -2,6 +2,14 @@
 
 Required steps to reproduce De Schepper et al. 2022
 
+## Installing the full software environment
+
+This step is not always required, to simply reproduce the plots from the available datasets, this can be skipped.
+
+```
+pip install -r requirements.txt --only-binary=":all:"
+```
+
 ## Usage
 
 1. Plot all figures
