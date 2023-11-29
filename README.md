@@ -10,6 +10,12 @@ This step is not always required, to simply reproduce the plots from the availab
 pip install -r requirements.txt --only-binary=":all:"
 ```
 
+If you're planning to use MPI, also install `mpi4py`:
+
+```
+pip install mpi4py
+```
+
 ## Usage
 
 1. Plot all figures
